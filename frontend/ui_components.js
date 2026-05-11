@@ -28,12 +28,51 @@ export function actionButton(label, handler) {
 }
 
 export function appendBubble(container, role, text = '') {
-  const bubble = document.createElement('div');
+  const bubble = document.createElement('article');
   bubble.className = `bubble ${role}`;
-  bubble.textContent = text;
+  const meta = document.createElement('div');
+  meta.className = 'bubble-meta';
+  const roleLabel = document.createElement('span');
+  roleLabel.className = 'bubble-role';
+  roleLabel.textContent = role === 'user' ? 'You' : 'Nova';
+  const timestamp = document.createElement('time');
+  const now = new Date();
+  timestamp.dateTime = now.toISOString();
+  timestamp.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const copyButton = document.createElement('button');
+  copyButton.type = 'button';
+  copyButton.className = 'bubble-copy';
+  copyButton.textContent = 'Copy';
+  copyButton.setAttribute('aria-label', `Copy ${roleLabel.textContent} message`);
+  const content = document.createElement('p');
+  content.className = 'bubble-text';
+  meta.append(roleLabel, timestamp, copyButton);
+  bubble.append(meta, content);
+  setBubbleText(bubble, text);
+  copyButton.addEventListener('click', async () => {
+    const message = content.textContent || '';
+    try {
+      await navigator.clipboard?.writeText(message);
+      copyButton.textContent = 'Copied';
+      window.setTimeout(() => {
+        copyButton.textContent = 'Copy';
+      }, 1200);
+    } catch (error) {
+      copyButton.textContent = 'Copy';
+    }
+  });
   container.appendChild(bubble);
   container.scrollTop = container.scrollHeight;
   return bubble;
+}
+
+export function setBubbleText(bubble, text) {
+  const content = bubble.querySelector('.bubble-text');
+  if (content) {
+    content.textContent = text;
+  } else {
+    bubble.textContent = text;
+  }
 }
 
 export function renderPreviews(container, files) {
@@ -202,6 +241,7 @@ window.FinSightUI = {
   confidenceClass,
   actionButton,
   appendBubble,
+  setBubbleText,
   renderPreviews,
   createTransactionRow,
   createTransactionDetailsRow,

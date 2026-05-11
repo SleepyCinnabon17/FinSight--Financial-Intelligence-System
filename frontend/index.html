@@ -138,6 +138,11 @@
       <section id="nova" class="nova-panel" aria-labelledby="nova-title">
         <div class="nova-panel-header">
           <h2 id="nova-title">Nova</h2>
+          <div class="chat-connection" aria-live="polite">
+            <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
+            <span id="chat-status-text">Idle</span>
+            <button id="chat-retry-button" type="button" hidden>Retry</button>
+          </div>
           <button class="nova-toggle" type="button" aria-expanded="true">Minimize</button>
         </div>
         <div class="nova-panel-body">
@@ -147,8 +152,15 @@
             <span></span>
           </div>
           <div id="chat-bubbles" class="chat-bubbles" aria-live="polite"></div>
+          <div id="chat-typing" class="typing-indicator" hidden aria-live="polite">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            Nova is typing
+          </div>
           <form id="chat-form" class="chat-form">
             <input id="chat-input" type="text" placeholder="Where do I invest?" autocomplete="off" />
+            <button id="chat-stop-button" type="button" hidden>Stop</button>
             <button type="submit">Send</button>
           </form>
           <p class="disclaimer">Nova does not provide certified financial advice.</p>

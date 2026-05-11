@@ -53,10 +53,27 @@ export function discardTransaction(uploadId) {
 }
 
 export async function streamNovaMessage(message, conversationHistory, onToken) {
+  const connection = openNovaConnection(message, conversationHistory, { onToken });
+  return connection.done;
+}
+
+export function openNovaConnection(message, conversationHistory, callbacks = {}) {
+  const controller = new AbortController();
+  const done = readNovaStream(message, conversationHistory, callbacks.onToken || (() => {}), controller.signal);
+  return {
+    done,
+    close() {
+      controller.abort();
+    }
+  };
+}
+
+async function readNovaStream(message, conversationHistory, onToken, signal) {
   const response = await fetch('/api/v1/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, conversation_history: conversationHistory })
+    body: JSON.stringify({ message, conversation_history: conversationHistory }),
+    signal
   });
   if (!response.ok || !response.body) {
     throw new Error('Nova is temporarily unavailable. Please try again.');
@@ -91,5 +108,6 @@ window.FinSightApi = {
   uploadBills,
   confirmTransaction,
   discardTransaction,
-  streamNovaMessage
+  streamNovaMessage,
+  openNovaConnection
 };
