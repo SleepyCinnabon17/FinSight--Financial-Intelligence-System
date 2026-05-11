@@ -102,3 +102,37 @@ def test_production_data_dir_and_secret_safe_health(tmp_path: Path) -> None:
         """,
         tmp_path,
     )
+
+
+def test_production_ignores_ocr_fixture_metadata_when_unset(tmp_path: Path) -> None:
+    _run_isolated(
+        """
+        import os
+        from unittest.mock import patch
+
+        from PIL import Image
+
+        os.environ.pop('FINSIGHT_ENABLE_OCR_FIXTURE_METADATA', None)
+
+        from backend import config
+        from backend.pipeline.ocr import run_paddleocr
+
+        class Engine:
+            def ocr(self, *_args, **_kwargs):
+                return [[
+                    [
+                        [[0, 0], [10, 0], [10, 10], [0, 10]],
+                        ('real ocr path', 0.99),
+                    ]
+                ]]
+
+        image = Image.new('RGB', (100, 100), 'white')
+        image.info['finsight_ocr_text'] = 'fixture shortcut'
+
+        assert config.OCR_FIXTURE_METADATA_ENABLED is False
+        with patch('backend.pipeline.ocr._get_paddleocr', return_value=Engine()):
+            blocks = run_paddleocr(image)
+        assert [block.text for block in blocks] == ['real ocr path']
+        """,
+        tmp_path,
+    )

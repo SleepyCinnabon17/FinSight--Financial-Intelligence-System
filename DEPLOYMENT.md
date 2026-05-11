@@ -55,7 +55,11 @@ MARKET_DATA_CACHE_TTL_HOURS=1
 NEWS_CACHE_TTL_HOURS=2
 ```
 
-Do not set `FINSIGHT_ENABLE_OCR_FIXTURE_METADATA` in Railway or any production environment. That flag is reserved for synthetic test fixtures only.
+OCR fixture metadata flag:
+
+- `FINSIGHT_ENABLE_OCR_FIXTURE_METADATA` is test/CI only.
+- Default production behavior is false/unset.
+- Never set `FINSIGHT_ENABLE_OCR_FIXTURE_METADATA` in Railway or any production environment.
 
 6. Deploy and run:
 
