@@ -7,11 +7,14 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
+from backend import config
 from backend.config import OCR_CONFIDENCE_THRESHOLD, OCR_LINE_MERGE_Y_TOLERANCE, OCR_PRIMARY_TIMEOUT_SECONDS
 from backend.models.extraction import OCRBlock
 
 
 def _metadata_blocks(image: Image.Image) -> list[OCRBlock]:
+    if not config.OCR_FIXTURE_METADATA_ENABLED:
+        return []
     text = image.info.get("finsight_ocr_text", "")
     if not text:
         return []

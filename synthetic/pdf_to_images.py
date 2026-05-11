@@ -27,26 +27,33 @@ def _atomic_save_image(image: Image.Image, path: Path, ocr_text: str | None = No
 def _render_fallback_png(record: dict[str, object], path: Path) -> None:
     image = Image.new("RGB", (1000, 1400), "white")
     draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()
-    bold = ImageFont.load_default()
+    try:
+        font = ImageFont.truetype("DejaVuSans.ttf", 34)
+        small = ImageFont.truetype("DejaVuSans.ttf", 30)
+        bold = ImageFont.truetype("DejaVuSans-Bold.ttf", 44)
+    except Exception:
+        font = ImageFont.load_default()
+        small = ImageFont.load_default()
+        bold = ImageFont.load_default()
     lines = [
-        str(record["merchant"]),
-        f"Invoice: {record['bill_number']}",
-        f"Date: {record['date']}",
-        "Bill To: FinSight Demo User",
-        f"{record['merchant']} Meal 1 {float(record['amount']) * 0.45:.2f}",
-        f"{record['merchant']} Ride 1 {float(record['amount']) * 0.30:.2f}",
-        f"{record['merchant']} Order 1 {float(record['amount']) * 0.25:.2f}",
-        f"Subtotal {float(record['subtotal']):.2f}",
-        f"GST 18% {float(record['tax']):.2f}",
-        f"Grand Total {float(record['amount']):.2f}",
-        f"Payment Method: {record['payment_method']}",
+        (str(record["merchant"]), bold),
+        (f"Invoice: {record['bill_number']}", font),
+        (f"Date: {record['date']}", font),
+        ("Bill To: FinSight Demo User", font),
+        ("Item                         Qty       Price", small),
+        (f"{record['merchant']} Meal        1       {float(record['amount']) * 0.45:.2f}", small),
+        (f"{record['merchant']} Ride        1       {float(record['amount']) * 0.30:.2f}", small),
+        (f"{record['merchant']} Order       1       {float(record['amount']) * 0.25:.2f}", small),
+        (f"Subtotal                         {float(record['subtotal']):.2f}", font),
+        (f"GST 18%                          {float(record['tax']):.2f}", font),
+        (f"Grand Total                      {float(record['amount']):.2f}", bold),
+        (f"Payment Method: {record['payment_method']}", font),
     ]
     y = 80
-    for index, line in enumerate(lines):
-        draw.text((80, y), line, fill="black", font=bold if index == 0 else font)
-        y += 70 if index == 0 else 45
-    _atomic_save_image(image, path, "\n".join(lines))
+    for index, (line, selected_font) in enumerate(lines):
+        draw.text((80, y), line, fill="black", font=selected_font)
+        y += 76 if index == 0 else 58
+    _atomic_save_image(image, path, "\n".join(line for line, _font in lines))
 
 
 def convert_all() -> int:

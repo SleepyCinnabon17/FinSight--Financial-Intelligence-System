@@ -4,12 +4,14 @@ from pathlib import Path
 
 from PIL import Image
 
+from backend import config
 from backend.models.extraction import OCRBlock
 from backend.pipeline.kie import extract_fields, normalize_amount, normalize_date
 from backend.pipeline.ocr import run_ocr
 
 
-def test_cord_path_itemized_bill_returns_line_items() -> None:
+def test_cord_path_itemized_bill_returns_line_items(monkeypatch) -> None:
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", True)
     with Image.open(sorted(Path("synthetic/synthetic_bill_images").glob("BILL-*.png"))[0]) as image:
         result = extract_fields(run_ocr(image))
     assert result.extraction_model == "cord_regex"

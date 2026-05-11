@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from PIL import Image
 
+from backend import config
 from backend.models.extraction import OCRBlock
 from backend.pipeline.ocr import merge_line_blocks, run_ocr, run_paddleocr, run_tesseract
 
@@ -13,12 +14,14 @@ def _synthetic_image() -> Image.Image:
     return Image.open(sorted(Path("synthetic/synthetic_bill_images").glob("BILL-*.png"))[0])
 
 
-def test_run_paddleocr_on_clean_synthetic_bill_returns_blocks() -> None:
+def test_run_paddleocr_on_clean_synthetic_bill_returns_blocks(monkeypatch) -> None:
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", True)
     with _synthetic_image() as image:
         assert run_paddleocr(image)
 
 
-def test_run_tesseract_on_clean_synthetic_bill_returns_blocks() -> None:
+def test_run_tesseract_on_clean_synthetic_bill_returns_blocks(monkeypatch) -> None:
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", True)
     with _synthetic_image() as image:
         assert run_tesseract(image)
 
@@ -34,10 +37,39 @@ def test_merge_line_blocks_merges_same_line_left_to_right() -> None:
     assert merged[0].confidence == 0.9
 
 
-def test_run_ocr_falls_back_when_paddle_raises() -> None:
+def test_run_ocr_falls_back_when_paddle_raises(monkeypatch) -> None:
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", True)
     with _synthetic_image() as image:
         with patch("backend.pipeline.ocr.run_paddleocr", side_effect=RuntimeError("paddle failure")):
             assert run_ocr(image)
+
+
+def test_metadata_fixture_requires_explicit_enable(monkeypatch) -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    image.info["finsight_ocr_text"] = "fixture shortcut"
+
+    class Engine:
+        def ocr(self, *_args, **_kwargs):
+            return [[
+                [
+                    [[0, 0], [10, 0], [10, 10], [0, 10]],
+                    ("real ocr", 0.99),
+                ]
+            ]]
+
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", False)
+    with patch("backend.pipeline.ocr._get_paddleocr", return_value=Engine()):
+        blocks = run_paddleocr(image)
+    assert [block.text for block in blocks] == ["real ocr"]
+
+
+def test_metadata_fixture_shortcut_is_explicitly_gated(monkeypatch) -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    image.info["finsight_ocr_text"] = "fixture shortcut"
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", True)
+    with patch("backend.pipeline.ocr._get_paddleocr", side_effect=AssertionError("should not load Paddle")):
+        blocks = run_paddleocr(image)
+    assert [block.text for block in blocks] == ["fixture shortcut"]
 
 
 def test_run_ocr_falls_back_when_paddle_returns_empty() -> None:

@@ -22,6 +22,7 @@ def _sample_image(index: int = 0) -> Path:
 
 
 def test_upload_ocr_extraction_confirm_and_discard_flow(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(config, "OCR_FIXTURE_METADATA_ENABLED", True)
     client = _client_store(monkeypatch, tmp_path)
 
     confirm_image = _sample_image(0)
