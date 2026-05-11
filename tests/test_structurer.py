@@ -56,3 +56,38 @@ def test_persist_transaction_appends_and_reloads(tmp_path: Path) -> None:
     persist_transaction(second, str(path))
     loaded = load_transactions(str(path))
     assert [transaction.total for transaction in loaded] == [100.0, 200.0]
+
+
+def test_missing_transactions_file_loads_empty(tmp_path: Path) -> None:
+    assert load_transactions(str(tmp_path / "transactions.json")) == []
+
+
+def test_empty_transactions_file_repairs_to_empty_list(tmp_path: Path) -> None:
+    path = tmp_path / "transactions.json"
+    path.write_text("   ", encoding="utf-8")
+    assert load_transactions(str(path)) == []
+    assert path.read_text(encoding="utf-8").strip() == "[]"
+
+
+def test_corrupt_transactions_file_is_quarantined_and_repaired(tmp_path: Path) -> None:
+    path = tmp_path / "transactions.json"
+    path.write_text("{broken json", encoding="utf-8")
+    assert load_transactions(str(path)) == []
+    assert path.read_text(encoding="utf-8").strip() == "[]"
+    backups = list(tmp_path.glob("transactions.json.corrupt.*.bak"))
+    assert len(backups) == 1
+    assert backups[0].read_text(encoding="utf-8") == "{broken json"
+
+
+def test_non_list_transactions_file_is_quarantined_and_repaired(tmp_path: Path) -> None:
+    path = tmp_path / "transactions.json"
+    path.write_text('{"id": "not-a-list"}', encoding="utf-8")
+    assert load_transactions(str(path)) == []
+    assert path.read_text(encoding="utf-8").strip() == "[]"
+    assert list(tmp_path.glob("transactions.json.corrupt.*.bak"))
+
+
+def test_sanitizes_user_visible_text_fields_before_persistence(tmp_path: Path) -> None:
+    transaction = extraction_to_transaction(_extraction(100, "<script>x</script>  Zomato   Store"), b"one", "one.png")
+    assert "<script>" not in transaction.merchant
+    assert transaction.merchant == "x Zomato Store"

@@ -3,10 +3,12 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import shutil
 import tempfile
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import asdict, is_dataclass
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +36,7 @@ from backend.pipeline.deduplicator import DuplicateResult, append_duplicate_reso
 from backend.pipeline.kie import extract_fields
 from backend.pipeline.ocr import run_ocr
 from backend.pipeline.preprocess import PreprocessingError, detect_format, preprocess
-from backend.pipeline.structurer import extraction_to_transaction, load_transactions, persist_transaction, write_transactions
+from backend.pipeline.structurer import extraction_to_transaction, load_transactions, persist_transaction, sanitize_text_field, write_transactions
 
 
 limiter = Limiter(key_func=get_remote_address)
@@ -45,10 +47,13 @@ async def lifespan(fastapi_app: FastAPI) -> Any:
     scheduler = getattr(fastapi_app.state, "news_scheduler", None)
     if scheduler is None or not getattr(scheduler, "running", False):
         start_news_scheduler(fastapi_app)
-    await asyncio.to_thread(get_news_context)
+    fastapi_app.state.news_warmup_task = asyncio.create_task(asyncio.to_thread(get_news_context))
     try:
         yield
     finally:
+        warmup_task = getattr(fastapi_app.state, "news_warmup_task", None)
+        if warmup_task is not None and not warmup_task.done():
+            warmup_task.cancel()
         scheduler = getattr(fastapi_app.state, "news_scheduler", None)
         if scheduler is not None and getattr(scheduler, "running", False):
             scheduler.shutdown(wait=False)
@@ -59,14 +64,15 @@ app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[],
-    allow_origin_regex=r"^http://localhost(:\d+)?$",
+    allow_origins=config.CORS_ALLOWED_ORIGINS,
+    allow_origin_regex=None if config.IS_PRODUCTION else r"^http://localhost(:\d+)?$|^http://127\.0\.0\.1(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 PENDING_UPLOADS: dict[str, dict[str, Any]] = {}
+SANITIZED_EDIT_FIELDS = {"merchant", "category", "payment_method", "bill_number"}
 
 
 class ConfirmTransactionRequest(BaseModel):
@@ -147,6 +153,31 @@ def _load_all_transactions() -> list[Transaction]:
     return load_transactions(str(config.TRANSACTIONS_PATH))
 
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _cleanup_expired_pending_uploads() -> None:
+    cutoff = _now() - timedelta(seconds=config.PENDING_UPLOAD_TTL_SECONDS)
+    expired = [
+        upload_id
+        for upload_id, payload in PENDING_UPLOADS.items()
+        if payload.get("created_at") is None or payload["created_at"] < cutoff
+    ]
+    for upload_id in expired:
+        PENDING_UPLOADS.pop(upload_id, None)
+
+
+def _pop_pending_upload(upload_id: str | None) -> dict[str, Any] | None:
+    _cleanup_expired_pending_uploads()
+    if not upload_id:
+        return None
+    pending = PENDING_UPLOADS.pop(upload_id, None)
+    if pending is None:
+        raise HTTPException(status_code=404, detail="Upload session expired or not found.")
+    return pending
+
+
 def _validate_file_bytes(file_bytes: bytes) -> str:
     max_size = config.UPLOAD_MAX_SIZE_MB * 1024 * 1024
     if len(file_bytes) > max_size:
@@ -157,6 +188,14 @@ def _validate_file_bytes(file_bytes: bytes) -> str:
         if "empty" in str(exc).lower():
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(exc)) from exc
+
+
+async def _read_bounded_upload(upload_file: UploadFile) -> bytes:
+    max_size = config.UPLOAD_MAX_SIZE_MB * 1024 * 1024
+    payload = await upload_file.read(max_size + 1)
+    if len(payload) > max_size:
+        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=f"File too large. Maximum size is {config.UPLOAD_MAX_SIZE_MB}MB.")
+    return payload
 
 
 def _stage_temp_file(file_bytes: bytes, suffix: str) -> Path:
@@ -237,6 +276,8 @@ def _extraction_from_payload(payload: dict[str, Any]) -> ExtractionResult:
 def _coerce_numeric_edit(field_name: str, value: Any) -> Any:
     if field_name in {"subtotal", "tax", "total"} and value not in {None, ""}:
         return float(value)
+    if field_name in SANITIZED_EDIT_FIELDS:
+        return sanitize_text_field(value, field_name)
     return value
 
 
@@ -247,7 +288,7 @@ def _apply_edits(extraction: ExtractionResult, edits: dict[str, Any] | None) -> 
     changed = False
     for field_name, value in edits.items():
         if field_name == "category":
-            extraction.metadata["category_override"] = str(value)
+            extraction.metadata["category_override"] = sanitize_text_field(value, "category")
             changed = True
             continue
         if field_name not in editable:
@@ -264,9 +305,10 @@ async def upload(request: Request, background_tasks: BackgroundTasks, files: lis
     del request, background_tasks
     if len(files) > config.MAX_UPLOAD_FILES:
         raise HTTPException(status_code=400, detail=f"Maximum {config.MAX_UPLOAD_FILES} files are allowed per upload.")
+    _cleanup_expired_pending_uploads()
     results: list[dict[str, Any]] = []
     for upload_file in files:
-        file_bytes = await upload_file.read()
+        file_bytes = await _read_bounded_upload(upload_file)
         file_format = _validate_file_bytes(file_bytes)
         temp_path: Path | None = None
         try:
@@ -286,6 +328,7 @@ async def upload(request: Request, background_tasks: BackgroundTasks, files: lis
                 "file_bytes": file_bytes,
                 "file_name": upload_file.filename or temp_path.name,
                 "extraction": extraction,
+                "created_at": _now(),
             }
             results.append(
                 {
@@ -303,14 +346,14 @@ async def upload(request: Request, background_tasks: BackgroundTasks, files: lis
 
 @app.post("/api/v1/transactions/confirm")
 async def confirm_transaction(body: ConfirmTransactionRequest) -> JSONResponse:
-    pending = PENDING_UPLOADS.pop(body.upload_id, None) if body.upload_id else None
+    pending = _pop_pending_upload(body.upload_id)
     extraction = pending["extraction"] if pending else _extraction_from_payload(body.extraction_result)
     edited = _apply_edits(extraction, body.user_edits)
     file_bytes = pending["file_bytes"] if pending else extraction.raw_ocr_text.encode("utf-8")
     file_name = pending["file_name"] if pending else extraction.metadata.get("file_name", "confirmed_upload")
     transaction = extraction_to_transaction(extraction, file_bytes, str(file_name))
     if "category_override" in extraction.metadata:
-        transaction.category = extraction.metadata["category_override"]
+        transaction.category = sanitize_text_field(extraction.metadata["category_override"], "category")
     transaction.user_confirmed = True
     transaction.manually_edited = edited
     existing = _load_all_transactions()
@@ -322,7 +365,7 @@ async def confirm_transaction(body: ConfirmTransactionRequest) -> JSONResponse:
 @app.post("/api/v1/transactions/discard")
 async def discard_transaction(body: DiscardRequest | None = None) -> JSONResponse:
     if body and body.upload_id:
-        PENDING_UPLOADS.pop(body.upload_id, None)
+        _pop_pending_upload(body.upload_id)
     return JSONResponse(_success({"discarded": True}))
 
 
@@ -431,26 +474,104 @@ def _run_benchmark_inline() -> dict[str, Any]:
 
 @app.get("/api/v1/benchmark")
 async def benchmark() -> JSONResponse:
+    if not config.ENABLE_BENCHMARK_ENDPOINT:
+        return JSONResponse(status_code=404, content=_error("benchmark_disabled", "Benchmark endpoint is disabled in this environment.", None))
     return JSONResponse(_success(_run_benchmark_inline()))
 
 
-@app.get("/api/v1/health")
-async def health() -> JSONResponse:
-    news_cache = load_news_cache(str(config.NEWS_CACHE_PATH))
+def _llm_status() -> dict[str, Any]:
     provider = config.LLM_PROVIDER.lower()
     llm_configured = provider == "ollama" or bool(
         (provider == "groq" and config.GROQ_API_KEY)
         or (provider == "openai" and config.OPENAI_API_KEY)
         or (provider == "anthropic" and config.ANTHROPIC_API_KEY)
     )
+    return {"provider": provider, "configured": llm_configured}
+
+
+def _dependency_status() -> dict[str, bool]:
+    return {
+        "tesseract": shutil.which("tesseract") is not None,
+        "poppler_pdfinfo": shutil.which("pdfinfo") is not None,
+    }
+
+
+def _json_file_readable(path: Path) -> bool:
+    if not path.exists():
+        return True
+    try:
+        json.loads(path.read_text(encoding="utf-8"))
+        return True
+    except Exception:
+        return False
+
+
+def _readiness_payload() -> dict[str, Any]:
+    data_dir_ready = False
+    transaction_store_ready = False
+    try:
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        probe = config.DATA_DIR / ".finsight-write-probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        data_dir_ready = True
+        load_transactions(str(config.TRANSACTIONS_PATH))
+        transaction_store_ready = True
+    except Exception:
+        data_dir_ready = False
+        transaction_store_ready = False
+
+    frontend_root = config.PROJECT_ROOT / "frontend"
+    cache_status = {
+        "news_cache_readable": _json_file_readable(config.NEWS_CACHE_PATH),
+        "market_cache_readable": _json_file_readable(config.MARKET_CACHE_PATH),
+    }
+    dependencies = _dependency_status()
+    checks = {
+        "data_dir_writable": data_dir_ready,
+        "transaction_store_ready": transaction_store_ready,
+        "frontend_static_root": frontend_root.exists(),
+        **dependencies,
+        **cache_status,
+    }
+    return {
+        "ready": all(checks.values()),
+        "checks": checks,
+        "benchmark_endpoint_enabled": config.ENABLE_BENCHMARK_ENDPOINT,
+        "app_env": config.APP_ENV,
+        "llm": _llm_status(),
+    }
+
+
+@app.get("/api/v1/health")
+async def health() -> JSONResponse:
+    news_cache = load_news_cache(str(config.NEWS_CACHE_PATH))
     data = {
         "ocr": {"available": True},
         "kie": {"available": True},
-        "llm": {"provider": provider, "configured": llm_configured},
+        "dependencies": _dependency_status(),
+        "llm": _llm_status(),
+        "app_env": config.APP_ENV,
+        "benchmark_endpoint_enabled": config.ENABLE_BENCHMARK_ENDPOINT,
         "news_cache_fresh": bool(news_cache and cache_is_fresh(news_cache, config.NEWS_CACHE_TTL_HOURS)),
         "market_cache_fresh": market_cache_is_fresh(),
     }
     return JSONResponse(_success(data))
+
+
+async def _health_live() -> JSONResponse:
+    return JSONResponse(_success({"status": "alive"}))
+
+
+async def _health_ready() -> JSONResponse:
+    payload = _readiness_payload()
+    return JSONResponse(_success(payload), status_code=200 if payload["ready"] else 503)
+
+
+app.add_api_route("/health/live", _health_live, methods=["GET"])
+app.add_api_route("/api/v1/health/live", _health_live, methods=["GET"])
+app.add_api_route("/health/ready", _health_ready, methods=["GET"])
+app.add_api_route("/api/v1/health/ready", _health_ready, methods=["GET"])
 
 
 @app.post("/api/v1/duplicate/confirm")

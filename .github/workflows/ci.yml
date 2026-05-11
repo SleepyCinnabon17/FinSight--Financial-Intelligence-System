@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils tesseract-ocr libgl1 libglib2.0-0
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Backend tests
+        run: python -m pytest
+
+      - name: Frontend tests
+        run: npm run test:frontend
+
+      - name: Production-mode tests
+        run: APP_ENV=production python -m pytest tests/test_production_hardening.py
+
+      - name: Benchmark validation
+        run: python backend/benchmarks/evaluate.py
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker build
+        run: docker build -t finsight-ci .

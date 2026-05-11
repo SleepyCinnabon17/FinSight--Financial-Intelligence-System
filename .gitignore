@@ -1,4 +1,7 @@
 .env
+node_modules/
+test-results/
+playwright-report/
 backend/data/transactions.json
 backend/data/duplicate_log.json
 backend/data/market_cache.json

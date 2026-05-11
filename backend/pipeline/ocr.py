@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import concurrent.futures
 from functools import lru_cache
 from typing import Any
 
 import numpy as np
 from PIL import Image
 
-from backend.config import OCR_CONFIDENCE_THRESHOLD, OCR_LINE_MERGE_Y_TOLERANCE
+from backend.config import OCR_CONFIDENCE_THRESHOLD, OCR_LINE_MERGE_Y_TOLERANCE, OCR_PRIMARY_TIMEOUT_SECONDS
 from backend.models.extraction import OCRBlock
 
 
@@ -124,11 +125,15 @@ def merge_line_blocks(blocks: list[OCRBlock], y_tolerance: int = OCR_LINE_MERGE_
 
 
 def run_ocr(image: Image.Image) -> list[OCRBlock]:
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(run_paddleocr, image)
     try:
-        blocks = run_paddleocr(image)
+        blocks = future.result(timeout=OCR_PRIMARY_TIMEOUT_SECONDS)
+        executor.shutdown(wait=False, cancel_futures=True)
         if blocks:
             return merge_line_blocks(blocks)
     except Exception:
-        pass
+        future.cancel()
+        executor.shutdown(wait=False, cancel_futures=True)
     blocks = run_tesseract(image)
     return merge_line_blocks(blocks)

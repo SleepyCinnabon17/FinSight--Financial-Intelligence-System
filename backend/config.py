@@ -13,11 +13,6 @@ except Exception:  # pragma: no cover - optional dependency fallback
 
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent
 PROJECT_ROOT: Final[Path] = BASE_DIR.parent
-DATA_DIR: Final[Path] = BASE_DIR / "data"
-TRANSACTIONS_PATH: Final[Path] = DATA_DIR / "transactions.json"
-DUPLICATE_LOG_PATH: Final[Path] = DATA_DIR / "duplicate_log.json"
-MARKET_CACHE_PATH: Final[Path] = DATA_DIR / "market_cache.json"
-NEWS_CACHE_PATH: Final[Path] = DATA_DIR / "news_cache.json"
 
 load_dotenv(PROJECT_ROOT / ".env")
 
@@ -44,6 +39,35 @@ def _get_int(name: str, default: int) -> int:
         return int(raw)
     except ValueError:
         return default
+
+
+def _get_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None or raw == "":
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _get_csv(name: str, default: str = "") -> list[str]:
+    return [item.strip() for item in _get_str(name, default).split(",") if item.strip()]
+
+
+def _get_path(name: str, default: Path) -> Path:
+    raw = Path(_get_str(name, str(default))).expanduser()
+    return raw if raw.is_absolute() else PROJECT_ROOT / raw
+
+
+APP_ENV: Final[str] = _get_str("APP_ENV", "development").strip().lower() or "development"
+IS_PRODUCTION: Final[bool] = APP_ENV == "production"
+CORS_ALLOWED_ORIGINS: Final[list[str]] = _get_csv("CORS_ALLOWED_ORIGINS")
+DATA_DIR: Final[Path] = _get_path("FINSIGHT_DATA_DIR", BASE_DIR / "data")
+TRANSACTIONS_PATH: Final[Path] = DATA_DIR / "transactions.json"
+DUPLICATE_LOG_PATH: Final[Path] = DATA_DIR / "duplicate_log.json"
+MARKET_CACHE_PATH: Final[Path] = DATA_DIR / "market_cache.json"
+NEWS_CACHE_PATH: Final[Path] = DATA_DIR / "news_cache.json"
+ENABLE_BENCHMARK_ENDPOINT: Final[bool] = _get_bool("ENABLE_BENCHMARK_ENDPOINT", not IS_PRODUCTION)
+OCR_PRIMARY_TIMEOUT_SECONDS: Final[float] = _get_float("OCR_PRIMARY_TIMEOUT_SECONDS", 5.0)
+PENDING_UPLOAD_TTL_SECONDS: Final[int] = _get_int("PENDING_UPLOAD_TTL_SECONDS", 1800)
 
 
 LLM_PROVIDER: Final[str] = _get_str("LLM_PROVIDER", "groq").lower()
