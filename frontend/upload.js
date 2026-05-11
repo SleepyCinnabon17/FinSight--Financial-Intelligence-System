@@ -179,6 +179,12 @@ export function setupUpload() {
     els.dropZone.classList.remove('dragover');
     uploadFiles([...event.dataTransfer.files]);
   });
+  els.dropZone.addEventListener('keydown', (event) => {
+    if (event.target !== els.dropZone) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    els.fileInput.click();
+  });
 }
 
 setupUpload();

@@ -74,11 +74,11 @@
                 <table id="transaction-table">
                   <thead>
                     <tr>
-                      <th data-sort="date">Date</th>
-                      <th data-sort="merchant">Merchant</th>
-                      <th data-sort="category">Category</th>
-                      <th data-sort="total">Amount</th>
-                      <th data-sort="status">Status</th>
+                      <th data-sort="date" scope="col"><button class="sort-button" type="button">Date</button></th>
+                      <th data-sort="merchant" scope="col"><button class="sort-button" type="button">Merchant</button></th>
+                      <th data-sort="category" scope="col"><button class="sort-button" type="button">Category</button></th>
+                      <th data-sort="total" scope="col"><button class="sort-button" type="button">Amount</button></th>
+                      <th data-sort="status" scope="col"><button class="sort-button" type="button">Status</button></th>
                     </tr>
                   </thead>
                   <tbody id="transaction-body"></tbody>
@@ -101,17 +101,17 @@
                 <div class="chart-box">
                   <h3>By Category</h3>
                   <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
-                  <canvas id="category-chart"></canvas>
+                  <canvas id="category-chart" role="img" aria-label="Spend by category chart"></canvas>
                 </div>
                 <div class="chart-box">
                   <h3>Daily Trend</h3>
                   <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
-                  <canvas id="trend-chart"></canvas>
+                  <canvas id="trend-chart" role="img" aria-label="Daily spending trend chart"></canvas>
                 </div>
                 <div class="chart-box">
                   <h3>Top Merchants</h3>
                   <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
-                  <canvas id="merchant-chart"></canvas>
+                  <canvas id="merchant-chart" role="img" aria-label="Top merchants chart"></canvas>
                 </div>
               </div>
             </section>
@@ -120,15 +120,15 @@
           <div class="right-column">
             <section id="upload" aria-labelledby="upload-title">
               <h2 id="upload-title">Upload Bills</h2>
-              <div id="drop-zone" class="drop-zone" tabindex="0">
+              <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Choose or drop bill files" aria-describedby="upload-help">
                 <strong>Come see where you lost money</strong>
                 <span>Drop bills here or choose files</span>
                 <button id="file-picker-button" type="button">Choose files</button>
                 <input id="file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" hidden />
-                <small>PDF, JPEG, PNG, WEBP, HEIC. Max 10 MB each.</small>
+                <small id="upload-help">PDF, JPEG, PNG, WEBP, HEIC. Max 10 MB each.</small>
               </div>
-              <div id="preview-strip" class="preview-strip"></div>
-              <div id="upload-status" class="status-line" role="status"></div>
+              <div id="preview-strip" class="preview-strip" aria-live="polite"></div>
+              <div id="upload-status" class="status-line" role="status" aria-live="polite" aria-atomic="true"></div>
               <div id="extraction-preview" class="extraction-preview" hidden></div>
             </section>
           </div>
@@ -138,7 +138,7 @@
       <section id="nova" class="nova-panel" aria-labelledby="nova-title">
         <div class="nova-panel-header">
           <h2 id="nova-title">Nova</h2>
-          <div class="chat-connection" aria-live="polite">
+          <div class="chat-connection" role="status" aria-live="polite" aria-atomic="true">
             <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
             <span id="chat-status-text">Idle</span>
             <button id="chat-retry-button" type="button" hidden>Retry</button>
@@ -151,16 +151,16 @@
             <span></span>
             <span></span>
           </div>
-          <div id="chat-bubbles" class="chat-bubbles" aria-live="polite"></div>
-          <div id="chat-typing" class="typing-indicator" hidden aria-live="polite">
+          <div id="chat-bubbles" class="chat-bubbles" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Nova conversation"></div>
+          <div id="chat-typing" class="typing-indicator" hidden role="status" aria-live="polite">
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             Nova is typing
           </div>
           <form id="chat-form" class="chat-form">
-            <input id="chat-input" type="text" placeholder="Where do I invest?" autocomplete="off" />
-            <button id="chat-stop-button" type="button" hidden>Stop</button>
+            <input id="chat-input" type="text" placeholder="Where do I invest?" autocomplete="off" aria-label="Message Nova" />
+            <button id="chat-stop-button" type="button" hidden aria-label="Stop Nova response">Stop</button>
             <button type="submit">Send</button>
           </form>
           <p class="disclaimer">Nova does not provide certified financial advice.</p>

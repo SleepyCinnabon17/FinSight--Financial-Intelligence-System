@@ -109,7 +109,9 @@ export function createTransactionRow(transaction, status, onSelect) {
   ]
     .filter(Boolean)
     .join(' ');
+  row.tabIndex = 0;
   row.setAttribute('aria-expanded', 'false');
+  row.setAttribute('aria-label', `View details for ${transaction.merchant || 'Unknown'} transaction`);
   appendCell(row, transaction.date || '', 'date-cell');
   appendCell(row, transaction.merchant || 'Unknown', 'merchant-cell');
   appendCell(row, transaction.category || 'Uncategorized', 'category-cell');
@@ -118,6 +120,7 @@ export function createTransactionRow(transaction, status, onSelect) {
   statusCell.className = 'status-cell';
   const badge = document.createElement('span');
   badge.className = `status-badge ${status}`;
+  badge.setAttribute('aria-label', `Transaction status ${status}`);
   const icon = document.createElement('span');
   icon.className = 'status-icon';
   icon.setAttribute('aria-hidden', 'true');
@@ -128,6 +131,11 @@ export function createTransactionRow(transaction, status, onSelect) {
   statusCell.appendChild(badge);
   row.appendChild(statusCell);
   row.addEventListener('click', () => onSelect(transaction, row));
+  row.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    onSelect(transaction, row);
+  });
   return row;
 }
 
@@ -197,6 +205,8 @@ export function renderExtractionPreview(container, result, handlers) {
     const label = document.createElement('span');
     label.textContent = field.replace('_', ' ');
     const input = document.createElement('input');
+    const inputId = `extraction-${field}`;
+    input.id = inputId;
     input.name = field;
     input.value = info.value ?? '';
     const confidence = document.createElement('span');
@@ -205,7 +215,10 @@ export function renderExtractionPreview(container, result, handlers) {
     const error = document.createElement('small');
     error.className = 'field-error';
     error.dataset.fieldError = field;
+    error.id = `${inputId}-error`;
     error.hidden = true;
+    input.setAttribute('aria-describedby', error.id);
+    input.setAttribute('aria-invalid', 'false');
     row.append(label, input, confidence, error);
     container.appendChild(row);
   }
