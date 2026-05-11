@@ -54,6 +54,7 @@ def convert_all() -> int:
     for image in IMAGE_DIR.glob("*.png"):
         image.unlink()
 
+    force_fallback = os.getenv("FINSIGHT_FORCE_FALLBACK_IMAGES", "").strip().lower() in {"1", "true", "yes", "on"}
     records_by_file: dict[str, dict[str, object]] = {}
     if GROUND_TRUTH_PATH.exists():
         records = json.loads(GROUND_TRUTH_PATH.read_text(encoding="utf-8"))
@@ -67,7 +68,7 @@ def convert_all() -> int:
 
     for pdf_path in sorted(PDF_DIR.glob("*.pdf")):
         output = IMAGE_DIR / f"{pdf_path.stem}.png"
-        if convert_from_path is not None:
+        if convert_from_path is not None and not force_fallback:
             try:
                 pages = convert_from_path(str(pdf_path), dpi=150, first_page=1, last_page=1)
                 if pages:

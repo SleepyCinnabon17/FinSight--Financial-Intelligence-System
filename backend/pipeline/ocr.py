@@ -41,6 +41,9 @@ def _bbox_from_points(points: list[list[float]]) -> tuple[float, float, float, f
 
 
 def run_paddleocr(image: Image.Image) -> list[OCRBlock]:
+    metadata_blocks = _metadata_blocks(image)
+    if metadata_blocks:
+        return metadata_blocks
     try:
         ocr_engine = _get_paddleocr()
         result = ocr_engine.ocr(np.array(image.convert("RGB")), cls=True)

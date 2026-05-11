@@ -37,7 +37,7 @@ jobs:
       - name: Generate synthetic fixtures
         run: |
           python synthetic/generate_bills.py
-          python synthetic/pdf_to_images.py
+          FINSIGHT_FORCE_FALLBACK_IMAGES=1 python synthetic/pdf_to_images.py
           python synthetic/make_messy.py
 
       - name: Backend tests
