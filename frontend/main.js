@@ -43,8 +43,12 @@ export function toggleDetails(transaction, row) {
   const next = row.nextElementSibling;
   if (next?.classList.contains('details-row')) {
     next.remove();
+    row.classList.remove('is-expanded');
+    row.setAttribute('aria-expanded', 'false');
     return;
   }
+  row.classList.add('is-expanded');
+  row.setAttribute('aria-expanded', 'true');
   row.after(
     createTransactionDetailsRow(transaction, {
       onConfirmDuplicate: handleConfirmDuplicate,

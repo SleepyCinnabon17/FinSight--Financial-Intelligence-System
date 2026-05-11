@@ -63,15 +63,29 @@ export function renderPreviews(container, files) {
 
 export function createTransactionRow(transaction, status, onSelect) {
   const row = document.createElement('tr');
-  row.className = `${status === 'anomaly' ? 'anomaly-row' : ''} ${status === 'duplicate' ? 'duplicate-row' : ''}`;
-  appendCell(row, transaction.date || '');
-  appendCell(row, transaction.merchant || 'Unknown');
-  appendCell(row, transaction.category || 'Uncategorized');
-  appendCell(row, formatCurrency(transaction.total));
+  row.className = [
+    'transaction-row',
+    status === 'anomaly' ? 'anomaly-row' : '',
+    status === 'duplicate' ? 'duplicate-row' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+  row.setAttribute('aria-expanded', 'false');
+  appendCell(row, transaction.date || '', 'date-cell');
+  appendCell(row, transaction.merchant || 'Unknown', 'merchant-cell');
+  appendCell(row, transaction.category || 'Uncategorized', 'category-cell');
+  appendCell(row, formatCurrency(transaction.total), 'amount-cell');
   const statusCell = document.createElement('td');
+  statusCell.className = 'status-cell';
   const badge = document.createElement('span');
   badge.className = `status-badge ${status}`;
-  badge.textContent = status;
+  const icon = document.createElement('span');
+  icon.className = 'status-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  const label = document.createElement('span');
+  label.className = 'status-label';
+  label.textContent = status;
+  badge.append(icon, label);
   statusCell.appendChild(badge);
   row.appendChild(statusCell);
   row.addEventListener('click', () => onSelect(transaction, row));
@@ -81,20 +95,43 @@ export function createTransactionRow(transaction, status, onSelect) {
 export function createTransactionDetailsRow(transaction, handlers) {
   const details = document.createElement('tr');
   details.className = 'details-row';
-  const items = (transaction.items || []).map((item) => `${item.name}: ${formatCurrency(item.total_price)}`).join(', ');
   const cell = document.createElement('td');
   cell.colSpan = 5;
-  const billLine = document.createElement('div');
-  appendStrongText(billLine, 'Bill:');
-  billLine.appendChild(document.createTextNode(` ${transaction.bill_number || 'N/A'} | `));
-  appendStrongText(billLine, 'Payment:');
-  billLine.appendChild(document.createTextNode(` ${transaction.payment_method || 'N/A'}`));
-  const itemsLine = document.createElement('div');
-  appendStrongText(itemsLine, 'Items:');
-  itemsLine.appendChild(document.createTextNode(` ${items || 'No line items'}`));
+  const panel = document.createElement('div');
+  panel.className = 'details-panel';
+  const meta = document.createElement('div');
+  meta.className = 'details-meta';
+  const billLine = document.createElement('article');
+  billLine.className = 'detail-block';
+  appendStrongText(billLine, 'Bill');
+  billLine.appendChild(document.createTextNode(transaction.bill_number || 'N/A'));
+  const paymentLine = document.createElement('article');
+  paymentLine.className = 'detail-block';
+  appendStrongText(paymentLine, 'Payment');
+  paymentLine.appendChild(document.createTextNode(transaction.payment_method || 'N/A'));
+  meta.append(billLine, paymentLine);
+  const itemsBlock = document.createElement('article');
+  itemsBlock.className = 'detail-block detail-block-wide';
+  appendStrongText(itemsBlock, 'Items');
+  const itemsList = document.createElement('ul');
+  itemsList.className = 'details-items';
+  const items = transaction.items || [];
+  if (items.length) {
+    for (const item of items) {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${item.name}: ${formatCurrency(item.total_price)}`;
+      itemsList.appendChild(listItem);
+    }
+  } else {
+    const listItem = document.createElement('li');
+    listItem.textContent = 'No line items';
+    itemsList.appendChild(listItem);
+  }
+  itemsBlock.appendChild(itemsList);
   const actions = document.createElement('div');
-  actions.className = 'row-actions';
-  cell.append(billLine, itemsLine, actions);
+  actions.className = 'row-actions inline-actions';
+  panel.append(meta, itemsBlock, actions);
+  cell.appendChild(panel);
   details.appendChild(cell);
   if (transaction.is_duplicate) {
     actions.appendChild(actionButton('Confirm duplicate', () => handlers.onConfirmDuplicate(transaction.id, false)));
@@ -145,8 +182,9 @@ export function clearExtractionPreview(container) {
   container.replaceChildren();
 }
 
-function appendCell(row, value) {
+function appendCell(row, value, className = '') {
   const cell = document.createElement('td');
+  if (className) cell.className = className;
   cell.textContent = value;
   row.appendChild(cell);
 }
@@ -155,6 +193,7 @@ function appendStrongText(container, value) {
   const strong = document.createElement('strong');
   strong.textContent = value;
   container.appendChild(strong);
+  container.appendChild(document.createTextNode(' '));
 }
 
 window.FinSightUI = {
