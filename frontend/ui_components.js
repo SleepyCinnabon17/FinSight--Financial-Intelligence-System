@@ -3,6 +3,13 @@ export function formatCurrency(value) {
   return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 }
 
+export function formatFileSize(bytes) {
+  const size = Number(bytes || 0);
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function confidenceClass(confidence) {
   if (confidence >= 0.8) return 'confidence-high';
   if (confidence >= 0.4) return 'confidence-mid';
@@ -32,12 +39,25 @@ export function appendBubble(container, role, text = '') {
 export function renderPreviews(container, files) {
   container.replaceChildren();
   for (const file of files) {
-    if (!file.type.startsWith('image/')) continue;
-    const img = document.createElement('img');
-    img.alt = file.name;
-    img.src = URL.createObjectURL(file);
-    img.onload = () => URL.revokeObjectURL(img.src);
-    container.appendChild(img);
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.alt = file.name;
+      img.src = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      container.appendChild(img);
+      continue;
+    }
+
+    const chip = document.createElement('div');
+    chip.className = 'file-chip';
+    const name = document.createElement('span');
+    name.className = 'file-chip-name';
+    name.textContent = file.name;
+    const meta = document.createElement('small');
+    meta.className = 'file-chip-meta';
+    meta.textContent = `${file.type === 'application/pdf' ? 'PDF' : 'File'} - ${formatFileSize(file.size)}`;
+    chip.append(name, meta);
+    container.appendChild(chip);
   }
 }
 
@@ -139,6 +159,7 @@ function appendStrongText(container, value) {
 
 window.FinSightUI = {
   formatCurrency,
+  formatFileSize,
   confidenceClass,
   actionButton,
   appendBubble,

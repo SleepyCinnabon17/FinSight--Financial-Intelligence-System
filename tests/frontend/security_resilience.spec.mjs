@@ -127,6 +127,98 @@ test('blocks invalid confirmation edits with inline field errors', async ({ page
   expect(confirmRequests).toBe(0);
 });
 
+test('shows upload previews, progress states, and confirm/discard toasts', async ({ page }) => {
+  await mockChart(page);
+  await mockDashboard(page);
+
+  let uploadIndex = 0;
+  let confirmRequests = 0;
+  let discardRequests = 0;
+
+  await page.route('**/api/v1/upload', async (route) => {
+    uploadIndex += 1;
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: [{ file_name: 'bill.pdf', upload_id: `upload-${uploadIndex}`, extraction: extractionPayload() }],
+        error: null
+      })
+    });
+  });
+  await page.route('**/api/v1/transactions/confirm', async (route) => {
+    confirmRequests += 1;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data: {}, error: null })
+    });
+  });
+  await page.route('**/api/v1/transactions/discard', async (route) => {
+    discardRequests += 1;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data: {}, error: null })
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles([
+    {
+      name: 'bill.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('fake image bytes')
+    },
+    {
+      name: 'statement.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4 fake pdf bytes')
+    }
+  ]);
+
+  await expect(page.locator('#preview-strip img')).toHaveCount(1);
+  await expect(page.locator('#preview-strip')).toContainText('statement.pdf');
+  await expect(page.locator('#upload-status')).toContainText('Processing OCR');
+  await expect(page.locator('#upload-status')).toContainText('Extraction ready for review.');
+
+  await page.locator('#extraction-preview button', { hasText: 'Confirm' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Transaction confirmed.');
+  expect(confirmRequests).toBe(1);
+
+  await page.locator('#file-input').setInputFiles({
+    name: 'statement.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4 second fake pdf bytes')
+  });
+  await expect(page.locator('#extraction-preview')).toBeVisible();
+  await page.locator('#extraction-preview button', { hasText: 'Discard' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Upload discarded.');
+  expect(discardRequests).toBe(1);
+});
+
+test('shows a non-blocking upload toast on network failure', async ({ page }) => {
+  await mockChart(page);
+  await mockDashboard(page);
+
+  await page.route('**/api/v1/upload', async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: false, data: null, error: { message: 'OCR service unavailable' } })
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#file-input').setInputFiles({
+    name: 'bill.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('fake image bytes')
+  });
+
+  await expect(page.locator('#upload-status')).toContainText('OCR service unavailable');
+  await expect(page.locator('#toast-container .toast.error')).toContainText('OCR service unavailable');
+});
+
 test('shows a degraded chart state when chart rendering fails', async ({ page }) => {
   await mockChart(
     page,

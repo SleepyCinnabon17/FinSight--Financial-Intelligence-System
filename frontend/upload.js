@@ -7,8 +7,18 @@ const els = {
   dropZone: document.getElementById('drop-zone'),
   previewStrip: document.getElementById('preview-strip'),
   uploadStatus: document.getElementById('upload-status'),
-  extractionPreview: document.getElementById('extraction-preview')
+  extractionPreview: document.getElementById('extraction-preview'),
+  toastContainer: document.getElementById('toast-container')
 };
+
+const UPLOAD_STATUS_CLASSES = [
+  'upload-state-uploading',
+  'upload-state-processing',
+  'upload-state-review',
+  'upload-state-confirmed',
+  'upload-state-discarded',
+  'upload-state-error'
+];
 
 function state() {
   return window.FinSightState;
@@ -18,22 +28,56 @@ function requestDashboardRefresh() {
   document.dispatchEvent(new CustomEvent('finsight:refresh-dashboard'));
 }
 
+function setUploadState(status, message) {
+  els.uploadStatus.classList.remove(...UPLOAD_STATUS_CLASSES);
+  els.dropZone.classList.remove('is-processing');
+  if (status) {
+    els.uploadStatus.classList.add(`upload-state-${status}`);
+  }
+  if (status === 'processing') {
+    els.dropZone.classList.add('is-processing');
+  }
+  els.uploadStatus.textContent = message;
+}
+
+function showToast(message, type = 'success') {
+  if (!els.toastContainer) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  toast.textContent = message;
+  els.toastContainer.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 4500);
+}
+
 export async function uploadFiles(files) {
   if (!files.length) return;
+  let processingTimer = null;
   try {
     renderPreviews(els.previewStrip, files);
-    els.uploadStatus.textContent = 'Uploading...';
+    setUploadState('uploading', 'Uploading bills...');
     const formData = new FormData();
     for (const file of files) formData.append('files', file);
+    processingTimer = window.setTimeout(() => {
+      setUploadState('processing', 'Processing OCR...');
+    }, 120);
     const results = await uploadBills(formData);
+    if (processingTimer) window.clearTimeout(processingTimer);
+    setUploadState('processing', 'Processing OCR...');
+    if (!results[0]) {
+      throw new Error('No extraction result was returned.');
+    }
     state().setCurrentExtraction(results[0]);
     renderExtractionPreview(els.extractionPreview, results[0], {
       onConfirm: confirmCurrentExtraction,
       onDiscard: discardCurrentExtraction
     });
-    els.uploadStatus.textContent = 'Extraction ready.';
+    setUploadState('review', 'Extraction ready for review.');
   } catch (error) {
-    els.uploadStatus.textContent = error.message;
+    if (processingTimer) window.clearTimeout(processingTimer);
+    const message = error.message || 'Upload failed.';
+    setUploadState('error', message);
+    showToast(message, 'error');
   }
 }
 
@@ -45,15 +89,19 @@ export async function confirmCurrentExtraction() {
     const errors = validateEdits(edits);
     showFieldErrors(errors);
     if (Object.keys(errors).length) {
-      els.uploadStatus.textContent = 'Fix highlighted fields before confirming.';
+      setUploadState('review', 'Fix highlighted fields before confirming.');
       return;
     }
     await confirmTransaction(currentExtraction.upload_id, currentExtraction.extraction, edits);
     state().setCurrentExtraction(null);
     clearExtractionPreview(els.extractionPreview);
+    setUploadState('confirmed', 'Transaction confirmed.');
+    showToast('Transaction confirmed.', 'success');
     requestDashboardRefresh();
   } catch (error) {
-    els.uploadStatus.textContent = error.message || 'Could not confirm this extraction.';
+    const message = error.message || 'Could not confirm this extraction.';
+    setUploadState('error', message);
+    showToast(message, 'error');
   }
 }
 
@@ -62,8 +110,12 @@ export async function discardCurrentExtraction() {
     await discardTransaction(state().getCurrentExtraction()?.upload_id || null);
     state().setCurrentExtraction(null);
     clearExtractionPreview(els.extractionPreview);
+    setUploadState('discarded', 'Upload discarded.');
+    showToast('Upload discarded.', 'warning');
   } catch (error) {
-    els.uploadStatus.textContent = error.message || 'Could not discard this extraction.';
+    const message = error.message || 'Could not discard this extraction.';
+    setUploadState('error', message);
+    showToast(message, 'error');
   }
 }
 
