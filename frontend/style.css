@@ -30,6 +30,10 @@ html[data-theme="dark"] {
   --text-md: 16px;
   --text-lg: 20px;
   --text-xl: 28px;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+  --letter-spacing-normal: 0;
   --font-weight-normal: 400;
   --font-weight-medium: 600;
   --font-weight-bold: 700;
@@ -44,6 +48,13 @@ html[data-theme="dark"] {
   --nova-panel-width: 360px;
   --nova-panel-collapsed-width: 176px;
   --kpi-min-width: 160px;
+  --chart-max-height: 220px;
+  --drop-zone-min-height: 170px;
+  --preview-size: 72px;
+  --field-label-width: 120px;
+  --field-confidence-width: 90px;
+  --chat-min-height: 280px;
+  --chat-max-height: 460px;
   --z-sidebar: 20;
   --z-nova: 30;
 }
@@ -77,6 +88,10 @@ html[data-theme="light"] {
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
   background: var(--background);
   color: var(--text);
 }
@@ -84,6 +99,8 @@ body {
 button,
 input {
   font: inherit;
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 button {
@@ -122,11 +139,15 @@ button {
   border-radius: var(--radius-md);
   color: var(--accent);
   font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .sidebar h1 {
   margin: 0 0 var(--space-sm);
   font-size: var(--text-xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .sidebar-nav {
@@ -138,6 +159,9 @@ button {
 .sidebar-nav a {
   color: var(--text);
   text-decoration: none;
+  font-size: var(--text-md);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
   padding: var(--space-md) calc(var(--space-md) + var(--space-xs));
   border-radius: var(--radius-sm);
 }
@@ -161,6 +185,8 @@ button {
 .app-header h2 {
   margin: 0 0 var(--space-sm);
   font-size: var(--text-xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .sidebar-toggle {
@@ -173,6 +199,9 @@ button {
 .status-line,
 small {
   color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .tagline,
@@ -203,10 +232,16 @@ small {
 
 .kpi-card span {
   color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .kpi-card strong {
   color: var(--text);
+  font-size: var(--text-lg);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .left-column,
@@ -260,6 +295,16 @@ section {
 h2,
 h3 {
   margin: 0 0 var(--space-lg);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+h2 {
+  font-size: var(--text-lg);
+}
+
+h3 {
+  font-size: var(--text-md);
 }
 
 .table-wrap {
@@ -277,11 +322,15 @@ td {
   border-bottom: var(--border-width-sm) solid var(--border);
   text-align: left;
   vertical-align: top;
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 th {
   cursor: pointer;
   white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .details-row td {
@@ -303,6 +352,9 @@ th {
   border: var(--border-width-sm) solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .status-badge.anomaly {
@@ -332,7 +384,7 @@ th {
 
 .chart-box canvas {
   width: 100%;
-  max-height: 220px;
+  max-height: var(--chart-max-height);
 }
 
 .drop-zone {
@@ -340,7 +392,7 @@ th {
   gap: calc(var(--space-md) + var(--space-xs));
   align-items: center;
   justify-items: start;
-  min-height: 170px;
+  min-height: var(--drop-zone-min-height);
   padding: var(--space-xl);
   border: var(--border-width-md) dashed var(--border);
   border-radius: var(--radius-md);
@@ -359,8 +411,8 @@ th {
 }
 
 .preview-strip img {
-  width: 72px;
-  height: 72px;
+  width: var(--preview-size);
+  height: var(--preview-size);
   object-fit: cover;
   border: var(--border-width-sm) solid var(--border);
   border-radius: var(--radius-sm);
@@ -374,9 +426,11 @@ th {
 
 .field-row {
   display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) 90px;
+  grid-template-columns: var(--field-label-width) minmax(0, 1fr) var(--field-confidence-width);
   gap: var(--space-md);
   align-items: center;
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .field-row input {
@@ -412,8 +466,8 @@ th {
   display: flex;
   flex-direction: column;
   gap: calc(var(--space-md) + var(--space-xs));
-  min-height: 280px;
-  max-height: 460px;
+  min-height: var(--chat-min-height);
+  max-height: var(--chat-max-height);
   overflow-y: auto;
   padding: var(--space-md);
   border: var(--border-width-sm) solid var(--border);
@@ -428,6 +482,8 @@ th {
   border-radius: var(--radius-md);
   background: var(--surface);
   white-space: pre-wrap;
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .bubble.user {
