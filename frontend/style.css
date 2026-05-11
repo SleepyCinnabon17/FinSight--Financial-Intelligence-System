@@ -55,6 +55,8 @@ html[data-theme="dark"] {
   --field-confidence-width: 90px;
   --chat-min-height: 280px;
   --chat-max-height: 460px;
+  --skeleton-line-height: 12px;
+  --empty-state-visual-size: 48px;
   --z-sidebar: 20;
   --z-nova: 30;
 }
@@ -244,6 +246,17 @@ small {
   letter-spacing: var(--letter-spacing-normal);
 }
 
+.skeleton-loader {
+  display: none;
+}
+
+.app-shell.is-loading .skeleton-loader {
+  display: block;
+  min-height: var(--skeleton-line-height);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
 .left-column,
 .right-column {
   min-width: 0;
@@ -309,6 +322,25 @@ h3 {
 
 .table-wrap {
   overflow-x: auto;
+}
+
+.table-skeleton {
+  display: none;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+}
+
+.app-shell.is-loading .table-skeleton,
+.app-shell.is-loading .chat-skeleton {
+  display: grid;
+}
+
+.table-skeleton span,
+.chat-skeleton span {
+  display: block;
+  min-height: var(--skeleton-line-height);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
 }
 
 table {
@@ -380,6 +412,10 @@ th {
 
 .chart-box {
   min-width: 0;
+}
+
+.chart-skeleton {
+  min-height: var(--chart-max-height);
 }
 
 .chart-box canvas {
@@ -460,6 +496,51 @@ th {
 
 .field-error {
   grid-column: 2 / -1;
+}
+
+.transaction-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-md);
+  padding: calc(var(--space-xl) * 2) var(--space-xl);
+  color: var(--muted);
+  text-align: center;
+}
+
+.transaction-empty-state[hidden] {
+  display: none;
+}
+
+.transaction-empty-state strong {
+  color: var(--text);
+  font-size: var(--text-lg);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.transaction-empty-state p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.empty-state-illustration {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: center;
+  width: var(--empty-state-visual-size);
+  height: var(--empty-state-visual-size);
+  padding: var(--space-md);
+  border: var(--border-width-sm) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.empty-state-illustration span {
+  display: block;
+  height: var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
 }
 
 .chat-bubbles {

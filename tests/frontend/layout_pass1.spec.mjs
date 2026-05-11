@@ -68,6 +68,18 @@ test('collapses sidebar behind hamburger at mobile width', async ({ page }) => {
   await expect(page.locator('.sidebar')).toHaveClass(/is-open/);
 });
 
+test('keeps the pass 1 shell usable at tablet width', async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await mockDashboard(page);
+
+  await page.goto('/');
+
+  await expect(page.locator('.app-shell')).toBeVisible();
+  await expect(page.locator('.sidebar')).toBeVisible();
+  await expect(page.locator('.kpi-card')).toHaveCount(4);
+  await expect(page.locator('#nova.nova-panel')).toBeVisible();
+});
+
 test('toggles light and dark theme with localStorage persistence', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await mockDashboard(page);
@@ -81,4 +93,18 @@ test('toggles light and dark theme with localStorage persistence', async ({ page
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
+
+test('includes skeleton shells and shows transaction empty state with no data', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await mockDashboard(page);
+
+  await page.goto('/');
+
+  await expect(page.locator('.kpi-card .skeleton-loader')).toHaveCount(4);
+  await expect(page.locator('.table-skeleton.skeleton-loader')).toHaveCount(1);
+  await expect(page.locator('.chart-skeleton.skeleton-loader')).toHaveCount(3);
+  await expect(page.locator('.chat-skeleton.skeleton-loader')).toHaveCount(1);
+  await expect(page.locator('.transaction-empty-state')).toBeVisible();
+  await expect(page.locator('.transaction-empty-state')).toContainText('No transactions yet.');
 });

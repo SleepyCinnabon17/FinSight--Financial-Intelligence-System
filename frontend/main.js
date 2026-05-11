@@ -4,6 +4,7 @@ import { createTransactionDetailsRow, createTransactionRow } from './ui_componen
 const els = {
   uploadStatus: document.getElementById('upload-status'),
   transactionBody: document.getElementById('transaction-body'),
+  transactionEmpty: document.querySelector('.transaction-empty-state'),
   refreshData: document.getElementById('refresh-data'),
   sidebar: document.querySelector('.sidebar'),
   sidebarToggle: document.getElementById('sidebar-toggle'),
@@ -28,7 +29,11 @@ export async function loadDashboard() {
 
 export function renderTransactions() {
   els.transactionBody.replaceChildren();
-  for (const transaction of state().sortedTransactions()) {
+  const transactions = state().sortedTransactions();
+  if (els.transactionEmpty) {
+    els.transactionEmpty.hidden = transactions.length > 0;
+  }
+  for (const transaction of transactions) {
     const status = state().transactionStatus(transaction);
     els.transactionBody.appendChild(createTransactionRow(transaction, status, toggleDetails));
   }
