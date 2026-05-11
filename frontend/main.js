@@ -4,7 +4,11 @@ import { createTransactionDetailsRow, createTransactionRow } from './ui_componen
 const els = {
   uploadStatus: document.getElementById('upload-status'),
   transactionBody: document.getElementById('transaction-body'),
-  refreshData: document.getElementById('refresh-data')
+  refreshData: document.getElementById('refresh-data'),
+  sidebar: document.querySelector('.sidebar'),
+  sidebarToggle: document.getElementById('sidebar-toggle'),
+  novaPanel: document.getElementById('nova'),
+  novaToggle: document.querySelector('.nova-toggle')
 };
 
 function state() {
@@ -63,9 +67,30 @@ export function setupTransactions() {
 }
 
 setupTransactions();
+setupLayoutShell();
 
 loadDashboard().catch((error) => {
   els.uploadStatus.textContent = error.message;
 });
 
 window.FinSightMain = { loadDashboard, renderTransactions, setupTransactions };
+
+function setupLayoutShell() {
+  els.sidebarToggle?.addEventListener('click', () => {
+    const isOpen = els.sidebar?.classList.toggle('is-open') || false;
+    els.sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  els.novaToggle?.addEventListener('click', () => {
+    const isCollapsed = els.novaPanel?.classList.toggle('is-collapsed') || false;
+    els.novaToggle.setAttribute('aria-expanded', String(!isCollapsed));
+    els.novaToggle.textContent = isCollapsed ? 'Open' : 'Minimize';
+  });
+
+  document.querySelectorAll('.sidebar-nav a').forEach((link) => {
+    link.addEventListener('click', () => {
+      els.sidebar?.classList.remove('is-open');
+      els.sidebarToggle?.setAttribute('aria-expanded', 'false');
+    });
+  });
+}

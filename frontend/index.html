@@ -8,82 +8,126 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <header class="app-header">
-      <div>
-        <h1>FinSight</h1>
-        <p class="tagline">Track bills, spot leaks, and plan smarter.</p>
-        <p class="subheadline">Upload receipts, confirm transactions, and ask Nova for spending context.</p>
-      </div>
-    </header>
+    <div class="app-shell">
+      <aside id="primary-sidebar" class="sidebar" aria-label="Primary navigation">
+        <div class="sidebar-brand">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <div>
+            <h1>FinSight</h1>
+            <p class="tagline">Track bills, spot leaks, and plan smarter.</p>
+          </div>
+        </div>
+        <nav class="sidebar-nav" aria-label="Main sections">
+          <a href="#dashboard">Dashboard</a>
+          <a href="#transactions">Transactions</a>
+          <a href="#upload">Upload</a>
+          <a href="#nova">Nova Chat</a>
+        </nav>
+      </aside>
 
-    <main class="app-layout">
-      <div class="left-column">
-        <section id="transactions" aria-labelledby="transactions-title">
-          <div class="section-header">
-            <h2 id="transactions-title">Transactions</h2>
-            <button id="refresh-data" type="button">Refresh</button>
+      <main id="dashboard" class="main-content">
+        <header class="app-header">
+          <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="primary-sidebar" aria-expanded="false">Menu</button>
+          <div>
+            <h2>Dashboard</h2>
+            <p class="subheadline">Upload receipts, confirm transactions, and ask Nova for spending context.</p>
           </div>
-          <div class="table-wrap">
-            <table id="transaction-table">
-              <thead>
-                <tr>
-                  <th data-sort="date">Date</th>
-                  <th data-sort="merchant">Merchant</th>
-                  <th data-sort="category">Category</th>
-                  <th data-sort="total">Amount</th>
-                  <th data-sort="status">Status</th>
-                </tr>
-              </thead>
-              <tbody id="transaction-body"></tbody>
-            </table>
-          </div>
+        </header>
+
+        <section class="kpi-grid" aria-label="Financial summary">
+          <article class="kpi-card">
+            <span>Total Spend</span>
+            <strong>--</strong>
+          </article>
+          <article class="kpi-card">
+            <span>This Month</span>
+            <strong>--</strong>
+          </article>
+          <article class="kpi-card">
+            <span>Anomalies Flagged</span>
+            <strong>--</strong>
+          </article>
+          <article class="kpi-card">
+            <span>Bills Processed</span>
+            <strong>--</strong>
+          </article>
         </section>
 
-        <section id="charts" aria-labelledby="charts-title">
-          <h2 id="charts-title">Analysis</h2>
-          <div class="chart-grid">
-            <div class="chart-box">
-              <h3>By Category</h3>
-              <canvas id="category-chart"></canvas>
-            </div>
-            <div class="chart-box">
-              <h3>Daily Trend</h3>
-              <canvas id="trend-chart"></canvas>
-            </div>
-            <div class="chart-box">
-              <h3>Top Merchants</h3>
-              <canvas id="merchant-chart"></canvas>
-            </div>
-          </div>
-        </section>
-      </div>
+        <div class="app-layout">
+          <div class="left-column">
+            <section id="transactions" aria-labelledby="transactions-title">
+              <div class="section-header">
+                <h2 id="transactions-title">Transactions</h2>
+                <button id="refresh-data" type="button">Refresh</button>
+              </div>
+              <div class="table-wrap">
+                <table id="transaction-table">
+                  <thead>
+                    <tr>
+                      <th data-sort="date">Date</th>
+                      <th data-sort="merchant">Merchant</th>
+                      <th data-sort="category">Category</th>
+                      <th data-sort="total">Amount</th>
+                      <th data-sort="status">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transaction-body"></tbody>
+                </table>
+              </div>
+            </section>
 
-      <div class="right-column">
-        <section id="upload" aria-labelledby="upload-title">
-          <h2 id="upload-title">Upload Bills</h2>
-          <div id="drop-zone" class="drop-zone" tabindex="0">
-            <strong>Come see where you lost money</strong>
-            <span>Drop bills here or choose files</span>
-            <button id="file-picker-button" type="button">Choose files</button>
-            <input id="file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" hidden />
-            <small>PDF, JPEG, PNG, WEBP, HEIC. Max 10 MB each.</small>
+            <section id="charts" aria-labelledby="charts-title">
+              <h2 id="charts-title">Analysis</h2>
+              <div class="chart-grid">
+                <div class="chart-box">
+                  <h3>By Category</h3>
+                  <canvas id="category-chart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <h3>Daily Trend</h3>
+                  <canvas id="trend-chart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <h3>Top Merchants</h3>
+                  <canvas id="merchant-chart"></canvas>
+                </div>
+              </div>
+            </section>
           </div>
-          <div id="preview-strip" class="preview-strip"></div>
-          <div id="upload-status" class="status-line" role="status"></div>
-          <div id="extraction-preview" class="extraction-preview" hidden></div>
-        </section>
 
-        <section id="nova" aria-labelledby="nova-title">
+          <div class="right-column">
+            <section id="upload" aria-labelledby="upload-title">
+              <h2 id="upload-title">Upload Bills</h2>
+              <div id="drop-zone" class="drop-zone" tabindex="0">
+                <strong>Come see where you lost money</strong>
+                <span>Drop bills here or choose files</span>
+                <button id="file-picker-button" type="button">Choose files</button>
+                <input id="file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" hidden />
+                <small>PDF, JPEG, PNG, WEBP, HEIC. Max 10 MB each.</small>
+              </div>
+              <div id="preview-strip" class="preview-strip"></div>
+              <div id="upload-status" class="status-line" role="status"></div>
+              <div id="extraction-preview" class="extraction-preview" hidden></div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <section id="nova" class="nova-panel" aria-labelledby="nova-title">
+        <div class="nova-panel-header">
           <h2 id="nova-title">Nova</h2>
+          <button class="nova-toggle" type="button" aria-expanded="true">Minimize</button>
+        </div>
+        <div class="nova-panel-body">
           <div id="chat-bubbles" class="chat-bubbles" aria-live="polite"></div>
           <form id="chat-form" class="chat-form">
             <input id="chat-input" type="text" placeholder="Where do I invest?" autocomplete="off" />
             <button type="submit">Send</button>
           </form>
           <p class="disclaimer">Nova does not provide certified financial advice.</p>
-        </section>
-      </div>
-    </main>
+        </div>
+      </section>
+    </div>
 
     <script type="module" src="/state.js"></script>
     <script type="module" src="/charts.js"></script>
