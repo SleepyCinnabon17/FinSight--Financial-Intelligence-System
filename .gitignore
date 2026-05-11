@@ -1,0 +1,12 @@
+.env
+backend/data/transactions.json
+backend/data/duplicate_log.json
+backend/data/market_cache.json
+backend/data/news_cache.json
+synthetic/synthetic_bills/
+synthetic/synthetic_bill_images/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.log

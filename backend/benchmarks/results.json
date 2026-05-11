@@ -1,0 +1,30 @@
+{
+  "field_accuracy": {
+    "merchant": 1.0,
+    "date": 1.0,
+    "total": 1.0,
+    "category": 1.0
+  },
+  "anomaly_detection_recall": 0.8,
+  "duplicate_detection_precision": 1.0,
+  "overall_extraction_f1": 1.0,
+  "counts": {
+    "evaluated_images": 47,
+    "canonical_bills": 37,
+    "pipeline_errors": 0
+  },
+  "targets": {
+    "field_accuracy_min": 0.7,
+    "anomaly_recall_min": 0.8,
+    "duplicate_precision_min": 0.95
+  },
+  "target_pass": {
+    "merchant": true,
+    "date": true,
+    "total": true,
+    "category": true,
+    "anomaly_detection_recall": true,
+    "duplicate_detection_precision": true
+  },
+  "errors": []
+}

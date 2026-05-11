@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "test": "python -m pytest && npm run test:frontend",
+    "test:backend": "python -m pytest",
+    "test:frontend": "playwright test --config tests/frontend/playwright.config.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}

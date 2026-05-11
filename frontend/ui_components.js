@@ -1,0 +1,150 @@
+export function formatCurrency(value) {
+  const amount = Number(value || 0);
+  return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+}
+
+export function confidenceClass(confidence) {
+  if (confidence >= 0.8) return 'confidence-high';
+  if (confidence >= 0.4) return 'confidence-mid';
+  return 'confidence-low';
+}
+
+export function actionButton(label, handler) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    handler();
+  });
+  return button;
+}
+
+export function appendBubble(container, role, text = '') {
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+  bubble.textContent = text;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+export function renderPreviews(container, files) {
+  container.replaceChildren();
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    const img = document.createElement('img');
+    img.alt = file.name;
+    img.src = URL.createObjectURL(file);
+    img.onload = () => URL.revokeObjectURL(img.src);
+    container.appendChild(img);
+  }
+}
+
+export function createTransactionRow(transaction, status, onSelect) {
+  const row = document.createElement('tr');
+  row.className = `${status === 'anomaly' ? 'anomaly-row' : ''} ${status === 'duplicate' ? 'duplicate-row' : ''}`;
+  appendCell(row, transaction.date || '');
+  appendCell(row, transaction.merchant || 'Unknown');
+  appendCell(row, transaction.category || 'Uncategorized');
+  appendCell(row, formatCurrency(transaction.total));
+  const statusCell = document.createElement('td');
+  const badge = document.createElement('span');
+  badge.className = `status-badge ${status}`;
+  badge.textContent = status;
+  statusCell.appendChild(badge);
+  row.appendChild(statusCell);
+  row.addEventListener('click', () => onSelect(transaction, row));
+  return row;
+}
+
+export function createTransactionDetailsRow(transaction, handlers) {
+  const details = document.createElement('tr');
+  details.className = 'details-row';
+  const items = (transaction.items || []).map((item) => `${item.name}: ${formatCurrency(item.total_price)}`).join(', ');
+  const cell = document.createElement('td');
+  cell.colSpan = 5;
+  const billLine = document.createElement('div');
+  appendStrongText(billLine, 'Bill:');
+  billLine.appendChild(document.createTextNode(` ${transaction.bill_number || 'N/A'} | `));
+  appendStrongText(billLine, 'Payment:');
+  billLine.appendChild(document.createTextNode(` ${transaction.payment_method || 'N/A'}`));
+  const itemsLine = document.createElement('div');
+  appendStrongText(itemsLine, 'Items:');
+  itemsLine.appendChild(document.createTextNode(` ${items || 'No line items'}`));
+  const actions = document.createElement('div');
+  actions.className = 'row-actions';
+  cell.append(billLine, itemsLine, actions);
+  details.appendChild(cell);
+  if (transaction.is_duplicate) {
+    actions.appendChild(actionButton('Confirm duplicate', () => handlers.onConfirmDuplicate(transaction.id, false)));
+    actions.appendChild(actionButton('Keep both', () => handlers.onConfirmDuplicate(transaction.id, true)));
+  }
+  if (transaction.is_anomaly) {
+    actions.appendChild(actionButton('Dismiss', () => handlers.onDismissAnomaly(transaction.id)));
+  }
+  return details;
+}
+
+export function renderExtractionPreview(container, result, handlers) {
+  const extraction = result.extraction;
+  const fields = ['merchant', 'date', 'subtotal', 'tax', 'total', 'payment_method', 'bill_number'];
+  container.hidden = false;
+  container.replaceChildren();
+  const heading = document.createElement('h3');
+  heading.textContent = 'Extraction Preview';
+  container.appendChild(heading);
+  for (const field of fields) {
+    const info = extraction[field] || { value: '', confidence: 0 };
+    const row = document.createElement('label');
+    row.className = 'field-row';
+    const label = document.createElement('span');
+    label.textContent = field.replace('_', ' ');
+    const input = document.createElement('input');
+    input.name = field;
+    input.value = info.value ?? '';
+    const confidence = document.createElement('span');
+    confidence.className = confidenceClass(info.confidence || 0);
+    confidence.textContent = `${Math.round((info.confidence || 0) * 100)}%`;
+    const error = document.createElement('small');
+    error.className = 'field-error';
+    error.dataset.fieldError = field;
+    error.hidden = true;
+    row.append(label, input, confidence, error);
+    container.appendChild(row);
+  }
+  const actions = document.createElement('div');
+  actions.className = 'row-actions';
+  actions.appendChild(actionButton('Confirm', handlers.onConfirm));
+  actions.appendChild(actionButton('Discard', handlers.onDiscard));
+  container.appendChild(actions);
+}
+
+export function clearExtractionPreview(container) {
+  container.hidden = true;
+  container.replaceChildren();
+}
+
+function appendCell(row, value) {
+  const cell = document.createElement('td');
+  cell.textContent = value;
+  row.appendChild(cell);
+}
+
+function appendStrongText(container, value) {
+  const strong = document.createElement('strong');
+  strong.textContent = value;
+  container.appendChild(strong);
+}
+
+window.FinSightUI = {
+  formatCurrency,
+  confidenceClass,
+  actionButton,
+  appendBubble,
+  renderPreviews,
+  createTransactionRow,
+  createTransactionDetailsRow,
+  renderExtractionPreview,
+  clearExtractionPreview
+};
