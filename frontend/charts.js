@@ -7,7 +7,7 @@ export function updateCharts(analysis) {
     const categoryEntries = Object.entries(analysis.category_totals || {});
     const trendEntries = analysis.daily_trend || [];
     const merchantEntries = analysis.top_merchants || analysis.merchant_totals || [];
-    const palette = ['#2457c5', '#15803d', '#b45309', '#be123c', '#6d28d9', '#0f766e'];
+    const palette = chartPalette();
     const configs = [
       ['donut', 'category-chart', 'doughnut', categoryEntries.map(([key]) => key), categoryEntries.map(([, value]) => value)],
       ['line', 'trend-chart', 'line', trendEntries.map(([key]) => key), trendEntries.map(([, value]) => value)],
@@ -18,7 +18,7 @@ export function updateCharts(analysis) {
       if (charts[slot]) charts[slot].destroy();
       charts[slot] = new Chart(ctx, {
         type,
-        data: { labels, datasets: [{ data, label: 'Spend', backgroundColor: palette, borderColor: '#2457c5' }] },
+        data: { labels, datasets: [{ data, label: 'Spend', backgroundColor: palette, borderColor: palette[0] }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut' } } }
       });
     }
@@ -60,6 +60,11 @@ function showChartErrors(message) {
     error.textContent = message;
     box.appendChild(error);
   });
+}
+
+function chartPalette() {
+  const styles = getComputedStyle(document.documentElement);
+  return [1, 2, 3, 4, 5, 6].map((index) => styles.getPropertyValue(`--chart-${index}`).trim());
 }
 
 document.addEventListener('finsight:analysis-updated', (event) => updateCharts(event.detail?.analysis));

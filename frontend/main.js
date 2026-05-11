@@ -8,8 +8,11 @@ const els = {
   sidebar: document.querySelector('.sidebar'),
   sidebarToggle: document.getElementById('sidebar-toggle'),
   novaPanel: document.getElementById('nova'),
-  novaToggle: document.querySelector('.nova-toggle')
+  novaToggle: document.querySelector('.nova-toggle'),
+  themeToggle: document.querySelector('.theme-toggle')
 };
+
+const THEME_STORAGE_KEY = 'finsight-theme';
 
 function state() {
   return window.FinSightState;
@@ -68,6 +71,7 @@ export function setupTransactions() {
 
 setupTransactions();
 setupLayoutShell();
+setupTheme();
 
 loadDashboard().catch((error) => {
   els.uploadStatus.textContent = error.message;
@@ -93,4 +97,39 @@ function setupLayoutShell() {
       els.sidebarToggle?.setAttribute('aria-expanded', 'false');
     });
   });
+}
+
+function setupTheme() {
+  applyTheme(readStoredTheme() || 'dark');
+  els.themeToggle?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  });
+}
+
+function readStoredTheme() {
+  try {
+    const theme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return theme === 'light' || theme === 'dark' ? theme : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  if (els.themeToggle) {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    els.themeToggle.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+    els.themeToggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+  }
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (error) {
+    return;
+  }
+  const analysis = state().getAnalysis();
+  if (analysis) {
+    document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+  }
 }

@@ -67,3 +67,18 @@ test('collapses sidebar behind hamburger at mobile width', async ({ page }) => {
   await page.locator('#sidebar-toggle').click();
   await expect(page.locator('.sidebar')).toHaveClass(/is-open/);
 });
+
+test('toggles light and dark theme with localStorage persistence', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await mockDashboard(page);
+
+  await page.goto('/');
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.locator('.theme-toggle').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('finsight-theme'))).toBe('light');
+
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
