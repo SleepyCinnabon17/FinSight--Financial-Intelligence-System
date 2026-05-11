@@ -6,12 +6,23 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
       contentType: 'application/javascript',
       body: `
         window.__chartCalls = [];
+        window.__resizeCalls = [];
         window.Chart = class MockChart {
           constructor(ctx, config) {
-            window.__chartCalls.push({ id: ctx.id || ctx.canvas?.id, type: config.type, labels: config.data.labels });
+            this.id = ctx.id || ctx.canvas?.id;
+            window.__chartCalls.push({
+              id: this.id,
+              type: config.type,
+              labels: config.data.labels,
+              colors: config.data.datasets[0].backgroundColor,
+              tickColor: config.options.scales?.x?.ticks?.color || null
+            });
           }
 
           destroy() {}
+          resize() {
+            window.__resizeCalls.push(this.id);
+          }
         };
       `
     });
@@ -63,8 +74,78 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
   await expect
     .poll(() => page.evaluate(() => window.__chartCalls))
     .toEqual([
-      { id: 'category-chart', type: 'doughnut', labels: ['Groceries'] },
-      { id: 'trend-chart', type: 'line', labels: ['2026-05-10'] },
-      { id: 'merchant-chart', type: 'bar', labels: ['Metro Market'] }
+      {
+        id: 'category-chart',
+        type: 'doughnut',
+        labels: ['Groceries'],
+        colors: ['#7aa2ff', '#4ade80', '#f59e0b', '#f87171', '#a78bfa', '#2dd4bf'],
+        tickColor: null
+      },
+      {
+        id: 'trend-chart',
+        type: 'line',
+        labels: ['2026-05-10'],
+        colors: ['#7aa2ff', '#4ade80', '#f59e0b', '#f87171', '#a78bfa', '#2dd4bf'],
+        tickColor: '#a8b0c2'
+      },
+      {
+        id: 'merchant-chart',
+        type: 'bar',
+        labels: ['Metro Market'],
+        colors: ['#7aa2ff', '#4ade80', '#f59e0b', '#f87171', '#a78bfa', '#2dd4bf'],
+        tickColor: '#a8b0c2'
+      }
     ]);
+
+  await page.setViewportSize({ width: 768, height: 900 });
+  await expect.poll(() => page.evaluate(() => window.__resizeCalls.length)).toBeGreaterThan(0);
+});
+
+test('shows chart empty states instead of rendering empty datasets', async ({ page }) => {
+  await page.route('https://cdn.jsdelivr.net/npm/chart.js', async (route) => {
+    await route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        window.__chartCalls = [];
+        window.Chart = class MockChart {
+          constructor(ctx, config) {
+            window.__chartCalls.push({ id: ctx.id || ctx.canvas?.id, type: config.type, labels: config.data.labels });
+          }
+
+          destroy() {}
+          resize() {}
+        };
+      `
+    });
+  });
+
+  await page.route('**/api/v1/transactions', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data: [], error: null })
+    });
+  });
+
+  await page.route('**/api/v1/analysis', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: {
+          total_spend: 0,
+          category_totals: {},
+          daily_trend: [],
+          top_merchants: [],
+          merchant_totals: []
+        },
+        error: null
+      })
+    });
+  });
+
+  await page.goto('/');
+
+  await expect(page.locator('.chart-empty-state')).toHaveCount(3);
+  await expect(page.locator('#charts')).toContainText('No category spend yet.');
+  await expect.poll(() => page.evaluate(() => window.__chartCalls)).toEqual([]);
 });

@@ -551,6 +551,59 @@ td.status-cell {
   max-height: var(--chart-max-height);
 }
 
+.chart-box.has-data canvas {
+  animation: chart-enter 220ms ease;
+}
+
+.chart-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-md);
+  min-height: var(--chart-max-height);
+  padding: var(--space-xl);
+  border: var(--border-width-sm) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+  color: var(--muted);
+  text-align: center;
+}
+
+.chart-empty-icon {
+  display: grid;
+  place-items: end center;
+  width: var(--empty-state-visual-size);
+  height: var(--empty-state-visual-size);
+  border: var(--border-width-sm) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.chart-empty-icon::before,
+.chart-empty-icon::after {
+  content: '';
+  display: block;
+  width: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+}
+
+.chart-empty-icon::before {
+  height: calc(var(--space-xl) * 1.5);
+}
+
+.chart-empty-icon::after {
+  height: var(--space-xl);
+  transform: translateX(var(--space-lg));
+}
+
+.chart-empty-state p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.chart-box.is-empty canvas {
+  display: none;
+}
+
 .drop-zone {
   display: grid;
   gap: calc(var(--space-md) + var(--space-xs));
@@ -831,6 +884,18 @@ td.status-cell {
 
   100% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+
+@keyframes chart-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-sm));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
