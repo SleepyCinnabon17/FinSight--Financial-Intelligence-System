@@ -34,6 +34,12 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
+      - name: Generate synthetic fixtures
+        run: |
+          python synthetic/generate_bills.py
+          python synthetic/pdf_to_images.py
+          python synthetic/make_messy.py
+
       - name: Backend tests
         run: python -m pytest
 
