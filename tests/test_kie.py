@@ -59,6 +59,55 @@ def test_total_prefers_final_payable_total_over_intermediate_total_lines() -> No
     assert result.total.value == 106.0
 
 
+def test_total_parses_decimal_comma_without_treating_it_as_thousands() -> None:
+    blocks = [
+        OCRBlock("OJC MARKETING SDN BHD", (0, 0, 240, 20), 0.95),
+        OCRBlock("TAX INVOICE", (0, 40, 150, 60), 0.95),
+        OCRBlock("Date: 15/01/2019", (0, 80, 180, 100), 0.95),
+        OCRBlock("Total Inclusive GST: 193.00", (0, 160, 240, 180), 0.95),
+        OCRBlock("TOTAL: 193,00", (0, 190, 180, 210), 0.95),
+    ]
+
+    result = extract_fields(blocks)
+
+    assert result.total.value == 193.0
+
+
+def test_total_uses_final_total_over_quantity_and_tax_lines() -> None:
+    blocks = [
+        OCRBlock("TEO HENG STATIONERY & BOOKS", (0, 0, 280, 20), 0.95),
+        OCRBlock("SIMPLIFIED TAX INVOICE", (0, 40, 220, 60), 0.95),
+        OCRBlock("Date: 27/01/2018", (0, 80, 180, 100), 0.95),
+        OCRBlock("Total Qty. : 8 25.80", (0, 180, 220, 200), 0.95),
+        OCRBlock("SUB-TOTAL (EX) 25.80", (0, 210, 220, 230), 0.95),
+        OCRBlock("TOTAL TAX : 1.55", (0, 240, 180, 260), 0.95),
+        OCRBlock("ROUNDING : 0.00", (0, 270, 180, 290), 0.95),
+        OCRBlock("TOTAL : 27.35", (0, 300, 180, 320), 0.95),
+        OCRBlock("CASH 27.35", (0, 330, 140, 350), 0.95),
+    ]
+
+    result = extract_fields(blocks)
+
+    assert result.total.value == 27.35
+
+
+def test_merchant_skips_numeric_ids_and_combines_adjacent_company_suffix() -> None:
+    blocks = [
+        OCRBlock("3180301 |", (0, 0, 90, 20), 0.95),
+        OCRBlock("SECURE PARKING", (0, 35, 180, 55), 0.95),
+        OCRBlock("CORPORATION S/B", (0, 60, 200, 80), 0.95),
+        OCRBlock("23.03.18 14:59 |", (0, 120, 180, 140), 0.95),
+        OCRBlock("*AMT RM", (0, 220, 120, 240), 0.95),
+        OCRBlock("1.00", (140, 220, 200, 240), 0.95),
+    ]
+
+    result = extract_fields(blocks)
+
+    assert result.merchant.value == "SECURE PARKING CORPORATION S/B"
+    assert result.date.value == "2018-03-23"
+    assert result.total.value == 1.0
+
+
 def test_funsd_path_maps_question_answer_pairs() -> None:
     blocks = [
         OCRBlock("Merchant:", (0, 0, 80, 20), 0.9),
@@ -76,7 +125,7 @@ def test_funsd_path_maps_question_answer_pairs() -> None:
 
 
 def test_date_normalization_formats() -> None:
-    cases = ["01/05/2026", "12/31/2026", "2026-05-01", "01 May 2026", "01-05-2026", "31.12.2017"]
+    cases = ["01/05/2026", "12/31/2026", "2026-05-01", "01 May 2026", "01-05-2026", "31.12.2017", "09/02/2078"]
     assert [normalize_date(value) for value in cases] == [
         "2026-05-01",
         "2026-12-31",
@@ -84,12 +133,17 @@ def test_date_normalization_formats() -> None:
         "2026-05-01",
         "2026-05-01",
         "2017-12-31",
+        "2018-02-09",
     ]
 
 
 def test_amount_parsing() -> None:
     assert normalize_amount("\u20b91,250.00") == 1250.0
     assert normalize_amount("Rs. 500") == 500.0
+    assert normalize_amount("TOTAL: 193,00") == 193.0
+    assert normalize_amount("Nett Total: $8.20") == 8.2
+    assert normalize_amount("TOTAL 46 ,000") == 46000.0
+    assert normalize_amount("Rp.118.000") == 118000.0
 
 
 def test_low_confidence_field_marked_unextracted() -> None:

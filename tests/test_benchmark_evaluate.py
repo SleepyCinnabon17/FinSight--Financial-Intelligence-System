@@ -245,6 +245,13 @@ def test_merchant_matching_ignores_punctuation_for_company_names() -> None:
     assert evaluate._text_matches("CROSS CHANNEL NETWORK SDN BHD", "CROSS CHANNEL NETWORK SDN. BHD.")
 
 
+def test_merchant_matching_allows_minor_ocr_spelling_drift() -> None:
+    assert evaluate._text_matches("PERNIAGAAN ZHENG HU", "PERNIAGAAN ZHENG HUI")
+    assert evaluate._text_matches("Old Town Kopitiam Sdn Bhd", "OLD TOWN KOPITAM SND BHD")
+    assert evaluate._text_matches("Aeon Tebrau City", "YHM AEON TEBRAU CITY")
+    assert not evaluate._text_matches("CROSS CHANNEL", "CROSS CHANNEL NETWORK SDN BHD")
+
+
 def test_external_total_detection_uses_extracted_field_not_default_transaction_zero() -> None:
     extraction = ExtractionResult(
         merchant=ExtractedField(None, 0.0, ""),

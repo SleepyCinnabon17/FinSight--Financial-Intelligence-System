@@ -20,29 +20,39 @@ from backend.config import (
 from backend.models.extraction import ExtractedField, ExtractionResult, LineItem, OCRBlock
 
 
-PRICE_RE = re.compile(r"(?<!\d)(?:rs\.?\s*)?[\d,]+(?:\.\d{1,2})?(?!\d)", re.IGNORECASE)
+PRICE_RE = re.compile(
+    r"(?<!\w)(?:rs\.?|rm|rp|inr|myr)?\s*[$\u20b9]?\s*-?\d[\d,]*(?:[\.,:]\d{1,3})?(?!\w)",
+    re.IGNORECASE,
+)
 DATE_RE = re.compile(
     r"(\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\s+\w{3,9}\s+\d{4})",
     re.IGNORECASE,
 )
-TOTAL_KEYWORDS = re.compile(r"\b(total|grand total|amount due)\b", re.IGNORECASE)
+TOTAL_KEYWORDS = re.compile(r"\b(total|tot|grand total|amount due|amount|amt)\b|\*amt\b", re.IGNORECASE)
 TOTAL_PENALTY_KEYWORDS = re.compile(
-    r"\b(subtotal|sub total|exclude|excluding|gst|tax|vat|round|rounding|discount|disc)\b",
+    r"\b("
+    r"subtotal|sub total|sub-total|exclude|excluding|gst|tax|vat|round|rounding|discount|disc|"
+    r"qty|quantity|change|tender|paid|payment|cashier|sales|tel|fax|phone|gst id"
+    r")\b",
     re.IGNORECASE,
 )
-TOTAL_STRONG_KEYWORDS = re.compile(r"\b(grand total|amount due|balance due|total payable|net total)\b", re.IGNORECASE)
+TOTAL_STRONG_KEYWORDS = re.compile(
+    r"\b(grand total|amount due|balance due|total payable|net total|total amount|total amt|amt rm|nett total)\b|\*amt\b",
+    re.IGNORECASE,
+)
 MERCHANT_NOISE_RE = re.compile(
     r"\b("
     r"invoice|receipt|tax invoice|date|bill to|subtotal|sub total|total|gst|tax|vat|payment|"
     r"cashier|sales|copy|customer|address|description|qty|quantity|price|amount|tel|fax|"
-    r"email|website|www|roc|reg|no\.?|page|time"
+    r"email|website|www|roc|reg|no\.?|page|time|jalan|jln|bandar|taman|selangor|johor|"
+    r"kuala|bahru|ba(h)?ru|store no|id no|gst id|co no"
     r")\b",
     re.IGNORECASE,
 )
 MERCHANT_SUFFIX_RE = re.compile(
     r"\b("
     r"sdn|bhd|ltd|limited|llc|inc|corp|company|co\.?|store|stores|market|marketing|"
-    r"restaurant|cafe|pharmacy|supermarket|mart|trading|enterprise|enterprises"
+    r"restaurant|cafe|pharmacy|supermarket|mart|trading|enterprise|enterprises|corporation|s/?b|sb"
     r")\b",
     re.IGNORECASE,
 )
@@ -83,10 +93,61 @@ def _field(value: object, confidence: float, raw_text: str) -> ExtractedField:
 
 
 def normalize_amount(raw: str | None) -> float | None:
+    amounts = _amount_candidates(raw, infer_cents=False)
+    return amounts[0] if amounts else None
+
+
+def _amount_candidates(raw: str | None, *, infer_cents: bool = False) -> list[float]:
     if raw is None:
+        return []
+    text = re.sub(r"(?<=\d)\s+([,\.:])\s*(?=\d)", r"\1", str(raw))
+    currency_context = bool(re.search(r"(?i)\b(rs\.?|rm|rp|inr|myr)\b|[$\u20b9]", text))
+    values: list[float] = []
+    for match in PRICE_RE.finditer(text):
+        token = match.group(0).strip()
+        token_end = match.end()
+        if token_end < len(text) and text[token_end : token_end + 1] == "%":
+            continue
+        amount = _parse_amount_token(token, infer_cents=infer_cents, currency_context=currency_context)
+        if amount is not None:
+            values.append(amount)
+    return values
+
+
+def _parse_amount_token(token: str, *, infer_cents: bool, currency_context: bool) -> float | None:
+    cleaned = re.sub(r"(?i)\b(rs\.?|rm|rp|inr|myr)\b", "", token)
+    cleaned = cleaned.replace("\u20b9", "").replace("$", "").strip()
+    cleaned = re.sub(r"\s+", "", cleaned)
+    cleaned = re.sub(r"(?<=\d):(?=\d{1,2}\b)", ".", cleaned)
+    cleaned = cleaned.rstrip("/-")
+    if not re.search(r"\d", cleaned):
         return None
-    cleaned = re.sub(r"(?i)\brs\.?", "", raw)
-    cleaned = cleaned.replace(",", "")
+
+    has_decimal_marker = bool(re.search(r"[\.,:]\d{1,2}$", cleaned))
+    if "," in cleaned and "." in cleaned:
+        cleaned = cleaned.replace(",", "")
+    elif "," in cleaned:
+        integer, fraction = cleaned.rsplit(",", 1)
+        if len(fraction) in {1, 2}:
+            cleaned = f"{integer}.{fraction}"
+        else:
+            cleaned = cleaned.replace(",", "")
+    elif "." in cleaned:
+        integer, fraction = cleaned.rsplit(".", 1)
+        if len(fraction) == 3 and integer.lstrip("-").isdigit() and len(integer.lstrip("-")) <= 3:
+            cleaned = f"{integer}{fraction}"
+
+    digits_only = re.sub(r"\D", "", cleaned)
+    if not digits_only:
+        return None
+    if len(digits_only) > 7 and not has_decimal_marker and not currency_context:
+        return None
+    if infer_cents and not has_decimal_marker and not currency_context and 3 <= len(digits_only) <= 4:
+        try:
+            return round(float(digits_only) / 100.0, 2)
+        except ValueError:
+            return None
+
     match = re.search(r"-?\d+(?:\.\d+)?", cleaned)
     if not match:
         return None
@@ -96,17 +157,11 @@ def normalize_amount(raw: str | None) -> float | None:
         return None
 
 
-def _last_amount(raw: str | None) -> float | None:
-    if raw is None:
+def _last_amount(raw: str | None, *, infer_cents: bool = False) -> float | None:
+    amounts = _amount_candidates(raw, infer_cents=infer_cents)
+    if not amounts:
         return None
-    cleaned = re.sub(r"(?i)\brs\.?", "", raw).replace(",", "")
-    matches = re.findall(r"-?\d+(?:\.\d+)?", cleaned)
-    if not matches:
-        return None
-    try:
-        return float(matches[-1])
-    except ValueError:
-        return None
+    return amounts[-1]
 
 
 def normalize_date(raw: str | None) -> str | None:
@@ -135,6 +190,8 @@ def normalize_date(raw: str | None) -> str | None:
     first, second, year = (int(part) for part in parts)
     if year < 100:
         year += 2000
+    elif 2060 <= year <= 2079:
+        year -= 60
     if first > 12:
         day, month = first, second
     elif second > 12:
@@ -166,20 +223,58 @@ def _raw_text(blocks: Iterable[OCRBlock]) -> str:
 
 def _top_merchant(blocks: list[OCRBlock]) -> tuple[str | None, float, str]:
     ordered = sorted(blocks, key=lambda item: (item.bbox[1], item.bbox[0]))
-    candidates = []
-    for block in ordered:
-        text = block.text.strip()
+    candidates: list[tuple[float, OCRBlock]] = []
+    for index, block in enumerate(ordered):
+        text = _clean_merchant_candidate(block.text)
         if not text or MERCHANT_NOISE_RE.search(text):
             continue
-        if PRICE_RE.fullmatch(text):
+        if PRICE_RE.fullmatch(text) or _looks_like_identifier_or_phone(text):
             continue
-        candidates.append(block)
+        score = max(0.0, 10.0 - index * 0.35)
+        if MERCHANT_SUFFIX_RE.search(text):
+            score += 4.0
+        if re.search(r"[A-Za-z]{3}", text):
+            score += 1.0
+        candidates.append((score, block))
     if not candidates:
         return None, 0.0, ""
-    top_window = candidates[:8]
-    suffix_matches = [block for block in top_window if MERCHANT_SUFFIX_RE.search(block.text)]
-    block = suffix_matches[0] if suffix_matches else candidates[0]
-    return block.text.strip(), min(KIE_HIGH_CONFIDENCE, block.confidence), block.text
+    top_window = candidates[:15]
+    _, block = max(top_window, key=lambda item: item[0])
+    merchant_text = _clean_merchant_candidate(block.text)
+    block_index = ordered.index(block)
+    merchant_words = re.findall(r"[A-Za-z0-9/&']+", merchant_text)
+    if block_index > 0 and MERCHANT_SUFFIX_RE.search(merchant_text) and len(merchant_words) <= 2:
+        previous_text = _clean_merchant_candidate(ordered[block_index - 1].text)
+        if previous_text and not MERCHANT_NOISE_RE.search(previous_text) and not _looks_like_identifier_or_phone(previous_text):
+            merchant_text = f"{previous_text} {merchant_text}".strip()
+    if block_index + 1 < len(ordered):
+        next_text = _clean_merchant_candidate(ordered[block_index + 1].text)
+        if next_text and MERCHANT_SUFFIX_RE.search(next_text) and not MERCHANT_NOISE_RE.search(next_text):
+            merchant_text = f"{merchant_text} {next_text}".strip()
+    return merchant_text, min(KIE_HIGH_CONFIDENCE, block.confidence), block.text
+
+
+def _clean_merchant_candidate(raw: str | None) -> str:
+    text = (raw or "").strip()
+    text = re.sub(r"^[^\w&]+|[^\w&./' -]+$", "", text)
+    return " ".join(text.split())
+
+
+def _looks_like_identifier_or_phone(text: str) -> bool:
+    stripped = text.strip()
+    if re.search(r"\d[\.,:]\d{1,2}\b", stripped):
+        return False
+    digits = re.sub(r"\D", "", stripped)
+    letters = re.sub(r"[^A-Za-z]", "", stripped)
+    if len(digits) >= 6 and len(letters) <= 4:
+        return True
+    if len(digits) == 5 and len(letters) <= 4:
+        return True
+    if len(digits) >= 4 and re.search(r"\b(tel|fax|phone|id|no|gst|roc|co)\b", stripped, re.IGNORECASE):
+        return True
+    if digits and len(letters) == 0:
+        return True
+    return False
 
 
 def _extract_date(blocks: list[OCRBlock]) -> tuple[str | None, float, str]:
@@ -237,34 +332,96 @@ def _extract_total(blocks: list[OCRBlock]) -> tuple[float | None, float, str]:
     for index, block in enumerate(blocks):
         if not TOTAL_KEYWORDS.search(block.text):
             continue
-        amount = _last_amount(block.text)
-        source_block = block
-        confidence = min(KIE_HIGH_CONFIDENCE, block.confidence)
-        if amount is None and index + 1 < len(blocks):
-            amount = normalize_amount(blocks[index + 1].text)
-            source_block = blocks[index + 1]
-            confidence = min(KIE_MEDIUM_CONFIDENCE, source_block.confidence)
-        if amount is None:
-            continue
         text = block.text
-        score = 10.0
-        if TOTAL_STRONG_KEYWORDS.search(text):
-            score += 6.0
-        if re.search(r"^\s*total\s*[:\-]?", text, re.IGNORECASE):
-            score += 5.0
-        if TOTAL_PENALTY_KEYWORDS.search(text):
-            score -= 8.0
-        score += min(block.bbox[1] / 1000.0, 5.0)
-        total_candidates.append((score, amount, source_block))
+        sources: list[tuple[float, OCRBlock, int, int]] = []
+        same_line_amounts = _amount_candidates(text, infer_cents=True)
+        for amount in same_line_amounts:
+            sources.append((amount, block, 0, len(same_line_amounts)))
+        for lookahead, next_block in enumerate(blocks[index + 1 : index + 7], start=1):
+            if _skip_total_lookahead_line(next_block.text):
+                continue
+            next_amounts = _amount_candidates(next_block.text, infer_cents=True)
+            for amount in next_amounts:
+                sources.append((amount, next_block, lookahead, len(next_amounts)))
+        for amount, source_block, lookahead, amount_count in sources:
+            if amount <= 0:
+                continue
+            payment_confirmed = _has_nearby_payment_confirmation(blocks, source_block, amount)
+            score = _total_candidate_score(text, amount, source_block, lookahead, amount_count, payment_confirmed)
+            total_candidates.append((score, amount, source_block))
     if total_candidates:
-        _, amount, block = max(total_candidates, key=lambda item: item[0])
+        _, amount, block = max(total_candidates, key=lambda item: (item[0], item[1]))
         return amount, min(KIE_HIGH_CONFIDENCE, block.confidence), block.text
-    amounts = [(normalize_amount(block.text), block) for block in blocks if PRICE_RE.search(block.text)]
-    parsed = [(amount, block) for amount, block in amounts if amount is not None]
+    amounts = [(_last_amount(block.text), block) for block in blocks if PRICE_RE.search(block.text) and not _skip_total_fallback_line(block.text)]
+    parsed = [(amount, block) for amount, block in amounts if amount is not None and 0 < amount < 100000]
     if not parsed:
         return None, 0.0, ""
-    amount, block = max(parsed, key=lambda item: item[0])
+    amount, block = max(parsed, key=lambda item: (item[1].bbox[1], item[0]))
     return amount, min(KIE_FALLBACK_TOTAL_CONFIDENCE, block.confidence), block.text
+
+
+def _skip_total_lookahead_line(text: str) -> bool:
+    if re.search(r"\b(gst|tax|vat|discount|rounding|round|change|tender|paid|cashier|tel|fax|phone|id)\b", text, re.IGNORECASE):
+        return True
+    if _looks_like_identifier_or_phone(text):
+        return True
+    return False
+
+
+def _skip_total_fallback_line(text: str) -> bool:
+    if re.search(r"\b(tel|fax|phone|gst id|roc|co no|invoice|receipt|date|time|approval|code)\b", text, re.IGNORECASE):
+        return True
+    if re.search(r"\b(jalan|jln|bandar|taman|selangor|johor|km)\b", text, re.IGNORECASE):
+        return True
+    if DATE_RE.search(text) or re.search(r"\b\d{1,2}:\d{2}(?::\d{2})?\b", text):
+        return True
+    return _looks_like_identifier_or_phone(text)
+
+
+def _has_nearby_payment_confirmation(blocks: list[OCRBlock], source_block: OCRBlock, amount: float) -> bool:
+    try:
+        index = blocks.index(source_block)
+    except ValueError:
+        return False
+    for neighbor in blocks[index + 1 : index + 4]:
+        if not re.search(r"\b(cash|card|visa|mastercard|payment|paid)\b", neighbor.text, re.IGNORECASE):
+            continue
+        if any(abs(candidate - amount) <= 0.01 for candidate in _amount_candidates(neighbor.text, infer_cents=True)):
+            return True
+    return False
+
+
+def _total_candidate_score(
+    keyword_text: str,
+    amount: float,
+    source_block: OCRBlock,
+    lookahead: int,
+    amount_count: int,
+    payment_confirmed: bool,
+) -> float:
+    score = 10.0
+    if TOTAL_STRONG_KEYWORDS.search(keyword_text):
+        score += 8.0
+    if re.search(r"^\s*(?:\*?amt|total|tot|nett total|net total)\b\s*[:\-]?", keyword_text, re.IGNORECASE):
+        score += 6.0
+    if re.search(r"\binclusive\b", keyword_text, re.IGNORECASE):
+        score += 5.0
+    if TOTAL_PENALTY_KEYWORDS.search(keyword_text):
+        score -= 9.0
+    if amount_count > 1:
+        score -= 10.0
+    if re.search(r"\b\d{2,}:\d{1,2}\b", source_block.text):
+        score -= 8.0
+    if payment_confirmed:
+        score += 4.0
+    if re.search(r"\b(payment mode|cash|change|tender|paid)\b", keyword_text, re.IGNORECASE):
+        score -= 7.0
+    if amount >= 100000:
+        score -= 20.0
+    if lookahead:
+        score -= lookahead * 0.75
+    score += min(source_block.bbox[1] / 1000.0, 5.0)
+    return score
 
 
 def _extract_line_items(blocks: list[OCRBlock]) -> list[LineItem]:

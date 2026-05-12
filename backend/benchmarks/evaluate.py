@@ -8,6 +8,7 @@ import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -151,7 +152,19 @@ def _amount_matches(left: float | None, right: float | None) -> bool:
 def _text_matches(left: str | None, right: str | None) -> bool:
     if not left or not right:
         return False
-    return _normalize_text(left) == _normalize_text(right)
+    left_text = _normalize_text(left)
+    right_text = _normalize_text(right)
+    if left_text == right_text:
+        return True
+    if not left_text or not right_text:
+        return False
+    left_tokens = set(left_text.split())
+    right_tokens = set(right_text.split())
+    shorter, longer = (left_text, right_text) if len(left_text) <= len(right_text) else (right_text, left_text)
+    shorter_tokens, longer_tokens = (left_tokens, right_tokens) if len(left_text) <= len(right_text) else (right_tokens, left_tokens)
+    if shorter_tokens and shorter_tokens.issubset(longer_tokens) and len(shorter) / len(longer) >= 0.65:
+        return True
+    return SequenceMatcher(None, left_text, right_text).ratio() >= 0.9
 
 
 def _normalize_text(value: str | None) -> str:

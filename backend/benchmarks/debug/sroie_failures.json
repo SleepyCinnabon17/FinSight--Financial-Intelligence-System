@@ -1,6 +1,6 @@
 {
   "dataset": "sroie",
-  "generated_at": "2026-05-12T18:54:06.531191+00:00",
+  "generated_at": "2026-05-12T20:19:01.209890+00:00",
   "limit": 25,
   "debug_sample_limit": 10,
   "processed": 25,
@@ -46,7 +46,7 @@
       "predicted": {
         "merchant": "OJC MARKETING SDN BHD.",
         "date": null,
-        "total": 19300.0
+        "total": 193.0
       },
       "normalized_ground_truth": {
         "merchant": "ojc marketing sdn bhd",
@@ -56,7 +56,7 @@
       "normalized_prediction": {
         "merchant": "ojc marketing sdn bhd",
         "date": null,
-        "total": 19300.0
+        "total": 193.0
       },
       "field_results": {
         "merchant": {
@@ -68,13 +68,12 @@
           "failure_reason": "missing_prediction"
         },
         "total": {
-          "passed": false,
-          "failure_reason": "value_mismatch"
+          "passed": true,
+          "failure_reason": null
         }
       },
       "diagnosis": [
-        "date_missing_prediction",
-        "total_value_mismatch"
+        "date_missing_prediction"
       ]
     },
     {
@@ -188,9 +187,9 @@
         "THANK YOU."
       ],
       "predicted": {
-        "merchant": "PERNIAGAAN ZHENG HU!",
-        "date": "2078-02-09",
-        "total": 411.5
+        "merchant": "PERNIAGAAN ZHENG HU",
+        "date": "2018-02-09",
+        "total": 436.2
       },
       "normalized_ground_truth": {
         "merchant": "perniagaan zheng hui",
@@ -199,28 +198,24 @@
       },
       "normalized_prediction": {
         "merchant": "perniagaan zheng hu",
-        "date": "2078-02-09",
-        "total": 411.5
+        "date": "2018-02-09",
+        "total": 436.2
       },
       "field_results": {
         "merchant": {
-          "passed": false,
-          "failure_reason": "value_mismatch"
+          "passed": true,
+          "failure_reason": null
         },
         "date": {
-          "passed": false,
-          "failure_reason": "value_mismatch"
+          "passed": true,
+          "failure_reason": null
         },
         "total": {
-          "passed": false,
-          "failure_reason": "value_mismatch"
+          "passed": true,
+          "failure_reason": null
         }
       },
-      "diagnosis": [
-        "merchant_value_mismatch",
-        "date_value_mismatch",
-        "total_value_mismatch"
-      ]
+      "diagnosis": []
     },
     {
       "sample_id": "X51005230605",
@@ -248,9 +243,9 @@
         ": points to pay for"
       ],
       "predicted": {
-        "merchant": "= ALSERKAN ENTERPRISE a",
+        "merchant": "ALSERKAN ENTERPRISE a",
         "date": "2018-02-01",
-        "total": 6.0
+        "total": 0.0
       },
       "normalized_ground_truth": {
         "merchant": "petron bkt lanjan sb",
@@ -260,7 +255,7 @@
       "normalized_prediction": {
         "merchant": "alserkan enterprise a",
         "date": "2018-02-01",
-        "total": 6.0
+        "total": 0.0
       },
       "field_results": {
         "merchant": {
@@ -273,12 +268,12 @@
         },
         "total": {
           "passed": false,
-          "failure_reason": "value_mismatch"
+          "failure_reason": "missing_or_zero_prediction"
         }
       },
       "diagnosis": [
         "merchant_value_mismatch",
-        "total_value_mismatch"
+        "total_missing_or_zero_prediction"
       ]
     },
     {
@@ -455,7 +450,7 @@
       "predicted": {
         "merchant": "CROSS CHANNEL NETWORK SDN. BHD.",
         "date": "2018-01-29",
-        "total": 635.0
+        "total": 6.35
       },
       "normalized_ground_truth": {
         "merchant": "cross channel network sdn bhd",
@@ -465,7 +460,7 @@
       "normalized_prediction": {
         "merchant": "cross channel network sdn bhd",
         "date": "2018-01-29",
-        "total": 635.0
+        "total": 6.35
       },
       "field_results": {
         "merchant": {
@@ -477,13 +472,11 @@
           "failure_reason": null
         },
         "total": {
-          "passed": false,
-          "failure_reason": "value_mismatch"
+          "passed": true,
+          "failure_reason": null
         }
       },
-      "diagnosis": [
-        "total_value_mismatch"
-      ]
+      "diagnosis": []
     },
     {
       "sample_id": "X51005230657",
@@ -658,9 +651,9 @@
         "NGS WOOULHD"
       ],
       "predicted": {
-        "merchant": "#9 US",
+        "merchant": "888 YNVENY YNVE",
         "date": null,
-        "total": 888.0
+        "total": 3.0
       },
       "normalized_ground_truth": {
         "merchant": "lightroom gallery sdn bhd",
@@ -668,9 +661,9 @@
         "total": 278.8
       },
       "normalized_prediction": {
-        "merchant": "9 us",
+        "merchant": "888 ynveny ynve",
         "date": null,
-        "total": 888.0
+        "total": 3.0
       },
       "field_results": {
         "merchant": {
