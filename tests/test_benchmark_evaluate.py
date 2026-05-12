@@ -116,7 +116,7 @@ def test_sroie_row_maps_company_date_total_and_keeps_address_optional() -> None:
     assert sample.reference_text == "OJC MARKETING TOTAL 193.00"
 
 
-def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch) -> None:
+def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch, tmp_path: Path) -> None:
     sample = evaluate.ExternalSample(
         dataset_key="sroie",
         sample_id="S1",
@@ -156,6 +156,7 @@ def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch) -> None
 
     monkeypatch.setattr(evaluate, "_load_external_samples", lambda *_args, **_kwargs: [sample])
     monkeypatch.setattr(evaluate, "_safe_external_pipeline", fake_pipeline)
+    monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "external-results.json")
 
     result = evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
 

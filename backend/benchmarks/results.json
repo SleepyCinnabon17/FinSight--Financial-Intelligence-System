@@ -1,65 +1,173 @@
 {
-  "generated_at": "2026-05-12T13:24:54.711560+00:00",
+  "generated_at": "2026-05-12T13:32:18.031112+00:00",
   "summary": {
     "headline_source": "external",
-    "external_available": true,
-    "synthetic_regression_available": false
+    "external_available": false,
+    "synthetic_regression_available": true
   },
   "synthetic_regression": {
-    "available": false,
+    "available": true,
     "dataset": "FinSight generated synthetic bills",
     "purpose": "Internal regression check only",
-    "metrics": {},
-    "status": "not generated"
+    "notice": "Synthetic regression check with generated bills. These scores validate controlled pipeline consistency, not real-world accuracy.",
+    "metrics": {
+      "dataset": "synthetic",
+      "summary": {
+        "ocr_accuracy": 0.0027,
+        "field_extraction_accuracy": 0.0,
+        "categorization_f1": 0.0,
+        "duplicate_detection_rate": 1.0,
+        "anomaly_recall": 0.0,
+        "avg_pipeline_time_seconds": 0.2318,
+        "bills_processed": 47
+      },
+      "ocr": {
+        "cer": 0.9973,
+        "wer": 1.0,
+        "field_detection_rate": 0.25,
+        "ocr_accuracy": 0.0027
+      },
+      "extraction": {
+        "field_accuracy_overall": 0.0,
+        "field_accuracy_by_field": {
+          "merchant": 0.0,
+          "date": 0.0,
+          "amount": 0.0,
+          "category": 0.0
+        },
+        "amount_accuracy_within_1_inr": 0.0,
+        "date_parse_rate": 0.0,
+        "extraction_f1": 0.0
+      },
+      "categorization": {
+        "accuracy": 0.0,
+        "macro_f1": 0.0,
+        "weighted_f1": 0.0,
+        "per_category": {
+          "Food": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 16
+          },
+          "Shopping": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 9
+          },
+          "Subscription": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 11
+          },
+          "Transport": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 11
+          },
+          "Uncategorized": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "headline_f1": 0.0,
+        "target_f1_min": 0.85,
+        "target_pass": false
+      },
+      "duplicates_anomalies": {
+        "duplicate_precision": 0.0278,
+        "duplicate_detection_rate": 1.0,
+        "duplicates_seeded": 1,
+        "duplicates_caught": 1,
+        "anomaly_recall": 0.0,
+        "anomalies_seeded": 5,
+        "anomalies_detected": 0,
+        "false_positive_rate": 0.0
+      },
+      "self_correction": {
+        "correction_rate": null,
+        "false_positive_rate": 0.0,
+        "duplicate_detection_rate": 1.0,
+        "confidence_calibration": [
+          {
+            "range": "0.00-0.20",
+            "count": 141,
+            "avg_confidence": 0.0,
+            "accuracy": 0.0,
+            "calibration_gap": 0.0
+          }
+        ],
+        "status": "correction_rate requires review-event logging"
+      },
+      "pipeline": {
+        "avg_pipeline_time_seconds": 0.2318,
+        "max_pipeline_time_seconds": 1.0568,
+        "bills_processed": 47,
+        "pipeline_errors": 0
+      },
+      "product": {
+        "savings_identified": 0.0,
+        "anomalies_detected": 0,
+        "chatbot_relevance": null,
+        "status": "chatbot relevance requires human review or persisted chat evaluation labels"
+      },
+      "chatbot": {
+        "mode": "offline/documented",
+        "retrieval_precision": null,
+        "groundedness": null,
+        "response_latency_target_seconds": 5,
+        "user_query_success_rate": null,
+        "status": "requires source logging or mocked chat evaluation cases; no live LLM calls in CI"
+      },
+      "field_accuracy": {
+        "merchant": 0.0,
+        "date": 0.0,
+        "total": 0.0,
+        "category": 0.0
+      },
+      "anomaly_detection_recall": 0.0,
+      "duplicate_detection_precision": 0.0278,
+      "overall_extraction_f1": 0.0,
+      "counts": {
+        "evaluated_images": 47,
+        "canonical_bills": 37,
+        "pipeline_errors": 0
+      },
+      "targets": {
+        "field_accuracy_min": 0.7,
+        "anomaly_recall_min": 0.8,
+        "duplicate_precision_min": 0.95
+      },
+      "target_pass": {
+        "merchant": false,
+        "date": false,
+        "total": false,
+        "category": false,
+        "anomaly_detection_recall": false,
+        "duplicate_detection_precision": false
+      },
+      "errors": []
+    }
   },
   "external_benchmarks": {
     "sroie": {
-      "available": true,
+      "available": false,
       "dataset": "ICDAR2019-SROIE",
       "purpose": "Real receipt field extraction benchmark",
-      "limit": 1,
-      "metrics": {
-        "field_extraction_accuracy": 1.0,
-        "field_accuracy_by_field": {
-          "merchant": 1.0,
-          "date": 1.0,
-          "total": 1.0
-        },
-        "field_detection_rate": 1.0,
-        "field_detection_by_field": {
-          "merchant": 1.0,
-          "date": 1.0,
-          "total": 1.0
-        },
-        "cer": 0.0,
-        "wer": 0.0,
-        "ocr_accuracy": 1.0,
-        "avg_pipeline_time_seconds": 0.5,
-        "max_pipeline_time_seconds": 0.5,
-        "samples_processed": 1,
-        "samples_failed": 0,
-        "samples_skipped": 0,
-        "confidence_calibration": [
-          {
-            "range": "0.80-1.00",
-            "count": 3,
-            "avg_confidence": 0.95,
-            "accuracy": 1.0,
-            "calibration_gap": 0.05
-          }
-        ],
-        "merchant_accuracy": 1.0,
-        "date_accuracy": 1.0,
-        "date_parse_rate": 1.0,
-        "total_amount_accuracy_within_1": 1.0
-      },
-      "status": "generated"
+      "limit": 25,
+      "metrics": {},
+      "status": "not generated"
     },
     "cord": {
       "available": false,
       "dataset": "CORD v2",
       "purpose": "Receipt OCR/layout robustness benchmark",
-      "limit": 1,
+      "limit": 25,
       "metrics": {},
       "status": "not generated"
     },
@@ -67,7 +175,7 @@
       "available": false,
       "dataset": "FUNSD",
       "purpose": "Document key-value structure stress test; not a receipt benchmark",
-      "limit": 1,
+      "limit": 25,
       "metrics": {},
       "status": "not generated"
     }
