@@ -87,6 +87,8 @@ Health responses must not expose API keys, raw environment values, stack traces,
 
 `GET /api/v1/benchmark` is enabled by default in development and disabled by default when `APP_ENV=production`. Set `ENABLE_BENCHMARK_ENDPOINT=true` only for controlled environments.
 
+`GET /api/v1/benchmark/results` serves the last generated `backend/benchmarks/results.json` file for the frontend Benchmark Metrics panel. It does not execute OCR or benchmark work, so it can remain available in production while the benchmark execution endpoint stays disabled.
+
 ## Smoke Test Commands
 
 ```bash

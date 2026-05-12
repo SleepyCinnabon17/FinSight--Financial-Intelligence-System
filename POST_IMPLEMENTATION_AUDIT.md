@@ -5,7 +5,7 @@ Scope: current repository after frontend modularization/redesign and production-
 
 ## Executive Summary
 
-FinSight is now deployable as a single-user/demo Railway-style portfolio project. The repo includes frontend modularization, XSS-safe rendering, production config, Docker/Railway assets, health probes, a Railway smoke script, production-mode tests, JSON corruption repair, and deployment documentation.
+FinSight is now deployable as a single-user/demo Railway-style portfolio project. The repo includes frontend modularization, XSS-safe rendering, production config, Docker/Railway assets, health probes, a Railway smoke script, production-mode tests, JSON corruption repair, deployment documentation, and an evaluator-facing benchmark metrics panel backed by synthetic benchmark results.
 
 It is not a real multi-user financial production system. The remaining serious gaps are authentication, durable database storage, background OCR workers, shared rate limiting/session state, and formal privacy/compliance controls.
 
@@ -21,6 +21,7 @@ It is not a real multi-user financial production system. The remaining serious g
 | P1 | SSE robustness | Nova SSE lacks heartbeat/durable session resume | Medium | M | Yes | Proxy disconnects can interrupt chats | Long chats consume worker capacity | Add heartbeat, timeout, retry guidance, and cancellation telemetry |
 | P1 | Security headers | No CSP/HSTS/security header middleware | Medium | S | Yes | Browser hardening incomplete | No scale effect | Add production security headers after checking frontend inline-script needs |
 | P1 | Observability | Logs are not structured with request IDs/timings | Medium | M | Yes | Hosted debugging is harder | Bottlenecks harder to locate | Add JSON logs, request IDs, OCR/provider timing |
+| P1 | Evaluation logging | Review edits and Nova grounding are not persisted for KPI automation | Medium | M | Yes | Demo metrics remain synthetic/manual for these areas | No direct scale effect | Add review-event and chat-source logs before automating correction/groundedness KPIs |
 | P2 | UX scale | Transaction browsing is not server-paginated in the UI | Medium | M | Yes | Fine for demos, weak for large histories | 1000+ bills become harder to browse | Add filters/search/pagination controls |
 | P2 | Dependency weight | OCR/ML dependencies are heavy | Medium | M | Yes | Free-tier builds/cold starts may be slow | Memory pressure under load | Split optional ML paths and document minimum memory |
 
@@ -71,6 +72,10 @@ It is not a real multi-user financial production system. The remaining serious g
 | Choose production storage provider | Critical | S | PostgreSQL/Redis provider affects cost and architecture |
 | Define privacy/data retention policy | High | M | Uploaded bills contain sensitive financial data |
 | Validate with real anonymized bills | High | M | Synthetic benchmark does not prove real-world OCR quality |
+
+## KPI Metrics Coverage
+
+The current benchmark metrics are generated from synthetic bills and saved to `backend/benchmarks/results.json`. Automated metrics cover OCR CER/WER/accuracy, field detection, field extraction, amount tolerance, date parsing, category precision/recall/F1, duplicate detection, anomaly recall, confidence buckets, and pipeline timing. Correction rate, Nova groundedness/retrieval precision, chatbot relevance, and real savings validation remain manual/deferred because the app does not yet persist review-event labels or chat source-quality labels.
 
 ## Deployment Blockers
 

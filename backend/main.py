@@ -481,6 +481,23 @@ async def benchmark() -> JSONResponse:
     return JSONResponse(_success(_run_benchmark_inline()))
 
 
+@app.get("/api/v1/benchmark/results")
+async def benchmark_results() -> JSONResponse:
+    if not config.BENCHMARK_RESULTS_PATH.exists():
+        return JSONResponse(
+            status_code=404,
+            content=_error("benchmark_results_unavailable", "Run the benchmark to populate system metrics.", None),
+        )
+    try:
+        results = json.loads(config.BENCHMARK_RESULTS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return JSONResponse(
+            status_code=503,
+            content=_error("benchmark_results_unavailable", "Benchmark results are unavailable or invalid.", None),
+        )
+    return JSONResponse(_success(results))
+
+
 def _llm_status() -> dict[str, Any]:
     provider = config.LLM_PROVIDER.lower()
     llm_configured = provider == "ollama" or bool(

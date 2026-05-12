@@ -1,4 +1,4 @@
-import { confirmDuplicate, deleteTransaction, dismissAnomaly, fetchAnalysis, fetchTransactions } from './api.js';
+import { confirmDuplicate, deleteTransaction, dismissAnomaly, fetchAnalysis, fetchBenchmarkResults, fetchTransactions } from './api.js';
 import { createTransactionDetailsRow, createTransactionRow, formatCurrency } from './ui_components.js';
 
 const els = {
@@ -13,15 +13,37 @@ const els = {
   novaPanel: document.getElementById('nova'),
   novaToggle: document.querySelector('.nova-toggle'),
   themeToggle: document.querySelector('.theme-toggle'),
-  kpiValues: document.querySelectorAll('.kpi-card strong')
+  kpiValues: document.querySelectorAll('.kpi-card strong'),
+  metricsToggle: document.getElementById('benchmark-metrics-toggle'),
+  metricsBody: document.getElementById('benchmark-metrics-body'),
+  metricsSummary: document.getElementById('benchmark-metrics-summary'),
+  metricsDetails: document.getElementById('benchmark-metrics-details'),
+  metricsEmpty: document.getElementById('benchmark-metrics-empty')
 };
 
 const THEME_STORAGE_KEY = 'finsight-theme';
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
 const RESET_DISARM_MS = 4500;
+const SUMMARY_METRICS = [
+  ['OCR Accuracy', ['summary', 'ocr_accuracy'], 'percent'],
+  ['Field Extraction', ['summary', 'field_extraction_accuracy'], 'percent'],
+  ['Categorization F1', ['summary', 'categorization_f1'], 'percent'],
+  ['Duplicate Detection', ['summary', 'duplicate_detection_rate'], 'percent'],
+  ['Anomaly Recall', ['summary', 'anomaly_recall'], 'percent'],
+  ['Avg Pipeline Time', ['summary', 'avg_pipeline_time_seconds'], 'seconds']
+];
+const DETAIL_METRICS = [
+  ['CER', ['ocr', 'cer'], 'percent'],
+  ['WER', ['ocr', 'wer'], 'percent'],
+  ['Field Detection Rate', ['ocr', 'field_detection_rate'], 'percent'],
+  ['Date Parse Rate', ['extraction', 'date_parse_rate'], 'percent'],
+  ['Amount Accuracy', ['extraction', 'amount_accuracy_within_1_inr'], 'percent'],
+  ['Bills Processed', ['summary', 'bills_processed'], 'number']
+];
 let resetArmed = false;
 let resetTimer = null;
+let metricsLoaded = false;
 
 function state() {
   return window.FinSightState;
@@ -49,6 +71,69 @@ export function renderKpis(transactions = [], analysis = {}) {
   els.kpiValues.forEach((element, index) => {
     element.textContent = values[index] || '--';
   });
+}
+
+export async function loadBenchmarkMetrics() {
+  try {
+    const results = await fetchBenchmarkResults();
+    renderBenchmarkMetrics(results);
+  } catch (error) {
+    renderBenchmarkMetrics(null);
+  }
+}
+
+export function renderBenchmarkMetrics(results) {
+  if (!els.metricsSummary || !els.metricsDetails || !els.metricsEmpty) return;
+  els.metricsSummary.replaceChildren();
+  els.metricsDetails.replaceChildren();
+  if (!results?.summary) {
+    els.metricsEmpty.hidden = false;
+    return;
+  }
+  els.metricsEmpty.hidden = true;
+  for (const [label, path, format] of SUMMARY_METRICS) {
+    els.metricsSummary.appendChild(createMetricCard(label, getMetricValue(results, path), format));
+  }
+  for (const [label, path, format] of DETAIL_METRICS) {
+    els.metricsDetails.appendChild(createMetricDetail(label, getMetricValue(results, path), format));
+  }
+  if (results.chatbot?.status) {
+    els.metricsDetails.appendChild(createMetricDetail('Nova Metrics', results.chatbot.status, 'text'));
+  }
+}
+
+function createMetricCard(label, value, format) {
+  const card = document.createElement('article');
+  card.className = 'metric-card';
+  const title = document.createElement('span');
+  title.textContent = label;
+  const number = document.createElement('strong');
+  number.textContent = formatMetricValue(value, format);
+  card.append(title, number);
+  return card;
+}
+
+function createMetricDetail(label, value, format) {
+  const item = document.createElement('div');
+  item.className = 'metric-detail';
+  const term = document.createElement('dt');
+  term.textContent = label;
+  const description = document.createElement('dd');
+  description.textContent = formatMetricValue(value, format);
+  item.append(term, description);
+  return item;
+}
+
+function getMetricValue(source, path) {
+  return path.reduce((value, key) => (value && value[key] !== undefined ? value[key] : null), source);
+}
+
+function formatMetricValue(value, format) {
+  if (value === null || value === undefined || value === '') return '--';
+  if (format === 'percent') return `${Math.round(Number(value) * 1000) / 10}%`;
+  if (format === 'seconds') return `${Number(value).toFixed(2)}s`;
+  if (format === 'number') return String(value);
+  return String(value);
 }
 
 function calculateCurrentMonthSpend(transactions, analysis) {
@@ -124,6 +209,21 @@ export function setupTransactions() {
   document.addEventListener('finsight:refresh-dashboard', loadDashboard);
 }
 
+function setupBenchmarkMetrics() {
+  els.metricsToggle?.addEventListener('click', async () => {
+    const isExpanded = els.metricsToggle.getAttribute('aria-expanded') === 'true';
+    els.metricsToggle.setAttribute('aria-expanded', String(!isExpanded));
+    els.metricsToggle.textContent = isExpanded ? 'Show metrics' : 'Hide metrics';
+    if (els.metricsBody) {
+      els.metricsBody.hidden = isExpanded;
+    }
+    if (!isExpanded && !metricsLoaded) {
+      metricsLoaded = true;
+      await loadBenchmarkMetrics();
+    }
+  });
+}
+
 async function handleResetDemoData() {
   if (!resetArmed) {
     armResetDemoData();
@@ -185,12 +285,13 @@ function showToast(message, type = 'success') {
 setupTransactions();
 setupLayoutShell();
 setupTheme();
+setupBenchmarkMetrics();
 
 loadDashboard().catch((error) => {
   els.uploadStatus.textContent = error.message;
 });
 
-window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, setupTransactions };
+window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, loadBenchmarkMetrics, renderBenchmarkMetrics, setupTransactions };
 
 function setupLayoutShell() {
   els.sidebarToggle?.addEventListener('click', () => {

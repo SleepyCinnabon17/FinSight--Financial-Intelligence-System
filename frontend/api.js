@@ -16,6 +16,10 @@ export function fetchAnalysis() {
   return api('/api/v1/analysis');
 }
 
+export function fetchBenchmarkResults() {
+  return api('/api/v1/benchmark/results');
+}
+
 export function confirmDuplicate(transactionId, confirmed) {
   return api('/api/v1/duplicate/confirm', {
     method: 'POST',
@@ -107,6 +111,7 @@ window.FinSightApi = {
   api,
   fetchTransactions,
   fetchAnalysis,
+  fetchBenchmarkResults,
   confirmDuplicate,
   dismissAnomaly,
   deleteTransaction,

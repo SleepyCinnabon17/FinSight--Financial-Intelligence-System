@@ -57,6 +57,8 @@ jobs:
           python synthetic/make_messy.py
 
       - name: Benchmark validation
+        env:
+          FINSIGHT_ENABLE_OCR_FIXTURE_METADATA: "1"
         run: python backend/benchmarks/evaluate.py
 
   docker:

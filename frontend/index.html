@@ -58,6 +58,29 @@
           </article>
         </section>
 
+        <section id="benchmark-metrics" class="metrics-panel" aria-labelledby="benchmark-metrics-title">
+          <div class="section-header">
+            <div>
+              <h2 id="benchmark-metrics-title">Benchmark Metrics</h2>
+              <p class="metrics-caption">Synthetic evaluator snapshot for system quality.</p>
+            </div>
+            <button
+              id="benchmark-metrics-toggle"
+              class="metrics-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="benchmark-metrics-body"
+            >
+              Show metrics
+            </button>
+          </div>
+          <div id="benchmark-metrics-body" class="metrics-body" hidden>
+            <div id="benchmark-metrics-summary" class="metrics-grid" aria-label="Benchmark metric summary"></div>
+            <dl id="benchmark-metrics-details" class="metrics-details"></dl>
+            <p id="benchmark-metrics-empty" class="metrics-empty" hidden>Run the benchmark to populate system metrics.</p>
+          </div>
+        </section>
+
         <div class="app-layout">
           <div class="left-column">
             <section id="transactions" aria-labelledby="transactions-title">

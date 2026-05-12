@@ -65,6 +65,7 @@ TRANSACTIONS_PATH: Final[Path] = DATA_DIR / "transactions.json"
 DUPLICATE_LOG_PATH: Final[Path] = DATA_DIR / "duplicate_log.json"
 MARKET_CACHE_PATH: Final[Path] = DATA_DIR / "market_cache.json"
 NEWS_CACHE_PATH: Final[Path] = DATA_DIR / "news_cache.json"
+BENCHMARK_RESULTS_PATH: Final[Path] = PROJECT_ROOT / "backend" / "benchmarks" / "results.json"
 ENABLE_BENCHMARK_ENDPOINT: Final[bool] = _get_bool("ENABLE_BENCHMARK_ENDPOINT", not IS_PRODUCTION)
 OCR_PRIMARY_TIMEOUT_SECONDS: Final[float] = _get_float("OCR_PRIMARY_TIMEOUT_SECONDS", 5.0)
 PENDING_UPLOAD_TTL_SECONDS: Final[int] = _get_int("PENDING_UPLOAD_TTL_SECONDS", 1800)

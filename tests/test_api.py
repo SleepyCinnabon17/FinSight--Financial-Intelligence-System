@@ -142,3 +142,25 @@ def test_analysis_chat_news_health(monkeypatch, tmp_path: Path) -> None:
     assert client.get("/api/v1/health").status_code == 200
     assert client.get("/health/live").status_code == 200
     assert client.get("/api/v1/health/live").status_code == 200
+
+
+def test_benchmark_results_endpoint_reads_generated_json(monkeypatch, tmp_path: Path) -> None:
+    results_path = tmp_path / "results.json"
+    results_path.write_text('{"summary": {"ocr_accuracy": 0.95}}', encoding="utf-8")
+    monkeypatch.setattr(config, "BENCHMARK_RESULTS_PATH", results_path)
+    client = TestClient(app)
+
+    response = client.get("/api/v1/benchmark/results")
+
+    assert response.status_code == 200
+    assert response.json()["data"]["summary"]["ocr_accuracy"] == 0.95
+
+
+def test_benchmark_results_endpoint_handles_missing_file(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(config, "BENCHMARK_RESULTS_PATH", tmp_path / "missing-results.json")
+    client = TestClient(app)
+
+    response = client.get("/api/v1/benchmark/results")
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "benchmark_results_unavailable"

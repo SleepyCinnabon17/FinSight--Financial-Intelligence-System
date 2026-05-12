@@ -31,3 +31,7 @@ On Railway free tier, the likely failure modes are memory pressure during OCR/mo
 ## Free-Tier Guidance
 
 Railway free or very small tiers are suitable for demos with a few uploads. Keep benchmark endpoint disabled in production, attach `/data`, avoid large PDFs, and expect cold OCR requests to be slow. A paid tier or separate worker host is recommended for reliable OCR demos.
+
+## KPI Metrics Limits
+
+The Benchmark Metrics panel is evaluator-facing and uses the saved synthetic benchmark result file. It is not a live production observability system. Real user correction rate, Nova groundedness, retrieval precision, chatbot relevance, and validated savings require persisted review/chat events plus labeled evaluation data before they can be automated. External datasets such as SROIE or CORD can be added later without changing the v1 Railway topology.

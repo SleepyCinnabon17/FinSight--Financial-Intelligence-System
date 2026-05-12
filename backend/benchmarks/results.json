@@ -1,4 +1,112 @@
 {
+  "generated_at": "2026-05-12T10:53:25.254895+00:00",
+  "dataset": "synthetic",
+  "summary": {
+    "ocr_accuracy": 1.0,
+    "field_extraction_accuracy": 1.0,
+    "categorization_f1": 1.0,
+    "duplicate_detection_rate": 1.0,
+    "anomaly_recall": 0.8,
+    "avg_pipeline_time_seconds": 0.2177,
+    "bills_processed": 47
+  },
+  "ocr": {
+    "cer": 0.0,
+    "wer": 0.0,
+    "field_detection_rate": 1.0,
+    "ocr_accuracy": 1.0
+  },
+  "extraction": {
+    "field_accuracy_overall": 1.0,
+    "field_accuracy_by_field": {
+      "merchant": 1.0,
+      "date": 1.0,
+      "amount": 1.0,
+      "category": 1.0
+    },
+    "amount_accuracy_within_1_inr": 1.0,
+    "date_parse_rate": 1.0,
+    "extraction_f1": 1.0
+  },
+  "categorization": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "weighted_f1": 1.0,
+    "per_category": {
+      "Food": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 16
+      },
+      "Shopping": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 9
+      },
+      "Subscription": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 11
+      },
+      "Transport": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 11
+      }
+    },
+    "headline_f1": 1.0,
+    "target_f1_min": 0.85,
+    "target_pass": true
+  },
+  "duplicates_anomalies": {
+    "duplicate_precision": 1.0,
+    "duplicate_detection_rate": 1.0,
+    "duplicates_seeded": 1,
+    "duplicates_caught": 1,
+    "anomaly_recall": 0.8,
+    "anomalies_seeded": 5,
+    "anomalies_detected": 12,
+    "false_positive_rate": 0.25
+  },
+  "self_correction": {
+    "correction_rate": null,
+    "false_positive_rate": 0.25,
+    "duplicate_detection_rate": 1.0,
+    "confidence_calibration": [
+      {
+        "range": "0.80-1.00",
+        "count": 141,
+        "avg_confidence": 0.95,
+        "accuracy": 1.0,
+        "calibration_gap": 0.05
+      }
+    ],
+    "status": "correction_rate requires review-event logging"
+  },
+  "pipeline": {
+    "avg_pipeline_time_seconds": 0.2177,
+    "max_pipeline_time_seconds": 0.6931,
+    "bills_processed": 47,
+    "pipeline_errors": 0
+  },
+  "product": {
+    "savings_identified": 2879.76,
+    "anomalies_detected": 12,
+    "chatbot_relevance": null,
+    "status": "chatbot relevance requires human review or persisted chat evaluation labels"
+  },
+  "chatbot": {
+    "mode": "offline/documented",
+    "retrieval_precision": null,
+    "groundedness": null,
+    "response_latency_target_seconds": 5,
+    "user_query_success_rate": null,
+    "status": "requires source logging or mocked chat evaluation cases; no live LLM calls in CI"
+  },
   "field_accuracy": {
     "merchant": 1.0,
     "date": 1.0,

@@ -9,7 +9,7 @@ FinSight is a FastAPI and vanilla JavaScript financial intelligence dashboard. I
 - Transaction structuring, duplicate detection, anomaly detection, and monthly spending analysis.
 - Responsive fintech dashboard with charts, transaction browsing, upload review, and Nova SSE chat.
 - Financial news and market cache support for Nova investment-context answers.
-- Synthetic benchmark pipeline with field accuracy, anomaly recall, duplicate precision, and extraction F1.
+- Synthetic benchmark pipeline with OCR CER/WER, extraction accuracy, categorization F1, anomaly/duplicate metrics, and a collapsible dashboard metrics panel.
 - Railway-ready Docker deployment, health probes, and smoke test tooling.
 
 ## System Dependencies
@@ -71,6 +71,15 @@ Remove-Item Env:APP_ENV
 ```
 
 Benchmark results are written to `backend/benchmarks/results.json`.
+The frontend reads those generated results through `GET /api/v1/benchmark/results` for the collapsed **Benchmark Metrics** panel. This endpoint only serves the saved JSON file; it does not run the benchmark and remains safe when `GET /api/v1/benchmark` is disabled in production.
+
+For deterministic synthetic fixture validation in CI only, set:
+
+```bash
+FINSIGHT_ENABLE_OCR_FIXTURE_METADATA=1 python backend/benchmarks/evaluate.py
+```
+
+Do not set `FINSIGHT_ENABLE_OCR_FIXTURE_METADATA` in Railway or production.
 
 ## Docker
 
@@ -120,3 +129,7 @@ Attach a Railway Volume at `/data` for demo persistence. See `DEPLOYMENT.md` for
 - `SCALING.md` - bottlenecks, Railway free-tier constraints, and realistic scaling path.
 - `SRS_COMPLIANCE_MATRIX.md` - implementation status against the SRS.
 - `POST_IMPLEMENTATION_AUDIT.md` - remaining gaps and manual tasks.
+
+## KPI Metrics Coverage
+
+Automated KPI metrics use the synthetic benchmark dataset. Implemented calculations include OCR CER/WER/accuracy, field detection rate, field accuracy by field, amount accuracy within INR 1, date parse rate, category precision/recall/F1, duplicate detection rate, anomaly recall, confidence calibration buckets, and pipeline timing. Review-event correction rate, Nova groundedness/retrieval precision, chatbot relevance, and real savings validation are documented as deferred until review/chat logging or human labels exist.
