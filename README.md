@@ -22,6 +22,20 @@ Install these OS packages for production-quality OCR/PDF behavior:
 
 The app degrades gracefully when optional tools are unavailable, but real OCR quality is best with these installed.
 
+### Windows OCR Setup
+
+External receipt benchmarks require OCR tools on PATH. On Windows, install and verify:
+
+```powershell
+winget install UB-Mannheim.TesseractOCR
+winget install oschwartz10612.Poppler
+tesseract --version
+pdfinfo -v
+python scripts/check_ocr_deps.py
+```
+
+If either `winget` package name fails, install Tesseract from the UB Mannheim installer, install Poppler for Windows, add `tesseract.exe` and the Poppler `bin` folder to PATH, then restart VS Code or your terminal.
+
 ## Local Setup
 
 ```bash
@@ -85,6 +99,34 @@ python backend/benchmarks/evaluate.py --external all --limit 25
 ```
 
 Use `--no-download` to verify missing-dataset behavior without network calls, or `--dataset-dir <path>` for local JSON/JSONL rows. SROIE is the primary receipt field extraction benchmark; CORD v2 is treated as receipt OCR/layout robustness; FUNSD is treated as a document-structure stress test, not a receipt accuracy score. Full external datasets are not run in CI or Railway production.
+
+Raw local external benchmark runs are valid only when OCR dependencies are present. The CLI fails early if required OCR tools are missing instead of writing misleading empty-OCR metrics. `--allow-missing-ocr` exists only for diagnostic debugging and should not be used for evaluator-facing results.
+
+The official reproducible external benchmark path is Docker or CI. Docker uses the repo `Dockerfile`, which installs Tesseract and Poppler:
+
+```bash
+bash scripts/benchmark_docker.sh
+```
+
+PowerShell:
+
+```powershell
+.\scripts\benchmark_docker.ps1
+```
+
+To benchmark local dataset rows without committing datasets:
+
+```bash
+DATASET_DIR=/path/to/datasets bash scripts/benchmark_docker.sh
+```
+
+PowerShell:
+
+```powershell
+.\scripts\benchmark_docker.ps1 -DatasetDir "C:\path\to\datasets"
+```
+
+Both Docker scripts mount `backend/benchmarks`, so `results.json` and `debug/sroie_failures.json` persist back into the host repo.
 
 For deterministic synthetic fixture validation in CI only, set:
 

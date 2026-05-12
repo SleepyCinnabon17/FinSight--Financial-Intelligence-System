@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from backend.benchmarks import evaluate
 from backend.models.extraction import ExtractedField, ExtractionResult
 from backend.models.transaction import Transaction
@@ -172,7 +174,7 @@ def test_sroie_debug_report_records_field_failures(monkeypatch, tmp_path: Path) 
     monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "results.json")
     monkeypatch.setattr(evaluate, "SROIE_DEBUG_PATH", debug_path)
 
-    evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
+    evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1, allow_missing_ocr=True)
 
     report = json.loads(debug_path.read_text(encoding="utf-8"))
     assert report["dataset"] == "sroie"
@@ -227,7 +229,7 @@ def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch, tmp_pat
     monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "external-results.json")
     monkeypatch.setattr(evaluate, "SROIE_DEBUG_PATH", tmp_path / "sroie-debug.json")
 
-    result = evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
+    result = evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1, allow_missing_ocr=True)
 
     assert result["summary"]["external_available"] is True
     assert result["synthetic_regression"]["available"] is False
@@ -278,3 +280,67 @@ def test_external_total_detection_uses_extracted_field_not_default_transaction_z
     )
 
     assert evaluate._external_field_detected(record, "total") is False
+
+
+def test_external_benchmark_fails_early_when_ocr_dependencies_missing(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "results.json")
+    monkeypatch.setattr(
+        evaluate,
+        "_external_ocr_dependency_status",
+        lambda: {
+            "ready": False,
+            "missing_required": ["tesseract", "pdfinfo"],
+            "checks": {
+                "tesseract": {"ok": False, "required": True},
+                "pdfinfo": {"ok": False, "required": True},
+            },
+        },
+    )
+
+    with pytest.raises(evaluate.ExternalDatasetUnavailable, match="External OCR benchmark cannot run reliably"):
+        evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
+
+
+def test_external_benchmark_debug_flag_allows_missing_ocr_dependencies(monkeypatch, tmp_path: Path) -> None:
+    sample = evaluate.ExternalSample(
+        dataset_key="sroie",
+        sample_id="S1",
+        image_bytes=b"image-bytes",
+        truth={"merchant": "Demo Store", "date": "2026-05-12", "total": 10.0, "fields": ["merchant", "date", "total"]},
+        reference_text="Demo Store Total 10.00",
+    )
+    monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "results.json")
+    monkeypatch.setattr(evaluate, "SROIE_DEBUG_PATH", tmp_path / "debug.json")
+    monkeypatch.setattr(
+        evaluate,
+        "_external_ocr_dependency_status",
+        lambda: {"ready": False, "missing_required": ["tesseract"], "checks": {}},
+    )
+    monkeypatch.setattr(evaluate, "_load_external_samples", lambda *_args, **_kwargs: [sample])
+    monkeypatch.setattr(
+        evaluate,
+        "_safe_external_pipeline",
+        lambda external_sample: evaluate.EvaluationRecord(
+            image_name="s1.png",
+            bill_id=external_sample.sample_id,
+            transaction=Transaction(
+                merchant="Demo Store",
+                date="2026-05-12",
+                items=[],
+                subtotal=None,
+                tax=None,
+                total=10.0,
+                category="Uncategorized",
+                file_name="s1.png",
+            ),
+            extraction=_extraction(),
+            truth=external_sample.truth,
+            ocr_text="Demo Store Total 10.00",
+            reference_text=external_sample.reference_text,
+            pipeline_seconds=0.2,
+        ),
+    )
+
+    result = evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1, allow_missing_ocr=True)
+
+    assert result["external_benchmarks"]["sroie"]["available"] is True

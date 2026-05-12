@@ -100,6 +100,32 @@ python backend/benchmarks/evaluate.py --external all --limit 25
 
 Use synthetic results only as a controlled regression check. Do not set `FINSIGHT_ENABLE_OCR_FIXTURE_METADATA` for Railway or production external benchmarks.
 
+## Reproducible Benchmark Environment
+
+Docker and CI are the official reproducible environments for evaluator-facing external benchmarks. Raw Windows runs require OCR tools on PATH and should be checked first:
+
+```powershell
+winget install UB-Mannheim.TesseractOCR
+winget install oschwartz10612.Poppler
+tesseract --version
+pdfinfo -v
+python scripts/check_ocr_deps.py
+```
+
+Run the Docker benchmark locally when Docker is available:
+
+```bash
+bash scripts/benchmark_docker.sh
+```
+
+PowerShell:
+
+```powershell
+.\scripts\benchmark_docker.ps1
+```
+
+The scripts build the existing Dockerfile image, run `python backend/benchmarks/evaluate.py --external all --limit 25`, and mount `backend/benchmarks` so `results.json` and `debug/sroie_failures.json` are written back to the host repo. External benchmarks fail early when required OCR dependencies are missing unless `--allow-missing-ocr` is used explicitly for debugging.
+
 ## Smoke Test Commands
 
 ```bash

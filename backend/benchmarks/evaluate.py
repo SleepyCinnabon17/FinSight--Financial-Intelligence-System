@@ -28,6 +28,7 @@ from backend.benchmarks.metrics import (
     field_accuracy as compute_field_accuracy,
     word_error_rate,
 )
+from backend.benchmarks.ocr_deps import external_ocr_dependency_status, format_dependency_report
 from backend.models.extraction import ExtractionResult
 from backend.models.transaction import Transaction
 from backend.pipeline.analyzer import detect_anomalies, generate_analysis
@@ -100,6 +101,23 @@ class ExternalSample:
 
 class ExternalDatasetUnavailable(RuntimeError):
     """Raised when an optional external benchmark cannot be loaded."""
+
+
+def _external_ocr_dependency_status() -> dict[str, Any]:
+    return external_ocr_dependency_status()
+
+
+def _ensure_external_ocr_dependencies(allow_missing_ocr: bool) -> None:
+    if allow_missing_ocr:
+        return
+    report = _external_ocr_dependency_status()
+    if report.get("ready"):
+        return
+    raise ExternalDatasetUnavailable(
+        "External OCR benchmark cannot run reliably because OCR dependencies are missing. "
+        "Use Docker benchmark command or install Tesseract/Poppler locally.\n"
+        f"{format_dependency_report(report)}"
+    )
 
 
 def _atomic_write_json(path: Path, data: dict[str, Any]) -> None:
@@ -916,10 +934,12 @@ def _run_external_benchmarks(
     limit: int,
     dataset_dir: Path | None,
     allow_download: bool,
+    allow_missing_ocr: bool,
 ) -> dict[str, dict[str, Any]]:
     external_results = _external_results_template(limit)
     if external is None:
         return external_results
+    _ensure_external_ocr_dependencies(allow_missing_ocr)
     dataset_keys = list(EXTERNAL_DATASETS) if external == "all" else [external]
     for dataset_key in dataset_keys:
         try:
@@ -960,11 +980,12 @@ def run_evaluation(
     limit: int = 25,
     dataset_dir: Path | None = None,
     allow_download: bool = True,
+    allow_missing_ocr: bool = False,
 ) -> dict[str, Any]:
     if external not in {None, "sroie", "cord", "funsd", "all"}:
         raise ValueError("external must be one of: sroie, cord, funsd, all")
     synthetic_regression = _synthetic_section(include_synthetic)
-    external_benchmarks = _run_external_benchmarks(external, limit, dataset_dir, allow_download)
+    external_benchmarks = _run_external_benchmarks(external, limit, dataset_dir, allow_download, allow_missing_ocr)
     external_available = any(result.get("available") is True for result in external_benchmarks.values())
     results = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -989,6 +1010,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=25, help="Maximum external samples to evaluate.")
     parser.add_argument("--dataset-dir", type=Path, default=None, help="Optional local directory containing <dataset>.json or <dataset>.jsonl rows.")
     parser.add_argument("--no-download", action="store_true", help="Do not call Hugging Face Dataset Viewer or download images.")
+    parser.add_argument(
+        "--allow-missing-ocr",
+        action="store_true",
+        help="Debug only: run external benchmarks even if local OCR system dependencies are missing.",
+    )
     return parser.parse_args()
 
 
@@ -997,13 +1023,18 @@ def main() -> None:
     include_synthetic = not args.skip_synthetic
     if args.synthetic:
         include_synthetic = True
-    results = run_evaluation(
-        include_synthetic=include_synthetic,
-        external=args.external,
-        limit=max(1, args.limit),
-        dataset_dir=args.dataset_dir,
-        allow_download=not args.no_download,
-    )
+    try:
+        results = run_evaluation(
+            include_synthetic=include_synthetic,
+            external=args.external,
+            limit=max(1, args.limit),
+            dataset_dir=args.dataset_dir,
+            allow_download=not args.no_download,
+            allow_missing_ocr=args.allow_missing_ocr,
+        )
+    except ExternalDatasetUnavailable as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(2) from None
     print(json.dumps(results, indent=2))
 
 
