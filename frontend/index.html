@@ -63,7 +63,18 @@
             <section id="transactions" aria-labelledby="transactions-title">
               <div class="section-header">
                 <h2 id="transactions-title">Transactions</h2>
-                <button id="refresh-data" type="button">Refresh</button>
+                <div class="section-actions">
+                  <button id="refresh-data" type="button">Refresh</button>
+                  <button
+                    id="reset-demo-data"
+                    class="danger-action"
+                    type="button"
+                    aria-label="Reset shared demo data to zero"
+                    title="Resets shared demo data because this deployment has no auth"
+                  >
+                    Reset demo
+                  </button>
+                </div>
               </div>
               <div class="table-wrap">
                 <div class="table-skeleton skeleton-loader" aria-hidden="true">

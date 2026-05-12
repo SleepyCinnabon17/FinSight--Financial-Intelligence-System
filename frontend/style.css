@@ -348,6 +348,12 @@ section {
   gap: var(--space-lg);
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 h2,
 h3 {
   margin: 0 0 var(--space-lg);
@@ -952,6 +958,7 @@ td.status-cell {
 .chat-form button,
 #file-picker-button,
 #refresh-data,
+#reset-demo-data,
 .sidebar-toggle,
 .nova-toggle,
 .theme-toggle,
@@ -962,6 +969,11 @@ td.status-cell {
   border: var(--border-width-sm) solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
+}
+
+#reset-demo-data.danger-action {
+  border-color: var(--error);
+  color: var(--error);
 }
 
 .toast-container {

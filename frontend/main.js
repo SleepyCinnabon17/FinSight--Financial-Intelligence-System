@@ -1,4 +1,4 @@
-import { confirmDuplicate, dismissAnomaly, fetchAnalysis, fetchTransactions } from './api.js';
+import { confirmDuplicate, deleteTransaction, dismissAnomaly, fetchAnalysis, fetchTransactions } from './api.js';
 import { createTransactionDetailsRow, createTransactionRow, formatCurrency } from './ui_components.js';
 
 const els = {
@@ -6,6 +6,8 @@ const els = {
   transactionBody: document.getElementById('transaction-body'),
   transactionEmpty: document.querySelector('.transaction-empty-state'),
   refreshData: document.getElementById('refresh-data'),
+  resetDemoData: document.getElementById('reset-demo-data'),
+  toastContainer: document.getElementById('toast-container'),
   sidebar: document.querySelector('.sidebar'),
   sidebarToggle: document.getElementById('sidebar-toggle'),
   novaPanel: document.getElementById('nova'),
@@ -15,6 +17,11 @@ const els = {
 };
 
 const THEME_STORAGE_KEY = 'finsight-theme';
+const RESET_LABEL = 'Reset demo';
+const RESET_ARMED_LABEL = 'Click again to reset';
+const RESET_DISARM_MS = 4500;
+let resetArmed = false;
+let resetTimer = null;
 
 function state() {
   return window.FinSightState;
@@ -107,6 +114,7 @@ async function handleDismissAnomaly(id) {
 
 export function setupTransactions() {
   els.refreshData.addEventListener('click', loadDashboard);
+  els.resetDemoData?.addEventListener('click', handleResetDemoData);
   document.querySelectorAll('#transaction-table th').forEach((th) => {
     th.addEventListener('click', () => {
       state().updateSortState(th.dataset.sort);
@@ -114,6 +122,64 @@ export function setupTransactions() {
     });
   });
   document.addEventListener('finsight:refresh-dashboard', loadDashboard);
+}
+
+async function handleResetDemoData() {
+  if (!resetArmed) {
+    armResetDemoData();
+    return;
+  }
+  clearResetTimer();
+  resetArmed = false;
+  els.resetDemoData.disabled = true;
+  els.resetDemoData.textContent = 'Resetting...';
+  try {
+    const transactions = await fetchTransactions();
+    const results = await Promise.allSettled(transactions.map((transaction) => deleteTransaction(transaction.id)));
+    const failed = results.some((result) => result.status === 'rejected');
+    await loadDashboard();
+    if (failed) {
+      throw new Error('Could not reset demo data.');
+    }
+    showToast('Demo data reset.', 'success');
+  } catch (error) {
+    showToast('Could not reset demo data.', 'error');
+  } finally {
+    els.resetDemoData.disabled = false;
+    resetResetDemoButton();
+  }
+}
+
+function armResetDemoData() {
+  resetArmed = true;
+  els.resetDemoData.textContent = RESET_ARMED_LABEL;
+  els.resetDemoData.setAttribute('aria-label', 'Click again to reset shared demo data to zero');
+  clearResetTimer();
+  resetTimer = window.setTimeout(resetResetDemoButton, RESET_DISARM_MS);
+}
+
+function resetResetDemoButton() {
+  resetArmed = false;
+  clearResetTimer();
+  els.resetDemoData.textContent = RESET_LABEL;
+  els.resetDemoData.setAttribute('aria-label', 'Reset shared demo data to zero');
+}
+
+function clearResetTimer() {
+  if (resetTimer) {
+    window.clearTimeout(resetTimer);
+    resetTimer = null;
+  }
+}
+
+function showToast(message, type = 'success') {
+  if (!els.toastContainer) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  toast.textContent = message;
+  els.toastContainer.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 4500);
 }
 
 setupTransactions();

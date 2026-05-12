@@ -28,6 +28,10 @@ export function dismissAnomaly(transactionId) {
   return api(`/api/v1/transactions/${transactionId}/dismiss-anomaly`, { method: 'POST' });
 }
 
+export function deleteTransaction(transactionId) {
+  return api(`/api/v1/transactions/${transactionId}`, { method: 'DELETE' });
+}
+
 export function uploadBills(formData) {
   return api('/api/v1/upload', { method: 'POST', body: formData });
 }
@@ -105,6 +109,7 @@ window.FinSightApi = {
   fetchAnalysis,
   confirmDuplicate,
   dismissAnomaly,
+  deleteTransaction,
   uploadBills,
   confirmTransaction,
   discardTransaction,
