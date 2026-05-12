@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-05-12T13:32:18.031112+00:00",
+  "generated_at": "2026-05-12T13:55:08.248189+00:00",
   "summary": {
     "headline_source": "external",
-    "external_available": false,
+    "external_available": true,
     "synthetic_regression_available": true
   },
   "synthetic_regression": {
@@ -18,7 +18,7 @@
         "categorization_f1": 0.0,
         "duplicate_detection_rate": 1.0,
         "anomaly_recall": 0.0,
-        "avg_pipeline_time_seconds": 0.2318,
+        "avg_pipeline_time_seconds": 0.2462,
         "bills_processed": 47
       },
       "ocr": {
@@ -105,8 +105,8 @@
         "status": "correction_rate requires review-event logging"
       },
       "pipeline": {
-        "avg_pipeline_time_seconds": 0.2318,
-        "max_pipeline_time_seconds": 1.0568,
+        "avg_pipeline_time_seconds": 0.2462,
+        "max_pipeline_time_seconds": 1.0245,
         "bills_processed": 47,
         "pipeline_errors": 0
       },
@@ -156,28 +156,111 @@
   },
   "external_benchmarks": {
     "sroie": {
-      "available": false,
+      "available": true,
       "dataset": "ICDAR2019-SROIE",
       "purpose": "Real receipt field extraction benchmark",
       "limit": 25,
-      "metrics": {},
-      "status": "not generated"
+      "metrics": {
+        "field_extraction_accuracy": 0.0533,
+        "field_accuracy_by_field": {
+          "merchant": 0.0,
+          "date": 0.12,
+          "total": 0.04
+        },
+        "field_detection_rate": 0.3333,
+        "field_detection_by_field": {
+          "merchant": 0.0,
+          "date": 0.0,
+          "total": 1.0
+        },
+        "cer": 0.9985,
+        "wer": 1.0,
+        "ocr_accuracy": 0.0015,
+        "avg_pipeline_time_seconds": 0.4205,
+        "max_pipeline_time_seconds": 1.7477,
+        "samples_processed": 25,
+        "samples_failed": 0,
+        "samples_skipped": 0,
+        "confidence_calibration": [
+          {
+            "range": "0.00-0.20",
+            "count": 75,
+            "avg_confidence": 0.0,
+            "accuracy": 0.0533,
+            "calibration_gap": 0.0533
+          }
+        ],
+        "merchant_accuracy": 0.0,
+        "date_accuracy": 0.12,
+        "date_parse_rate": 0.0,
+        "total_amount_accuracy_within_1": 0.04
+      },
+      "status": "generated"
     },
     "cord": {
-      "available": false,
+      "available": true,
       "dataset": "CORD v2",
       "purpose": "Receipt OCR/layout robustness benchmark",
       "limit": 25,
-      "metrics": {},
-      "status": "not generated"
+      "metrics": {
+        "field_extraction_accuracy": 0.0,
+        "field_accuracy_by_field": {
+          "total": 0.0,
+          "subtotal": 0.0,
+          "tax": 0.0
+        },
+        "field_detection_rate": 0.3333,
+        "field_detection_by_field": {
+          "total": 1.0,
+          "subtotal": 0.0,
+          "tax": 0.0
+        },
+        "cer": 0.9924,
+        "wer": 1.0,
+        "ocr_accuracy": 0.0076,
+        "avg_pipeline_time_seconds": 0.2823,
+        "max_pipeline_time_seconds": 1.8211,
+        "samples_processed": 25,
+        "samples_failed": 0,
+        "samples_skipped": 0,
+        "confidence_calibration": [
+          {
+            "range": "0.00-0.20",
+            "count": 75,
+            "avg_confidence": 0.0,
+            "accuracy": 0.0,
+            "calibration_gap": 0.0
+          }
+        ],
+        "total_amount_accuracy_within_1": 0.0,
+        "scope_note": "CORD metrics focus on receipt OCR/layout and totals where labels map cleanly to FinSight fields."
+      },
+      "status": "generated"
     },
     "funsd": {
-      "available": false,
+      "available": true,
       "dataset": "FUNSD",
       "purpose": "Document key-value structure stress test; not a receipt benchmark",
       "limit": 25,
-      "metrics": {},
-      "status": "not generated"
+      "metrics": {
+        "field_extraction_accuracy": null,
+        "field_accuracy_by_field": {},
+        "field_detection_rate": null,
+        "field_detection_by_field": {},
+        "cer": 0.999,
+        "wer": 1.0,
+        "ocr_accuracy": 0.001,
+        "avg_pipeline_time_seconds": 0.1851,
+        "max_pipeline_time_seconds": 0.2776,
+        "samples_processed": 25,
+        "samples_failed": 0,
+        "samples_skipped": 0,
+        "confidence_calibration": [],
+        "scope_note": "FUNSD is a document-structure stress test, not a receipt accuracy benchmark.",
+        "key_value_pairing_rate": null,
+        "key_value_pairing_status": "requires a dedicated form-understanding evaluator"
+      },
+      "status": "generated"
     }
   },
   "deferred_metrics": {
