@@ -287,6 +287,28 @@ small {
   gap: var(--space-md);
 }
 
+.metrics-section-heading {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.metrics-section-heading h3,
+.metrics-secondary-section h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: var(--line-height-tight);
+}
+
+.metrics-section-heading p,
+.metrics-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-normal);
+}
+
 .metric-card {
   display: grid;
   gap: var(--space-sm);
@@ -316,6 +338,36 @@ small {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-md);
   margin: 0;
+}
+
+.metrics-details.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: var(--space-md);
+}
+
+.metrics-secondary-section {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border: var(--border-width-sm) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+}
+
+.synthetic-regression-toggle {
+  justify-self: start;
+  padding: var(--space-sm) var(--space-md);
+  border: var(--border-width-sm) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: var(--font-weight-medium);
+}
+
+.synthetic-regression-body {
+  display: grid;
+  gap: var(--space-sm);
 }
 
 .metric-detail {

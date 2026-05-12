@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -146,14 +147,28 @@ def test_analysis_chat_news_health(monkeypatch, tmp_path: Path) -> None:
 
 def test_benchmark_results_endpoint_reads_generated_json(monkeypatch, tmp_path: Path) -> None:
     results_path = tmp_path / "results.json"
-    results_path.write_text('{"summary": {"ocr_accuracy": 0.95}}', encoding="utf-8")
+    results_path.write_text(
+        json.dumps(
+            {
+                "summary": {
+                    "headline_source": "external",
+                    "external_available": False,
+                    "synthetic_regression_available": True,
+                },
+                "synthetic_regression": {"available": True, "metrics": {"summary": {"ocr_accuracy": 0.95}}},
+                "external_benchmarks": {"sroie": {"available": False}},
+            }
+        ),
+        encoding="utf-8",
+    )
     monkeypatch.setattr(config, "BENCHMARK_RESULTS_PATH", results_path)
     client = TestClient(app)
 
     response = client.get("/api/v1/benchmark/results")
 
     assert response.status_code == 200
-    assert response.json()["data"]["summary"]["ocr_accuracy"] == 0.95
+    assert response.json()["data"]["summary"]["headline_source"] == "external"
+    assert response.json()["data"]["synthetic_regression"]["metrics"]["summary"]["ocr_accuracy"] == 0.95
 
 
 def test_benchmark_results_endpoint_handles_missing_file(monkeypatch, tmp_path: Path) -> None:

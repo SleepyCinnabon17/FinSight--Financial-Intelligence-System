@@ -6,7 +6,7 @@
 - `backend/pipeline/*`: preprocessing, OCR, KIE, transaction structuring, duplicate detection, and anomaly/spending analysis.
 - `backend/chatbot/*`: Nova chat, market data cache, and financial news cache.
 - `frontend/*`: vanilla JavaScript dashboard modules for API calls, state, upload, transactions, charts, and Nova chat.
-- `synthetic/*` and `backend/benchmarks/evaluate.py`: synthetic data generation and benchmark evaluation.
+- `synthetic/*` and `backend/benchmarks/evaluate.py`: generated-bill regression checks plus optional external SROIE/CORD/FUNSD benchmark evaluation.
 
 ## Request/Data Flow
 

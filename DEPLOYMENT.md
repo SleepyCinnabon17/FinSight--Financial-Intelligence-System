@@ -89,6 +89,17 @@ Health responses must not expose API keys, raw environment values, stack traces,
 
 `GET /api/v1/benchmark/results` serves the last generated `backend/benchmarks/results.json` file for the frontend Benchmark Metrics panel. It does not execute OCR or benchmark work, so it can remain available in production while the benchmark execution endpoint stays disabled.
 
+The saved results file separates external evaluator datasets from generated synthetic regression checks. External benchmarks are optional offline commands and should not be run from Railway production:
+
+```bash
+python backend/benchmarks/evaluate.py --external sroie --limit 25
+python backend/benchmarks/evaluate.py --external cord --limit 25
+python backend/benchmarks/evaluate.py --external funsd --limit 25
+python backend/benchmarks/evaluate.py --external all --limit 25
+```
+
+Use synthetic results only as a controlled regression check. Do not set `FINSIGHT_ENABLE_OCR_FIXTURE_METADATA` for Railway or production external benchmarks.
+
 ## Smoke Test Commands
 
 ```bash

@@ -26,6 +26,26 @@ DATE_RE = re.compile(
     re.IGNORECASE,
 )
 TOTAL_KEYWORDS = re.compile(r"\b(total|grand total|amount due)\b", re.IGNORECASE)
+TOTAL_PENALTY_KEYWORDS = re.compile(
+    r"\b(subtotal|sub total|exclude|excluding|gst|tax|vat|round|rounding|discount|disc)\b",
+    re.IGNORECASE,
+)
+TOTAL_STRONG_KEYWORDS = re.compile(r"\b(grand total|amount due|balance due|total payable|net total)\b", re.IGNORECASE)
+MERCHANT_NOISE_RE = re.compile(
+    r"\b("
+    r"invoice|receipt|tax invoice|date|bill to|subtotal|sub total|total|gst|tax|vat|payment|"
+    r"cashier|sales|copy|customer|address|description|qty|quantity|price|amount|tel|fax|"
+    r"email|website|www|roc|reg|no\.?|page|time"
+    r")\b",
+    re.IGNORECASE,
+)
+MERCHANT_SUFFIX_RE = re.compile(
+    r"\b("
+    r"sdn|bhd|ltd|limited|llc|inc|corp|company|co\.?|store|stores|market|marketing|"
+    r"restaurant|cafe|pharmacy|supermarket|mart|trading|enterprise|enterprises"
+    r")\b",
+    re.IGNORECASE,
+)
 TAX_KEYWORDS = ["gst", "tax", "vat", "cgst", "sgst", "igst"]
 PAYMENT_RE = re.compile(r"\b(upi|card|cash|netbanking|wallet)\b", re.IGNORECASE)
 MONTHS = {
@@ -145,14 +165,20 @@ def _raw_text(blocks: Iterable[OCRBlock]) -> str:
 
 
 def _top_merchant(blocks: list[OCRBlock]) -> tuple[str | None, float, str]:
-    candidates = [
-        block
-        for block in sorted(blocks, key=lambda item: (item.bbox[1], item.bbox[0]))
-        if not re.search(r"\b(invoice|date|bill to|subtotal|total|gst|payment)\b", block.text, re.IGNORECASE)
-    ]
+    ordered = sorted(blocks, key=lambda item: (item.bbox[1], item.bbox[0]))
+    candidates = []
+    for block in ordered:
+        text = block.text.strip()
+        if not text or MERCHANT_NOISE_RE.search(text):
+            continue
+        if PRICE_RE.fullmatch(text):
+            continue
+        candidates.append(block)
     if not candidates:
         return None, 0.0, ""
-    block = candidates[0]
+    top_window = candidates[:8]
+    suffix_matches = [block for block in top_window if MERCHANT_SUFFIX_RE.search(block.text)]
+    block = suffix_matches[0] if suffix_matches else candidates[0]
     return block.text.strip(), min(KIE_HIGH_CONFIDENCE, block.confidence), block.text
 
 
@@ -207,9 +233,32 @@ def _extract_subtotal(blocks: list[OCRBlock]) -> tuple[float | None, float, str]
 
 
 def _extract_total(blocks: list[OCRBlock]) -> tuple[float | None, float, str]:
-    total, confidence, raw = _amount_after_keyword(blocks, TOTAL_KEYWORDS)
-    if total is not None:
-        return total, confidence, raw
+    total_candidates: list[tuple[float, float, OCRBlock]] = []
+    for index, block in enumerate(blocks):
+        if not TOTAL_KEYWORDS.search(block.text):
+            continue
+        amount = _last_amount(block.text)
+        source_block = block
+        confidence = min(KIE_HIGH_CONFIDENCE, block.confidence)
+        if amount is None and index + 1 < len(blocks):
+            amount = normalize_amount(blocks[index + 1].text)
+            source_block = blocks[index + 1]
+            confidence = min(KIE_MEDIUM_CONFIDENCE, source_block.confidence)
+        if amount is None:
+            continue
+        text = block.text
+        score = 10.0
+        if TOTAL_STRONG_KEYWORDS.search(text):
+            score += 6.0
+        if re.search(r"^\s*total\s*[:\-]?", text, re.IGNORECASE):
+            score += 5.0
+        if TOTAL_PENALTY_KEYWORDS.search(text):
+            score -= 8.0
+        score += min(block.bbox[1] / 1000.0, 5.0)
+        total_candidates.append((score, amount, source_block))
+    if total_candidates:
+        _, amount, block = max(total_candidates, key=lambda item: item[0])
+        return amount, min(KIE_HIGH_CONFIDENCE, block.confidence), block.text
     amounts = [(normalize_amount(block.text), block) for block in blocks if PRICE_RE.search(block.text)]
     parsed = [(amount, block) for amount, block in amounts if amount is not None]
     if not parsed:

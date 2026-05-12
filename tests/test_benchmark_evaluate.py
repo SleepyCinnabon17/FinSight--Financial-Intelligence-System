@@ -74,11 +74,96 @@ def test_run_evaluation_writes_frontend_ready_kpi_shape(monkeypatch, tmp_path: P
 
     result = evaluate.run_evaluation()
 
-    assert result["summary"]["ocr_accuracy"] == 1.0
-    assert result["summary"]["field_extraction_accuracy"] == 1.0
-    assert result["summary"]["categorization_f1"] == 1.0
-    assert result["ocr"]["cer"] == 0.0
-    assert result["extraction"]["amount_accuracy_within_1_inr"] == 1.0
-    assert result["self_correction"]["correction_rate"] is None
-    assert result["chatbot"]["response_latency_target_seconds"] == 5
+    assert result["summary"] == {
+        "headline_source": "external",
+        "external_available": False,
+        "synthetic_regression_available": True,
+    }
+    assert result["synthetic_regression"]["purpose"] == "Internal regression check only"
+    synthetic_metrics = result["synthetic_regression"]["metrics"]
+    assert synthetic_metrics["summary"]["ocr_accuracy"] == 1.0
+    assert synthetic_metrics["summary"]["field_extraction_accuracy"] == 1.0
+    assert synthetic_metrics["summary"]["categorization_f1"] == 1.0
+    assert synthetic_metrics["ocr"]["cer"] == 0.0
+    assert synthetic_metrics["extraction"]["amount_accuracy_within_1_inr"] == 1.0
+    assert result["external_benchmarks"]["sroie"]["available"] is False
+    assert result["external_benchmarks"]["cord"]["available"] is False
+    assert result["external_benchmarks"]["funsd"]["available"] is False
+    assert result["deferred_metrics"]["correction_rate"] == "requires review-event logging"
     assert json.loads(results_path.read_text(encoding="utf-8"))["summary"] == result["summary"]
+
+
+def test_sroie_row_maps_company_date_total_and_keeps_address_optional() -> None:
+    row = {
+        "key": "X0001",
+        "entities": {
+            "company": "OJC MARKETING SDN BHD",
+            "date": "15/01/2019",
+            "address": "NO 2 JALAN BAYU",
+            "total": "193.00",
+        },
+        "words": ["OJC", "MARKETING", "TOTAL", "193.00"],
+    }
+
+    sample = evaluate._sample_from_sroie_row(row)
+
+    assert sample.sample_id == "X0001"
+    assert sample.truth["merchant"] == "OJC MARKETING SDN BHD"
+    assert sample.truth["date"] == "2019-01-15"
+    assert sample.truth["total"] == 193.0
+    assert sample.truth["address"] == "NO 2 JALAN BAYU"
+    assert sample.truth["fields"] == ["merchant", "date", "total"]
+    assert sample.reference_text == "OJC MARKETING TOTAL 193.00"
+
+
+def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch) -> None:
+    sample = evaluate.ExternalSample(
+        dataset_key="sroie",
+        sample_id="S1",
+        image_bytes=b"image-bytes",
+        truth={
+            "merchant": "Demo Store",
+            "date": "2026-05-12",
+            "total": 10.0,
+            "fields": ["merchant", "date", "total"],
+        },
+        reference_text="Demo Store Total 10.00",
+    )
+    extraction = _extraction()
+    transaction = Transaction(
+        merchant="Demo Store",
+        date="2026-05-12",
+        items=[],
+        subtotal=9.0,
+        tax=1.0,
+        total=10.0,
+        category="Uncategorized",
+        file_name="s1.png",
+        raw_ocr_text="Demo Store Total 10.00",
+    )
+
+    def fake_pipeline(external_sample: evaluate.ExternalSample) -> evaluate.EvaluationRecord:
+        return evaluate.EvaluationRecord(
+            image_name="s1.png",
+            bill_id=external_sample.sample_id,
+            transaction=transaction,
+            extraction=extraction,
+            truth=external_sample.truth,
+            ocr_text="Demo Store Total 10.00",
+            reference_text=external_sample.reference_text,
+            pipeline_seconds=0.5,
+        )
+
+    monkeypatch.setattr(evaluate, "_load_external_samples", lambda *_args, **_kwargs: [sample])
+    monkeypatch.setattr(evaluate, "_safe_external_pipeline", fake_pipeline)
+
+    result = evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
+
+    assert result["summary"]["external_available"] is True
+    assert result["synthetic_regression"]["available"] is False
+    sroie = result["external_benchmarks"]["sroie"]
+    assert sroie["available"] is True
+    assert sroie["purpose"] == "Real receipt field extraction benchmark"
+    assert sroie["metrics"]["merchant_accuracy"] == 1.0
+    assert sroie["metrics"]["total_amount_accuracy_within_1"] == 1.0
+    assert "synthetic" not in sroie["purpose"].lower()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -7,7 +8,9 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
+
+import requests
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -28,7 +31,7 @@ from backend.models.extraction import ExtractionResult
 from backend.models.transaction import Transaction
 from backend.pipeline.analyzer import detect_anomalies, generate_analysis
 from backend.pipeline.deduplicator import check_duplicate
-from backend.pipeline.kie import extract_fields
+from backend.pipeline.kie import extract_fields, normalize_amount, normalize_date
 from backend.pipeline.ocr import run_ocr
 from backend.pipeline.preprocess import preprocess
 from backend.pipeline.structurer import extraction_to_transaction
@@ -39,6 +42,36 @@ IMAGE_DIR = PROJECT_ROOT / "synthetic" / "synthetic_bill_images"
 RESULTS_PATH = Path(__file__).resolve().parent / "results.json"
 EVALUATED_FIELDS = ["merchant", "date", "total", "category"]
 DETECTION_FIELDS = ["merchant", "date", "total", "category"]
+HF_DATASET_ROWS_URL = "https://datasets-server.huggingface.co/rows"
+REQUEST_TIMEOUT_SECONDS = 30
+
+EXTERNAL_DATASETS: dict[str, dict[str, str]] = {
+    "sroie": {
+        "repo": "jsdnrs/ICDAR2019-SROIE",
+        "dataset": "ICDAR2019-SROIE",
+        "split": "test",
+        "purpose": "Real receipt field extraction benchmark",
+    },
+    "cord": {
+        "repo": "naver-clova-ix/cord-v2",
+        "dataset": "CORD v2",
+        "split": "test",
+        "purpose": "Receipt OCR/layout robustness benchmark",
+    },
+    "funsd": {
+        "repo": "nielsr/funsd",
+        "dataset": "FUNSD",
+        "split": "test",
+        "purpose": "Document key-value structure stress test; not a receipt benchmark",
+    },
+}
+
+DEFERRED_METRICS = {
+    "correction_rate": "requires review-event logging",
+    "nova_groundedness": "requires source/retrieval logging or human-labeled chat eval",
+    "nova_retrieval_precision": "requires retrieval/source evaluation",
+    "real_savings_validation": "requires longitudinal user data",
+}
 
 
 @dataclass(slots=True)
@@ -51,6 +84,19 @@ class EvaluationRecord:
     ocr_text: str
     reference_text: str
     pipeline_seconds: float
+
+
+@dataclass(slots=True)
+class ExternalSample:
+    dataset_key: str
+    sample_id: str
+    image_bytes: bytes | None
+    truth: dict[str, Any]
+    reference_text: str
+
+
+class ExternalDatasetUnavailable(RuntimeError):
+    """Raised when an optional external benchmark cannot be loaded."""
 
 
 def _atomic_write_json(path: Path, data: dict[str, Any]) -> None:
@@ -74,15 +120,27 @@ def _bill_id_from_image(path: Path) -> str:
     return stem
 
 
-def _amount_matches(left: float | None, right: float) -> bool:
-    if left is None:
+def _amount_matches(left: float | None, right: float | None) -> bool:
+    if left is None or right is None:
         return False
     return abs(float(left) - float(right)) <= 1.0
 
 
+def _text_matches(left: str | None, right: str | None) -> bool:
+    if not left or not right:
+        return False
+    return _normalize_text(left) == _normalize_text(right)
+
+
+def _normalize_text(value: str | None) -> str:
+    if value is None:
+        return ""
+    return " ".join(str(value).lower().replace("\n", " ").split())
+
+
 def _field_scores(predicted: Transaction, truth: dict[str, Any]) -> dict[str, bool]:
     return {
-        "merchant": (predicted.merchant or "").lower() == str(truth["merchant"]).lower(),
+        "merchant": _text_matches(predicted.merchant, str(truth["merchant"])),
         "date": predicted.date == truth["date"],
         "total": _amount_matches(predicted.total, float(truth["amount"])),
         "category": predicted.category == truth["category"],
@@ -131,13 +189,15 @@ def _mean(values: list[float]) -> float | None:
     return round(sum(values) / len(values), 4)
 
 
-def _confidence_samples(records: list[EvaluationRecord]) -> list[tuple[float | None, bool]]:
+def _confidence_samples(records: list[EvaluationRecord], fields: Iterable[str] = ("merchant", "date", "total")) -> list[tuple[float | None, bool]]:
     samples: list[tuple[float | None, bool]] = []
     for record in records:
-        scores = _field_scores(record.transaction, record.truth)
-        for field_name in ["merchant", "date", "total"]:
+        scores = _external_field_scores(record, list(fields)) if "fields" in record.truth else _field_scores(record.transaction, record.truth)
+        for field_name in fields:
+            if not hasattr(record.extraction, field_name):
+                continue
             field = getattr(record.extraction, field_name)
-            samples.append((field.confidence, scores[field_name]))
+            samples.append((field.confidence, scores.get(field_name, False)))
     return samples
 
 
@@ -152,7 +212,7 @@ def _legacy_target_pass(field_accuracy: dict[str, float], anomaly_recall: float,
     }
 
 
-def run_evaluation() -> dict[str, Any]:
+def _run_synthetic_regression() -> dict[str, Any]:
     truth_by_id = _load_ground_truth()
     errors: list[str] = []
     records: list[EvaluationRecord] = []
@@ -189,12 +249,7 @@ def run_evaluation() -> dict[str, Any]:
     detection_result = compute_field_accuracy(detection_checks, DETECTION_FIELDS)
     field_detection_rate = detection_result["overall"]
 
-    text_records = [record for record in records if record.reference_text]
-    combined_reference = "\n".join(record.reference_text for record in text_records)
-    combined_ocr = "\n".join(record.ocr_text for record in text_records)
-    cer = character_error_rate(combined_reference, combined_ocr) if text_records else None
-    wer = word_error_rate(combined_reference, combined_ocr) if text_records else None
-    ocr_accuracy = round(max(0.0, 1.0 - cer), 4) if cer is not None else None
+    cer, wer, ocr_accuracy = _ocr_quality(records)
 
     category_metrics = classification_metrics(
         [str(record.truth["category"]) for record in records],
@@ -246,8 +301,7 @@ def run_evaluation() -> dict[str, Any]:
     analysis = generate_analysis(canonical_transactions)
     pipeline_times = [record.pipeline_seconds for record in records]
 
-    results = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+    return {
         "dataset": "synthetic",
         "summary": {
             "ocr_accuracy": ocr_accuracy,
@@ -296,7 +350,7 @@ def run_evaluation() -> dict[str, Any]:
             "correction_rate": None,
             "false_positive_rate": anomaly_fpr,
             "duplicate_detection_rate": duplicate_rate,
-            "confidence_calibration": confidence_calibration_buckets(_confidence_samples(records)),
+            "confidence_calibration": confidence_calibration_buckets(_confidence_samples(records, ("merchant", "date", "total"))),
             "status": "correction_rate requires review-event logging",
         },
         "pipeline": {
@@ -336,12 +390,482 @@ def run_evaluation() -> dict[str, Any]:
         "target_pass": _legacy_target_pass(field_accuracy, anomaly_recall, duplicate_precision),
         "errors": errors,
     }
+
+
+def _ocr_quality(records: list[EvaluationRecord]) -> tuple[float | None, float | None, float | None]:
+    text_records = [record for record in records if record.reference_text]
+    if not text_records:
+        return None, None, None
+    combined_reference = "\n".join(record.reference_text for record in text_records)
+    combined_ocr = "\n".join(record.ocr_text for record in text_records)
+    cer = character_error_rate(combined_reference, combined_ocr)
+    wer = word_error_rate(combined_reference, combined_ocr)
+    ocr_accuracy = round(max(0.0, 1.0 - cer), 4)
+    return cer, wer, ocr_accuracy
+
+
+def _empty_external_result(dataset_key: str, limit: int, status: str = "not generated", message: str | None = None) -> dict[str, Any]:
+    dataset = EXTERNAL_DATASETS[dataset_key]
+    result: dict[str, Any] = {
+        "available": False,
+        "dataset": dataset["dataset"],
+        "purpose": dataset["purpose"],
+        "limit": limit,
+        "metrics": {},
+        "status": status,
+    }
+    if message:
+        result["message"] = message
+    return result
+
+
+def _external_results_template(limit: int) -> dict[str, dict[str, Any]]:
+    return {dataset_key: _empty_external_result(dataset_key, limit) for dataset_key in EXTERNAL_DATASETS}
+
+
+def _sample_from_sroie_row(row: dict[str, Any], image_bytes: bytes | None = None) -> ExternalSample:
+    entities = row.get("entities") or {}
+    company = _clean_string(entities.get("company"))
+    normalized = normalize_date(_clean_string(entities.get("date")))
+    amount = normalize_amount(_clean_string(entities.get("total")))
+    truth: dict[str, Any] = {
+        "merchant": company,
+        "date": normalized,
+        "total": amount,
+        "address": _clean_string(entities.get("address")),
+        "fields": ["merchant", "date", "total"],
+    }
+    return ExternalSample(
+        dataset_key="sroie",
+        sample_id=str(row.get("key") or row.get("id") or "sroie-sample"),
+        image_bytes=image_bytes,
+        truth=truth,
+        reference_text=_reference_text_from_words(row.get("words")),
+    )
+
+
+def _sample_from_cord_row(row: dict[str, Any], image_bytes: bytes | None = None) -> ExternalSample:
+    ground_truth = row.get("ground_truth") or {}
+    if isinstance(ground_truth, str):
+        try:
+            ground_truth = json.loads(ground_truth)
+        except json.JSONDecodeError:
+            ground_truth = {}
+    parse = ground_truth.get("gt_parse") if isinstance(ground_truth, dict) else {}
+    parse = parse if isinstance(parse, dict) else {}
+    total = parse.get("total") if isinstance(parse.get("total"), dict) else {}
+    subtotal = parse.get("sub_total") if isinstance(parse.get("sub_total"), dict) else {}
+    fields: list[str] = []
+    truth: dict[str, Any] = {"fields": fields}
+    total_amount = normalize_amount(_clean_string(total.get("total_price")))
+    subtotal_amount = normalize_amount(_clean_string(subtotal.get("subtotal_price")))
+    tax_amount = normalize_amount(_clean_string(subtotal.get("tax_price") or total.get("tax_price")))
+    if total_amount is not None:
+        truth["total"] = total_amount
+        fields.append("total")
+    if subtotal_amount is not None:
+        truth["subtotal"] = subtotal_amount
+        fields.append("subtotal")
+    if tax_amount is not None:
+        truth["tax"] = tax_amount
+        fields.append("tax")
+    reference_text = _cord_reference_text(ground_truth)
+    return ExternalSample(
+        dataset_key="cord",
+        sample_id=str(row.get("key") or row.get("id") or "cord-sample"),
+        image_bytes=image_bytes,
+        truth=truth,
+        reference_text=reference_text,
+    )
+
+
+def _sample_from_funsd_row(row: dict[str, Any], image_bytes: bytes | None = None) -> ExternalSample:
+    words = row.get("words") or []
+    return ExternalSample(
+        dataset_key="funsd",
+        sample_id=str(row.get("id") or row.get("key") or "funsd-sample"),
+        image_bytes=image_bytes,
+        truth={"fields": []},
+        reference_text=_reference_text_from_words(words),
+    )
+
+
+def _clean_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = " ".join(str(value).strip().split())
+    return text or None
+
+
+def _reference_text_from_words(words: Any) -> str:
+    if not isinstance(words, list):
+        return ""
+    return " ".join(str(word) for word in words if str(word).strip())
+
+
+def _cord_reference_text(ground_truth: Any) -> str:
+    if not isinstance(ground_truth, dict):
+        return ""
+    valid_lines = ground_truth.get("valid_line")
+    tokens: list[str] = []
+    if isinstance(valid_lines, list):
+        for line in valid_lines:
+            if not isinstance(line, dict):
+                continue
+            words = line.get("words")
+            if isinstance(words, list):
+                tokens.extend(str(word.get("text", "")) for word in words if isinstance(word, dict))
+    if tokens:
+        return " ".join(token for token in tokens if token.strip())
+    return json.dumps(ground_truth.get("gt_parse", {}), sort_keys=True)
+
+
+def _load_external_samples(
+    dataset_key: str,
+    limit: int,
+    dataset_dir: Path | None = None,
+    allow_download: bool = True,
+) -> list[ExternalSample]:
+    if dataset_key not in EXTERNAL_DATASETS:
+        raise ExternalDatasetUnavailable(f"Unknown external dataset: {dataset_key}")
+    if dataset_dir is not None:
+        local_samples = _load_local_external_samples(dataset_key, dataset_dir, limit)
+        if local_samples:
+            return local_samples
+        if not allow_download:
+            raise ExternalDatasetUnavailable(
+                f"{EXTERNAL_DATASETS[dataset_key]['dataset']} dataset not found. Provide dataset path or enable HuggingFace loading."
+            )
+    if not allow_download:
+        raise ExternalDatasetUnavailable(
+            f"{EXTERNAL_DATASETS[dataset_key]['dataset']} dataset not found. Provide dataset path or enable HuggingFace loading."
+        )
+    rows = _fetch_hf_rows(dataset_key, limit)
+    samples: list[ExternalSample] = []
+    for row in rows:
+        image_bytes = _download_image_bytes(row)
+        if dataset_key == "sroie":
+            samples.append(_sample_from_sroie_row(row, image_bytes=image_bytes))
+        elif dataset_key == "cord":
+            samples.append(_sample_from_cord_row(row, image_bytes=image_bytes))
+        else:
+            samples.append(_sample_from_funsd_row(row, image_bytes=image_bytes))
+    return samples
+
+
+def _load_local_external_samples(dataset_key: str, dataset_dir: Path, limit: int) -> list[ExternalSample]:
+    json_path = dataset_dir / f"{dataset_key}.json"
+    jsonl_path = dataset_dir / f"{dataset_key}.jsonl"
+    rows: list[dict[str, Any]] = []
+    if json_path.exists():
+        payload = json.loads(json_path.read_text(encoding="utf-8"))
+        rows = payload if isinstance(payload, list) else payload.get("rows", [])
+    elif jsonl_path.exists():
+        rows = [json.loads(line) for line in jsonl_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    else:
+        return []
+    samples: list[ExternalSample] = []
+    for row in rows[:limit]:
+        image_bytes = _local_image_bytes(row, dataset_dir)
+        if dataset_key == "sroie":
+            samples.append(_sample_from_sroie_row(row, image_bytes=image_bytes))
+        elif dataset_key == "cord":
+            samples.append(_sample_from_cord_row(row, image_bytes=image_bytes))
+        else:
+            samples.append(_sample_from_funsd_row(row, image_bytes=image_bytes))
+    return samples
+
+
+def _local_image_bytes(row: dict[str, Any], dataset_dir: Path) -> bytes | None:
+    image_path = row.get("image_path") or row.get("image")
+    if isinstance(image_path, dict):
+        image_path = image_path.get("path")
+    if not image_path:
+        return None
+    path = Path(str(image_path))
+    if not path.is_absolute():
+        path = dataset_dir / path
+    try:
+        return path.read_bytes()
+    except OSError:
+        return None
+
+
+def _fetch_hf_rows(dataset_key: str, limit: int) -> list[dict[str, Any]]:
+    meta = EXTERNAL_DATASETS[dataset_key]
+    response = requests.get(
+        HF_DATASET_ROWS_URL,
+        params={
+            "dataset": meta["repo"],
+            "config": "default",
+            "split": meta["split"],
+            "offset": 0,
+            "length": max(1, min(limit, 100)),
+        },
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return [item.get("row", {}) for item in payload.get("rows", [])]
+
+
+def _download_image_bytes(row: dict[str, Any]) -> bytes | None:
+    image = row.get("image")
+    if not isinstance(image, dict):
+        return None
+    src = image.get("src")
+    if not src:
+        return None
+    try:
+        response = requests.get(str(src), timeout=REQUEST_TIMEOUT_SECONDS)
+        response.raise_for_status()
+    except requests.RequestException:
+        return None
+    return response.content
+
+
+def _safe_external_pipeline(sample: ExternalSample) -> EvaluationRecord | None:
+    if not sample.image_bytes:
+        return None
+    started = time.perf_counter()
+    try:
+        image = preprocess(sample.image_bytes, "image/png")
+        blocks = run_ocr(image)
+        ocr_text = _ocr_text(blocks)
+        extraction = extract_fields(blocks)
+        transaction = _transaction_from_external_extraction(extraction, sample)
+        return EvaluationRecord(
+            image_name=f"{sample.dataset_key}-{sample.sample_id}",
+            bill_id=sample.sample_id,
+            transaction=transaction,
+            extraction=extraction,
+            truth=sample.truth,
+            ocr_text=ocr_text,
+            reference_text=sample.reference_text,
+            pipeline_seconds=time.perf_counter() - started,
+        )
+    except Exception:
+        return None
+
+
+def _transaction_from_external_extraction(extraction: ExtractionResult, sample: ExternalSample) -> Transaction:
+    total = extraction.total.value if extraction.total.value is not None else 0.0
+    return Transaction(
+        merchant=extraction.merchant.value,
+        date=extraction.date.value,
+        items=extraction.items.value or [],
+        subtotal=extraction.subtotal.value,
+        tax=extraction.tax.value,
+        total=float(total),
+        category="Uncategorized",
+        payment_method=extraction.payment_method.value,
+        bill_number=extraction.bill_number.value,
+        file_name=f"{sample.dataset_key}-{sample.sample_id}",
+        raw_ocr_text=extraction.raw_ocr_text,
+    )
+
+
+def _evaluate_external_dataset(dataset_key: str, samples: list[ExternalSample], limit: int) -> dict[str, Any]:
+    records: list[EvaluationRecord] = []
+    skipped = 0
+    failed = 0
+    for sample in samples[:limit]:
+        if not sample.image_bytes:
+            skipped += 1
+            continue
+        record = _safe_external_pipeline(sample)
+        if record is None:
+            failed += 1
+            continue
+        records.append(record)
+    if not records:
+        return _empty_external_result(
+            dataset_key,
+            limit,
+            status="no evaluable samples",
+            message="External samples were unavailable, skipped, or failed during OCR/KIE.",
+        )
+
+    metrics = _external_metrics(dataset_key, records, skipped=skipped, failed=failed)
+    return {
+        "available": True,
+        "dataset": EXTERNAL_DATASETS[dataset_key]["dataset"],
+        "purpose": EXTERNAL_DATASETS[dataset_key]["purpose"],
+        "limit": limit,
+        "metrics": metrics,
+        "status": "generated",
+    }
+
+
+def _external_metrics(dataset_key: str, records: list[EvaluationRecord], skipped: int, failed: int) -> dict[str, Any]:
+    field_names = _external_fields(records, dataset_key)
+    comparisons = [_external_field_scores(record, field_names) for record in records]
+    field_accuracy_result = compute_field_accuracy(comparisons, field_names) if field_names else {"overall": None, "by_field": {}}
+    detection_checks = [{field_name: _external_field_detected(record, field_name) for field_name in field_names} for record in records]
+    detection_result = compute_field_accuracy(detection_checks, field_names) if field_names else {"overall": None, "by_field": {}}
+    cer, wer, ocr_accuracy = _ocr_quality(records)
+    pipeline_times = [record.pipeline_seconds for record in records]
+    metrics: dict[str, Any] = {
+        "field_extraction_accuracy": field_accuracy_result["overall"],
+        "field_accuracy_by_field": field_accuracy_result["by_field"],
+        "field_detection_rate": detection_result["overall"],
+        "field_detection_by_field": detection_result["by_field"],
+        "cer": cer,
+        "wer": wer,
+        "ocr_accuracy": ocr_accuracy,
+        "avg_pipeline_time_seconds": _mean(pipeline_times),
+        "max_pipeline_time_seconds": round(max(pipeline_times), 4) if pipeline_times else None,
+        "samples_processed": len(records),
+        "samples_failed": failed,
+        "samples_skipped": skipped,
+        "confidence_calibration": confidence_calibration_buckets(_confidence_samples(records, tuple(field_names))),
+    }
+    if "merchant" in field_names:
+        metrics["merchant_accuracy"] = field_accuracy_result["by_field"].get("merchant")
+    if "date" in field_names:
+        metrics["date_accuracy"] = field_accuracy_result["by_field"].get("date")
+        metrics["date_parse_rate"] = date_parse_rate([record.transaction.date for record in records])
+    if "total" in field_names:
+        metrics["total_amount_accuracy_within_1"] = amount_accuracy_within_tolerance(
+            [record.transaction.total for record in records],
+            [record.truth.get("total") for record in records],
+            tolerance=1.0,
+        )
+    if dataset_key == "cord":
+        metrics["scope_note"] = "CORD metrics focus on receipt OCR/layout and totals where labels map cleanly to FinSight fields."
+    if dataset_key == "funsd":
+        metrics["scope_note"] = "FUNSD is a document-structure stress test, not a receipt accuracy benchmark."
+        metrics["key_value_pairing_rate"] = None
+        metrics["key_value_pairing_status"] = "requires a dedicated form-understanding evaluator"
+    return metrics
+
+
+def _external_fields(records: list[EvaluationRecord], dataset_key: str) -> list[str]:
+    if dataset_key == "funsd":
+        return []
+    ordered_fields = ["merchant", "date", "total", "subtotal", "tax"]
+    present = {field for record in records for field in record.truth.get("fields", [])}
+    return [field for field in ordered_fields if field in present]
+
+
+def _external_field_scores(record: EvaluationRecord, fields: list[str]) -> dict[str, bool]:
+    scores: dict[str, bool] = {}
+    for field_name in fields:
+        truth_value = record.truth.get(field_name)
+        if field_name == "merchant":
+            scores[field_name] = _text_matches(record.transaction.merchant, truth_value)
+        elif field_name == "date":
+            scores[field_name] = record.transaction.date == truth_value
+        elif field_name in {"total", "subtotal", "tax"}:
+            prediction = getattr(record.transaction, field_name)
+            scores[field_name] = _amount_matches(prediction, truth_value)
+        else:
+            scores[field_name] = False
+    return scores
+
+
+def _external_field_detected(record: EvaluationRecord, field_name: str) -> bool:
+    if field_name == "merchant":
+        return bool(record.transaction.merchant)
+    if field_name == "date":
+        return bool(record.transaction.date)
+    value = getattr(record.transaction, field_name, None)
+    return value is not None
+
+
+def _run_external_benchmarks(
+    external: str | None,
+    limit: int,
+    dataset_dir: Path | None,
+    allow_download: bool,
+) -> dict[str, dict[str, Any]]:
+    external_results = _external_results_template(limit)
+    if external is None:
+        return external_results
+    dataset_keys = list(EXTERNAL_DATASETS) if external == "all" else [external]
+    for dataset_key in dataset_keys:
+        try:
+            samples = _load_external_samples(dataset_key, limit=limit, dataset_dir=dataset_dir, allow_download=allow_download)
+            external_results[dataset_key] = _evaluate_external_dataset(dataset_key, samples, limit)
+        except Exception as exc:
+            external_results[dataset_key] = _empty_external_result(
+                dataset_key,
+                limit,
+                status="unavailable",
+                message=str(exc),
+            )
+    return external_results
+
+
+def _synthetic_section(include_synthetic: bool) -> dict[str, Any]:
+    if not include_synthetic:
+        return {
+            "available": False,
+            "dataset": "FinSight generated synthetic bills",
+            "purpose": "Internal regression check only",
+            "metrics": {},
+            "status": "not generated",
+        }
+    return {
+        "available": True,
+        "dataset": "FinSight generated synthetic bills",
+        "purpose": "Internal regression check only",
+        "notice": "Synthetic regression check with generated bills. These scores validate controlled pipeline consistency, not real-world accuracy.",
+        "metrics": _run_synthetic_regression(),
+    }
+
+
+def run_evaluation(
+    *,
+    include_synthetic: bool = True,
+    external: str | None = None,
+    limit: int = 25,
+    dataset_dir: Path | None = None,
+    allow_download: bool = True,
+) -> dict[str, Any]:
+    if external not in {None, "sroie", "cord", "funsd", "all"}:
+        raise ValueError("external must be one of: sroie, cord, funsd, all")
+    synthetic_regression = _synthetic_section(include_synthetic)
+    external_benchmarks = _run_external_benchmarks(external, limit, dataset_dir, allow_download)
+    external_available = any(result.get("available") is True for result in external_benchmarks.values())
+    results = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "headline_source": "external",
+            "external_available": external_available,
+            "synthetic_regression_available": synthetic_regression["available"],
+        },
+        "synthetic_regression": synthetic_regression,
+        "external_benchmarks": external_benchmarks,
+        "deferred_metrics": DEFERRED_METRICS,
+    }
     _atomic_write_json(RESULTS_PATH, results)
     return results
 
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run FinSight synthetic and optional external benchmark evaluation.")
+    parser.add_argument("--synthetic", action="store_true", help="Run the FinSight generated-bill regression benchmark.")
+    parser.add_argument("--skip-synthetic", action="store_true", help="Skip the generated-bill regression benchmark.")
+    parser.add_argument("--external", choices=["sroie", "cord", "funsd", "all"], default=None, help="Run an optional external dataset benchmark.")
+    parser.add_argument("--limit", type=int, default=25, help="Maximum external samples to evaluate.")
+    parser.add_argument("--dataset-dir", type=Path, default=None, help="Optional local directory containing <dataset>.json or <dataset>.jsonl rows.")
+    parser.add_argument("--no-download", action="store_true", help="Do not call Hugging Face Dataset Viewer or download images.")
+    return parser.parse_args()
+
+
 def main() -> None:
-    results = run_evaluation()
+    args = _parse_args()
+    include_synthetic = not args.skip_synthetic
+    if args.synthetic:
+        include_synthetic = True
+    results = run_evaluation(
+        include_synthetic=include_synthetic,
+        external=args.external,
+        limit=max(1, args.limit),
+        dataset_dir=args.dataset_dir,
+        allow_download=not args.no_download,
+    )
     print(json.dumps(results, indent=2))
 
 

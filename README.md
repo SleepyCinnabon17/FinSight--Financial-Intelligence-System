@@ -9,7 +9,7 @@ FinSight is a FastAPI and vanilla JavaScript financial intelligence dashboard. I
 - Transaction structuring, duplicate detection, anomaly detection, and monthly spending analysis.
 - Responsive fintech dashboard with charts, transaction browsing, upload review, and Nova SSE chat.
 - Financial news and market cache support for Nova investment-context answers.
-- Synthetic benchmark pipeline with OCR CER/WER, extraction accuracy, categorization F1, anomaly/duplicate metrics, and a collapsible dashboard metrics panel.
+- External benchmark support for SROIE, CORD v2, and FUNSD, plus a separate synthetic regression check and collapsible dashboard metrics panel.
 - Railway-ready Docker deployment, health probes, and smoke test tooling.
 
 ## System Dependencies
@@ -73,6 +73,19 @@ Remove-Item Env:APP_ENV
 Benchmark results are written to `backend/benchmarks/results.json`.
 The frontend reads those generated results through `GET /api/v1/benchmark/results` for the collapsed **Benchmark Metrics** panel. This endpoint only serves the saved JSON file; it does not run the benchmark and remains safe when `GET /api/v1/benchmark` is disabled in production.
 
+Synthetic benchmark output is an internal regression check only. It uses FinSight-generated bills to confirm the controlled pipeline did not break, so those scores are not presented as the public real-world accuracy headline.
+
+Evaluator-facing external benchmarks are optional and run offline from Hugging Face Dataset Viewer or local dataset rows:
+
+```bash
+python backend/benchmarks/evaluate.py --external sroie --limit 25
+python backend/benchmarks/evaluate.py --external cord --limit 25
+python backend/benchmarks/evaluate.py --external funsd --limit 25
+python backend/benchmarks/evaluate.py --external all --limit 25
+```
+
+Use `--no-download` to verify missing-dataset behavior without network calls, or `--dataset-dir <path>` for local JSON/JSONL rows. SROIE is the primary receipt field extraction benchmark; CORD v2 is treated as receipt OCR/layout robustness; FUNSD is treated as a document-structure stress test, not a receipt accuracy score. Full external datasets are not run in CI or Railway production.
+
 For deterministic synthetic fixture validation in CI only, set:
 
 ```bash
@@ -132,4 +145,4 @@ Attach a Railway Volume at `/data` for demo persistence. See `DEPLOYMENT.md` for
 
 ## KPI Metrics Coverage
 
-Automated KPI metrics use the synthetic benchmark dataset. Implemented calculations include OCR CER/WER/accuracy, field detection rate, field accuracy by field, amount accuracy within INR 1, date parse rate, category precision/recall/F1, duplicate detection rate, anomaly recall, confidence calibration buckets, and pipeline timing. Review-event correction rate, Nova groundedness/retrieval precision, chatbot relevance, and real savings validation are documented as deferred until review/chat logging or human labels exist.
+Automated KPI metrics now separate external evaluator results from synthetic regression results. Implemented calculations include OCR CER/WER/accuracy, field detection rate, field accuracy by field, amount accuracy within INR 1, date parse rate, category precision/recall/F1 where labels exist, duplicate detection rate, anomaly recall, confidence calibration buckets, and pipeline timing. Review-event correction rate, Nova groundedness/retrieval precision, chatbot relevance, and real savings validation are documented as deferred until review/chat logging or human labels exist.

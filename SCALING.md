@@ -34,4 +34,4 @@ Railway free or very small tiers are suitable for demos with a few uploads. Keep
 
 ## KPI Metrics Limits
 
-The Benchmark Metrics panel is evaluator-facing and uses the saved synthetic benchmark result file. It is not a live production observability system. Real user correction rate, Nova groundedness, retrieval precision, chatbot relevance, and validated savings require persisted review/chat events plus labeled evaluation data before they can be automated. External datasets such as SROIE or CORD can be added later without changing the v1 Railway topology.
+The Benchmark Metrics panel is evaluator-facing and reads the saved benchmark result file; it is not a live production observability system. SROIE, CORD v2, and FUNSD runs are optional offline evaluations and should not be triggered automatically in Railway production or normal CI. Synthetic generated bills remain an internal regression check only. Real user correction rate, Nova groundedness, retrieval precision, chatbot relevance, and validated savings require persisted review/chat events plus labeled evaluation data before they can be automated.

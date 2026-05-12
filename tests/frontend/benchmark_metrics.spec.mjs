@@ -41,7 +41,7 @@ async function mockShell(page) {
   });
 }
 
-test('renders collapsible benchmark metrics from generated results', async ({ page }) => {
+test('renders external SROIE metrics as the headline evaluator section', async ({ page }) => {
   await mockShell(page);
   await page.route('**/api/v1/benchmark/results', async (route) => {
     await route.fulfill({
@@ -50,25 +50,38 @@ test('renders collapsible benchmark metrics from generated results', async ({ pa
         success: true,
         data: {
           summary: {
-            ocr_accuracy: 0.942,
-            field_extraction_accuracy: 0.917,
-            categorization_f1: 0.88,
-            duplicate_detection_rate: 1,
-            anomaly_recall: 0.8,
-            avg_pipeline_time_seconds: 8.3,
-            bills_processed: 47
+            headline_source: 'external',
+            external_available: true,
+            synthetic_regression_available: true
           },
-          ocr: {
-            cer: 0.058,
-            wer: 0.09,
-            field_detection_rate: 0.92
+          external_benchmarks: {
+            sroie: {
+              available: true,
+              dataset: 'ICDAR2019-SROIE',
+              purpose: 'Real receipt field extraction benchmark',
+              limit: 25,
+              metrics: {
+                merchant_accuracy: 0.72,
+                date_parse_rate: 0.88,
+                total_amount_accuracy_within_1: 0.64,
+                field_extraction_accuracy: 0.7467,
+                ocr_accuracy: 0.81,
+                cer: 0.19,
+                wer: 0.31,
+                avg_pipeline_time_seconds: 4.21,
+                samples_processed: 25
+              }
+            },
+            cord: { available: false, status: 'not generated' },
+            funsd: { available: false, status: 'not generated' }
           },
-          extraction: {
-            date_parse_rate: 1,
-            amount_accuracy_within_1_inr: 0.95
-          },
-          chatbot: {
-            status: 'requires source logging or mocked chat evaluation cases'
+          synthetic_regression: {
+            available: true,
+            dataset: 'FinSight generated synthetic bills',
+            purpose: 'Internal regression check only',
+            metrics: {
+              summary: { ocr_accuracy: 1, field_extraction_accuracy: 1, categorization_f1: 1 }
+            }
           }
         },
         error: null
@@ -87,26 +100,44 @@ test('renders collapsible benchmark metrics from generated results', async ({ pa
   await expect(toggle).toHaveText('Hide metrics');
   await expect(page.locator('#benchmark-metrics-body')).toBeVisible();
   await expect(page.locator('.metric-card')).toHaveCount(6);
-  await expect(page.locator('#benchmark-metrics')).toContainText('OCR Accuracy');
-  await expect(page.locator('#benchmark-metrics')).toContainText('94.2%');
-  await expect(page.locator('#benchmark-metrics')).toContainText('Categorization F1');
-  await expect(page.locator('#benchmark-metrics')).toContainText('88%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('SROIE Receipt Benchmark');
+  await expect(page.locator('#benchmark-metrics')).toContainText('Merchant/Company Accuracy');
+  await expect(page.locator('#benchmark-metrics')).toContainText('72%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('Total Amount Accuracy');
+  await expect(page.locator('#benchmark-metrics')).toContainText('64%');
   await expect(page.locator('#benchmark-metrics')).toContainText('Avg Pipeline Time');
-  await expect(page.locator('#benchmark-metrics')).toContainText('8.30s');
-  await expect(page.locator('#benchmark-metrics-details')).toContainText('Bills Processed');
-  await expect(page.locator('#benchmark-metrics-details')).toContainText('47');
+  await expect(page.locator('#benchmark-metrics')).toContainText('4.21s');
+  await expect(page.locator('#benchmark-metrics')).toContainText('Synthetic Regression Check');
+  await expect(page.locator('#synthetic-regression-body')).toBeHidden();
+  await expect(page.locator('#benchmark-metrics-summary')).not.toContainText('100%');
 });
 
-test('shows a graceful metrics empty state when results are unavailable', async ({ page }) => {
+test('shows a graceful external benchmark empty state when external results are unavailable', async ({ page }) => {
   await mockShell(page);
   await page.route('**/api/v1/benchmark/results', async (route) => {
     await route.fulfill({
-      status: 404,
       contentType: 'application/json',
       body: JSON.stringify({
-        success: false,
-        data: null,
-        error: { code: 'benchmark_results_unavailable', message: 'Run the benchmark to populate system metrics.' }
+        success: true,
+        data: {
+          summary: {
+            headline_source: 'external',
+            external_available: false,
+            synthetic_regression_available: true
+          },
+          external_benchmarks: {
+            sroie: { available: false, status: 'not generated' },
+            cord: { available: false, status: 'not generated' },
+            funsd: { available: false, status: 'not generated' }
+          },
+          synthetic_regression: {
+            available: true,
+            dataset: 'FinSight generated synthetic bills',
+            purpose: 'Internal regression check only',
+            metrics: { summary: { ocr_accuracy: 1 } }
+          }
+        },
+        error: null
       })
     });
   });
@@ -115,6 +146,7 @@ test('shows a graceful metrics empty state when results are unavailable', async 
   await page.locator('#benchmark-metrics-toggle').click();
 
   await expect(page.locator('#benchmark-metrics-empty')).toBeVisible();
-  await expect(page.locator('#benchmark-metrics-empty')).toHaveText('Run the benchmark to populate system metrics.');
+  await expect(page.locator('#benchmark-metrics-empty')).toHaveText('External benchmark not generated yet. Run the optional SROIE/CORD/FUNSD benchmark to populate evaluator metrics.');
   await expect(page.locator('.metric-card')).toHaveCount(0);
+  await expect(page.locator('#benchmark-metrics')).toContainText('Synthetic Regression Check');
 });

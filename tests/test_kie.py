@@ -33,6 +33,32 @@ def test_sroie_path_extracts_merchant_date_total() -> None:
     assert result.total.value == 742.50
 
 
+def test_sroie_merchant_prefers_company_suffix_near_top() -> None:
+    blocks = [
+        OCRBlock("TAN CHAY YEE", (0, 0, 200, 20), 0.95),
+        OCRBlock("*** COPY ***", (0, 25, 200, 45), 0.95),
+        OCRBlock("OJC MARKETING SDN BHD", (0, 50, 240, 70), 0.95),
+        OCRBlock("TAX INVOICE", (0, 90, 150, 110), 0.95),
+        OCRBlock("DATE : 15/01/2019", (0, 120, 180, 140), 0.95),
+        OCRBlock("TOTAL: 193.00", (0, 180, 160, 200), 0.95),
+    ]
+    result = extract_fields(blocks)
+    assert result.merchant.value == "OJC MARKETING SDN BHD"
+
+
+def test_total_prefers_final_payable_total_over_intermediate_total_lines() -> None:
+    blocks = [
+        OCRBlock("Receipt", (0, 0, 100, 20), 0.95),
+        OCRBlock("TOTAL EXCLUDE GST: 100.00", (0, 100, 220, 120), 0.95),
+        OCRBlock("TOTAL GST @6%: 6.00", (0, 130, 220, 150), 0.95),
+        OCRBlock("TOTAL INCLUSIVE GST: 106.00", (0, 160, 240, 180), 0.95),
+        OCRBlock("ROUND AMT: 0.00", (0, 190, 180, 210), 0.95),
+        OCRBlock("TOTAL: 106.00", (0, 220, 180, 240), 0.95),
+    ]
+    result = extract_fields(blocks)
+    assert result.total.value == 106.0
+
+
 def test_funsd_path_maps_question_answer_pairs() -> None:
     blocks = [
         OCRBlock("Merchant:", (0, 0, 80, 20), 0.9),

@@ -25,21 +25,22 @@ const THEME_STORAGE_KEY = 'finsight-theme';
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
 const RESET_DISARM_MS = 4500;
-const SUMMARY_METRICS = [
-  ['OCR Accuracy', ['summary', 'ocr_accuracy'], 'percent'],
-  ['Field Extraction', ['summary', 'field_extraction_accuracy'], 'percent'],
-  ['Categorization F1', ['summary', 'categorization_f1'], 'percent'],
-  ['Duplicate Detection', ['summary', 'duplicate_detection_rate'], 'percent'],
-  ['Anomaly Recall', ['summary', 'anomaly_recall'], 'percent'],
-  ['Avg Pipeline Time', ['summary', 'avg_pipeline_time_seconds'], 'seconds']
+const EXTERNAL_EMPTY_MESSAGE = 'External benchmark not generated yet. Run the optional SROIE/CORD/FUNSD benchmark to populate evaluator metrics.';
+const SROIE_HEADLINE_METRICS = [
+  ['Merchant/Company Accuracy', ['merchant_accuracy'], 'percent'],
+  ['Date Parse Rate', ['date_parse_rate'], 'percent'],
+  ['Total Amount Accuracy', ['total_amount_accuracy_within_1'], 'percent'],
+  ['Field Extraction Accuracy', ['field_extraction_accuracy'], 'percent'],
+  ['OCR Accuracy', ['ocr_accuracy'], 'percent'],
+  ['Avg Pipeline Time', ['avg_pipeline_time_seconds'], 'seconds']
 ];
-const DETAIL_METRICS = [
-  ['CER', ['ocr', 'cer'], 'percent'],
-  ['WER', ['ocr', 'wer'], 'percent'],
-  ['Field Detection Rate', ['ocr', 'field_detection_rate'], 'percent'],
-  ['Date Parse Rate', ['extraction', 'date_parse_rate'], 'percent'],
-  ['Amount Accuracy', ['extraction', 'amount_accuracy_within_1_inr'], 'percent'],
-  ['Bills Processed', ['summary', 'bills_processed'], 'number']
+const SROIE_DETAIL_METRICS = [
+  ['CER', ['cer'], 'percent'],
+  ['WER', ['wer'], 'percent'],
+  ['Field Detection Rate', ['field_detection_rate'], 'percent'],
+  ['Samples Processed', ['samples_processed'], 'number'],
+  ['Samples Failed', ['samples_failed'], 'number'],
+  ['Samples Skipped', ['samples_skipped'], 'number']
 ];
 let resetArmed = false;
 let resetTimer = null;
@@ -86,20 +87,37 @@ export function renderBenchmarkMetrics(results) {
   if (!els.metricsSummary || !els.metricsDetails || !els.metricsEmpty) return;
   els.metricsSummary.replaceChildren();
   els.metricsDetails.replaceChildren();
-  if (!results?.summary) {
-    els.metricsEmpty.hidden = false;
-    return;
+  const externalBenchmarks = results?.external_benchmarks || {};
+  const sroie = externalBenchmarks.sroie;
+  const hasSroieMetrics = Boolean(sroie?.available && sroie.metrics);
+  els.metricsEmpty.textContent = EXTERNAL_EMPTY_MESSAGE;
+  els.metricsEmpty.hidden = hasSroieMetrics;
+  if (hasSroieMetrics) {
+    els.metricsSummary.appendChild(createMetricsHeading('SROIE Receipt Benchmark', sroie.purpose));
+    for (const [label, path, format] of SROIE_HEADLINE_METRICS) {
+      els.metricsSummary.appendChild(createMetricCard(label, getMetricValue(sroie.metrics, path), format));
+    }
+    for (const [label, path, format] of SROIE_DETAIL_METRICS) {
+      els.metricsDetails.appendChild(createMetricDetail(label, getMetricValue(sroie.metrics, path), format));
+    }
   }
-  els.metricsEmpty.hidden = true;
-  for (const [label, path, format] of SUMMARY_METRICS) {
-    els.metricsSummary.appendChild(createMetricCard(label, getMetricValue(results, path), format));
+  renderExternalSecondarySection('CORD OCR/Layout Robustness', externalBenchmarks.cord);
+  renderExternalSecondarySection('FUNSD Structure Stress Test', externalBenchmarks.funsd);
+  renderSyntheticRegression(results?.synthetic_regression);
+}
+
+function createMetricsHeading(title, caption = '') {
+  const heading = document.createElement('div');
+  heading.className = 'metrics-section-heading';
+  const titleElement = document.createElement('h3');
+  titleElement.textContent = title;
+  heading.appendChild(titleElement);
+  if (caption) {
+    const captionElement = document.createElement('p');
+    captionElement.textContent = caption;
+    heading.appendChild(captionElement);
   }
-  for (const [label, path, format] of DETAIL_METRICS) {
-    els.metricsDetails.appendChild(createMetricDetail(label, getMetricValue(results, path), format));
-  }
-  if (results.chatbot?.status) {
-    els.metricsDetails.appendChild(createMetricDetail('Nova Metrics', results.chatbot.status, 'text'));
-  }
+  return heading;
 }
 
 function createMetricCard(label, value, format) {
@@ -122,6 +140,65 @@ function createMetricDetail(label, value, format) {
   description.textContent = formatMetricValue(value, format);
   item.append(term, description);
   return item;
+}
+
+function renderExternalSecondarySection(title, datasetResult) {
+  if (!datasetResult?.available || !datasetResult.metrics) return;
+  const section = document.createElement('section');
+  section.className = 'metrics-secondary-section';
+  const heading = document.createElement('h3');
+  heading.textContent = title;
+  const note = document.createElement('p');
+  note.className = 'metrics-note';
+  note.textContent = datasetResult.metrics.scope_note || datasetResult.purpose || '';
+  section.append(heading, note);
+  const list = document.createElement('dl');
+  list.className = 'metrics-details compact';
+  list.append(
+    createMetricDetail('OCR Accuracy', datasetResult.metrics.ocr_accuracy, 'percent'),
+    createMetricDetail('Field Detection Rate', datasetResult.metrics.field_detection_rate, 'percent'),
+    createMetricDetail('Avg Pipeline Time', datasetResult.metrics.avg_pipeline_time_seconds, 'seconds'),
+    createMetricDetail('Samples Processed', datasetResult.metrics.samples_processed, 'number')
+  );
+  section.appendChild(list);
+  els.metricsDetails.appendChild(section);
+}
+
+function renderSyntheticRegression(syntheticRegression) {
+  if (!syntheticRegression?.available && !syntheticRegression?.metrics?.summary) return;
+  const section = document.createElement('section');
+  section.className = 'synthetic-regression metrics-secondary-section';
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'synthetic-regression-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', 'synthetic-regression-body');
+  toggle.textContent = 'Synthetic Regression Check';
+  const body = document.createElement('div');
+  body.id = 'synthetic-regression-body';
+  body.className = 'synthetic-regression-body';
+  body.hidden = true;
+  const note = document.createElement('p');
+  note.className = 'metrics-note';
+  note.textContent = syntheticRegression.notice || 'Generated synthetic bills are used for regression testing only and are not claimed as real-world accuracy.';
+  body.appendChild(note);
+  const summary = syntheticRegression.metrics?.summary || {};
+  const list = document.createElement('dl');
+  list.className = 'metrics-details compact';
+  list.append(
+    createMetricDetail('OCR Accuracy', summary.ocr_accuracy, 'percent'),
+    createMetricDetail('Field Extraction', summary.field_extraction_accuracy, 'percent'),
+    createMetricDetail('Categorization F1', summary.categorization_f1, 'percent'),
+    createMetricDetail('Bills Processed', summary.bills_processed, 'number')
+  );
+  body.appendChild(list);
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    body.hidden = expanded;
+  });
+  section.append(toggle, body);
+  els.metricsDetails.appendChild(section);
 }
 
 function getMetricValue(source, path) {
