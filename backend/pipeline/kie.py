@@ -22,7 +22,7 @@ from backend.models.extraction import ExtractedField, ExtractionResult, LineItem
 
 PRICE_RE = re.compile(r"(?<!\d)(?:rs\.?\s*)?[\d,]+(?:\.\d{1,2})?(?!\d)", re.IGNORECASE)
 DATE_RE = re.compile(
-    r"(\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\s+\w{3,9}\s+\d{4})",
+    r"(\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\s+\w{3,9}\s+\d{4})",
     re.IGNORECASE,
 )
 TOTAL_KEYWORDS = re.compile(r"\b(total|grand total|amount due)\b", re.IGNORECASE)
@@ -129,7 +129,7 @@ def normalize_date(raw: str | None) -> str | None:
         year_s, month_s, day_s = token.split("-")
         return _safe_iso_date(int(year_s), int(month_s), int(day_s))
 
-    parts = re.split(r"[/\-]", token)
+    parts = re.split(r"[/\-.]", token)
     if len(parts) != 3:
         return None
     first, second, year = (int(part) for part in parts)

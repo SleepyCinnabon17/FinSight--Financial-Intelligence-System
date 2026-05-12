@@ -116,6 +116,74 @@ def test_sroie_row_maps_company_date_total_and_keeps_address_optional() -> None:
     assert sample.reference_text == "OJC MARKETING TOTAL 193.00"
 
 
+def test_sroie_debug_report_records_field_failures(monkeypatch, tmp_path: Path) -> None:
+    sample = evaluate.ExternalSample(
+        dataset_key="sroie",
+        sample_id="SROIE-1",
+        image_bytes=b"image-bytes",
+        truth={
+            "merchant": "CROSS CHANNEL NETWORK SDN. BHD.",
+            "date": "2017-12-31",
+            "total": 7.95,
+            "fields": ["merchant", "date", "total"],
+        },
+        reference_text="CROSS CHANNEL NETWORK SDN. BHD. TOTAL 7.95",
+    )
+    extraction = ExtractionResult(
+        merchant=ExtractedField("CROSS CHANNEL NETWORK SDN BHD", 0.95, "CROSS CHANNEL NETWORK SDN BHD"),
+        date=ExtractedField(None, 0.0, ""),
+        items=ExtractedField([], 0.0, ""),
+        subtotal=ExtractedField(None, 0.0, ""),
+        tax=ExtractedField(None, 0.0, ""),
+        total=ExtractedField(0.0, 0.65, ""),
+        payment_method=ExtractedField(None, 0.0, ""),
+        bill_number=ExtractedField(None, 0.0, ""),
+        extraction_model="test",
+        ocr_engine="test",
+        raw_ocr_text="CROSS CHANNEL NETWORK SDN BHD",
+    )
+    transaction = Transaction(
+        merchant="CROSS CHANNEL NETWORK SDN BHD",
+        date=None,
+        items=[],
+        subtotal=None,
+        tax=None,
+        total=0.0,
+        category="Uncategorized",
+        file_name="sroie-1.png",
+        raw_ocr_text="CROSS CHANNEL NETWORK SDN BHD",
+    )
+
+    def fake_pipeline(external_sample: evaluate.ExternalSample) -> evaluate.EvaluationRecord:
+        return evaluate.EvaluationRecord(
+            image_name="sroie-1.png",
+            bill_id=external_sample.sample_id,
+            transaction=transaction,
+            extraction=extraction,
+            truth=external_sample.truth,
+            ocr_text="CROSS CHANNEL NETWORK SDN BHD",
+            reference_text=external_sample.reference_text,
+            pipeline_seconds=0.25,
+        )
+
+    debug_path = tmp_path / "sroie_failures.json"
+    monkeypatch.setattr(evaluate, "_load_external_samples", lambda *_args, **_kwargs: [sample])
+    monkeypatch.setattr(evaluate, "_safe_external_pipeline", fake_pipeline)
+    monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "results.json")
+    monkeypatch.setattr(evaluate, "SROIE_DEBUG_PATH", debug_path)
+
+    evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
+
+    report = json.loads(debug_path.read_text(encoding="utf-8"))
+    assert report["dataset"] == "sroie"
+    assert report["samples"][0]["sample_id"] == "SROIE-1"
+    assert report["samples"][0]["ground_truth"]["company"] == "CROSS CHANNEL NETWORK SDN. BHD."
+    assert report["samples"][0]["predicted"]["merchant"] == "CROSS CHANNEL NETWORK SDN BHD"
+    assert report["samples"][0]["field_results"]["merchant"]["passed"] is True
+    assert report["samples"][0]["field_results"]["date"]["failure_reason"] == "missing_prediction"
+    assert report["samples"][0]["diagnosis"] == ["date_missing_prediction", "total_missing_or_zero_prediction"]
+
+
 def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch, tmp_path: Path) -> None:
     sample = evaluate.ExternalSample(
         dataset_key="sroie",
@@ -157,6 +225,7 @@ def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch, tmp_pat
     monkeypatch.setattr(evaluate, "_load_external_samples", lambda *_args, **_kwargs: [sample])
     monkeypatch.setattr(evaluate, "_safe_external_pipeline", fake_pipeline)
     monkeypatch.setattr(evaluate, "RESULTS_PATH", tmp_path / "external-results.json")
+    monkeypatch.setattr(evaluate, "SROIE_DEBUG_PATH", tmp_path / "sroie-debug.json")
 
     result = evaluate.run_evaluation(include_synthetic=False, external="sroie", limit=1)
 
@@ -168,3 +237,44 @@ def test_external_sroie_metrics_are_separate_from_synthetic(monkeypatch, tmp_pat
     assert sroie["metrics"]["merchant_accuracy"] == 1.0
     assert sroie["metrics"]["total_amount_accuracy_within_1"] == 1.0
     assert "synthetic" not in sroie["purpose"].lower()
+
+
+def test_merchant_matching_ignores_punctuation_for_company_names() -> None:
+    assert evaluate._text_matches("CROSS CHANNEL NETWORK SDN BHD", "CROSS CHANNEL NETWORK SDN. BHD.")
+
+
+def test_external_total_detection_uses_extracted_field_not_default_transaction_zero() -> None:
+    extraction = ExtractionResult(
+        merchant=ExtractedField(None, 0.0, ""),
+        date=ExtractedField(None, 0.0, ""),
+        items=ExtractedField([], 0.0, ""),
+        subtotal=ExtractedField(None, 0.0, ""),
+        tax=ExtractedField(None, 0.0, ""),
+        total=ExtractedField(None, 0.0, ""),
+        payment_method=ExtractedField(None, 0.0, ""),
+        bill_number=ExtractedField(None, 0.0, ""),
+        extraction_model="test",
+        ocr_engine="test",
+    )
+    transaction = Transaction(
+        merchant=None,
+        date=None,
+        items=[],
+        subtotal=None,
+        tax=None,
+        total=0.0,
+        category="Uncategorized",
+        file_name="sroie-empty.png",
+    )
+    record = evaluate.EvaluationRecord(
+        image_name="sroie-empty.png",
+        bill_id="SROIE-EMPTY",
+        transaction=transaction,
+        extraction=extraction,
+        truth={"total": 7.95, "fields": ["total"]},
+        ocr_text="",
+        reference_text="",
+        pipeline_seconds=0.1,
+    )
+
+    assert evaluate._external_field_detected(record, "total") is False

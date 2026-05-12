@@ -76,13 +76,14 @@ def test_funsd_path_maps_question_answer_pairs() -> None:
 
 
 def test_date_normalization_formats() -> None:
-    cases = ["01/05/2026", "12/31/2026", "2026-05-01", "01 May 2026", "01-05-2026"]
+    cases = ["01/05/2026", "12/31/2026", "2026-05-01", "01 May 2026", "01-05-2026", "31.12.2017"]
     assert [normalize_date(value) for value in cases] == [
         "2026-05-01",
         "2026-12-31",
         "2026-05-01",
         "2026-05-01",
         "2026-05-01",
+        "2017-12-31",
     ]
 
 

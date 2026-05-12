@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -40,6 +41,8 @@ from backend.pipeline.structurer import extraction_to_transaction
 GROUND_TRUTH_PATH = PROJECT_ROOT / "synthetic" / "ground_truth.json"
 IMAGE_DIR = PROJECT_ROOT / "synthetic" / "synthetic_bill_images"
 RESULTS_PATH = Path(__file__).resolve().parent / "results.json"
+SROIE_DEBUG_PATH = Path(__file__).resolve().parent / "debug" / "sroie_failures.json"
+SROIE_DEBUG_SAMPLE_LIMIT = 10
 EVALUATED_FIELDS = ["merchant", "date", "total", "category"]
 DETECTION_FIELDS = ["merchant", "date", "total", "category"]
 HF_DATASET_ROWS_URL = "https://datasets-server.huggingface.co/rows"
@@ -100,6 +103,7 @@ class ExternalDatasetUnavailable(RuntimeError):
 
 
 def _atomic_write_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = Path(str(path) + ".tmp")
     with tmp_path.open("w", encoding="utf-8") as handle:
         json.dump(data, handle, indent=2)
@@ -135,7 +139,9 @@ def _text_matches(left: str | None, right: str | None) -> bool:
 def _normalize_text(value: str | None) -> str:
     if value is None:
         return ""
-    return " ".join(str(value).lower().replace("\n", " ").split())
+    text = str(value).lower().replace("\n", " ")
+    text = re.sub(r"[^\w\s]", " ", text)
+    return " ".join(text.split())
 
 
 def _field_scores(predicted: Transaction, truth: dict[str, Any]) -> dict[str, bool]:
@@ -667,17 +673,26 @@ def _transaction_from_external_extraction(extraction: ExtractionResult, sample: 
 
 def _evaluate_external_dataset(dataset_key: str, samples: list[ExternalSample], limit: int) -> dict[str, Any]:
     records: list[EvaluationRecord] = []
+    debug_entries: list[dict[str, Any]] = []
     skipped = 0
     failed = 0
     for sample in samples[:limit]:
         if not sample.image_bytes:
             skipped += 1
+            if dataset_key == "sroie" and len(debug_entries) < SROIE_DEBUG_SAMPLE_LIMIT:
+                debug_entries.append(_sroie_debug_entry(sample, None, "missing_image_bytes"))
             continue
         record = _safe_external_pipeline(sample)
         if record is None:
             failed += 1
+            if dataset_key == "sroie" and len(debug_entries) < SROIE_DEBUG_SAMPLE_LIMIT:
+                debug_entries.append(_sroie_debug_entry(sample, None, "pipeline_failed"))
             continue
         records.append(record)
+        if dataset_key == "sroie" and len(debug_entries) < SROIE_DEBUG_SAMPLE_LIMIT:
+            debug_entries.append(_sroie_debug_entry(sample, record))
+    if dataset_key == "sroie":
+        _write_sroie_debug_report(debug_entries, limit=limit, processed=len(records), skipped=skipped, failed=failed)
     if not records:
         return _empty_external_result(
             dataset_key,
@@ -695,6 +710,128 @@ def _evaluate_external_dataset(dataset_key: str, samples: list[ExternalSample], 
         "metrics": metrics,
         "status": "generated",
     }
+
+
+def _write_sroie_debug_report(
+    samples: list[dict[str, Any]],
+    *,
+    limit: int,
+    processed: int,
+    skipped: int,
+    failed: int,
+) -> None:
+    report = {
+        "dataset": "sroie",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "limit": limit,
+        "debug_sample_limit": SROIE_DEBUG_SAMPLE_LIMIT,
+        "processed": processed,
+        "skipped": skipped,
+        "failed": failed,
+        "samples": samples,
+    }
+    _atomic_write_json(SROIE_DEBUG_PATH, report)
+
+
+def _sroie_debug_entry(sample: ExternalSample, record: EvaluationRecord | None, failure_reason: str | None = None) -> dict[str, Any]:
+    field_results = _sroie_field_debug_results(record) if record is not None else _sroie_missing_field_results(failure_reason)
+    diagnosis = _sroie_diagnosis(record, field_results, failure_reason)
+    return {
+        "sample_id": sample.sample_id,
+        "ground_truth": {
+            "company": sample.truth.get("merchant"),
+            "date": sample.truth.get("date"),
+            "total": sample.truth.get("total"),
+        },
+        "raw_ocr_text": record.ocr_text if record is not None else "",
+        "ocr_lines": record.ocr_text.splitlines() if record is not None else [],
+        "predicted": {
+            "merchant": record.transaction.merchant if record is not None else None,
+            "date": record.transaction.date if record is not None else None,
+            "total": record.transaction.total if record is not None else None,
+        },
+        "normalized_ground_truth": _sroie_normalized_values(sample.truth),
+        "normalized_prediction": _sroie_normalized_prediction(record),
+        "field_results": field_results,
+        "diagnosis": diagnosis,
+    }
+
+
+def _sroie_normalized_values(values: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "merchant": _normalize_text(values.get("merchant")),
+        "date": normalize_date(str(values.get("date"))) if values.get("date") else None,
+        "total": normalize_amount(str(values.get("total"))) if values.get("total") is not None else None,
+    }
+
+
+def _sroie_normalized_prediction(record: EvaluationRecord | None) -> dict[str, Any]:
+    if record is None:
+        return {"merchant": "", "date": None, "total": None}
+    return {
+        "merchant": _normalize_text(record.transaction.merchant),
+        "date": normalize_date(str(record.transaction.date)) if record.transaction.date else None,
+        "total": normalize_amount(str(record.transaction.total)) if record.transaction.total is not None else None,
+    }
+
+
+def _sroie_missing_field_results(reason: str | None) -> dict[str, dict[str, Any]]:
+    return {
+        field: {
+            "passed": False,
+            "failure_reason": reason or "pipeline_failed",
+        }
+        for field in ("merchant", "date", "total")
+    }
+
+
+def _sroie_field_debug_results(record: EvaluationRecord) -> dict[str, dict[str, Any]]:
+    scores = _external_field_scores(record, ["merchant", "date", "total"])
+    reasons = {
+        "merchant": _field_failure_reason(record.transaction.merchant, record.truth.get("merchant"), "merchant", scores["merchant"]),
+        "date": _field_failure_reason(record.transaction.date, record.truth.get("date"), "date", scores["date"]),
+        "total": _field_failure_reason(record.transaction.total, record.truth.get("total"), "total", scores["total"]),
+    }
+    return {
+        field: {
+            "passed": bool(scores[field]),
+            "failure_reason": None if scores[field] else reasons[field],
+        }
+        for field in ("merchant", "date", "total")
+    }
+
+
+def _field_failure_reason(prediction: Any, truth: Any, field_name: str, passed: bool) -> str | None:
+    if passed:
+        return None
+    if prediction is None or str(prediction).strip() == "":
+        return "missing_prediction"
+    if field_name == "total" and float(prediction or 0.0) == 0.0:
+        return "missing_or_zero_prediction"
+    if truth is None or str(truth).strip() == "":
+        return "missing_ground_truth"
+    return "value_mismatch"
+
+
+def _sroie_diagnosis(
+    record: EvaluationRecord | None,
+    field_results: dict[str, dict[str, Any]],
+    failure_reason: str | None,
+) -> list[str]:
+    if record is None:
+        return [failure_reason or "pipeline_failed"]
+    reasons: list[str] = []
+    if not record.ocr_text.strip():
+        reasons.append("ocr_empty")
+    for field_name, result in field_results.items():
+        if result["passed"]:
+            continue
+        reason = str(result.get("failure_reason") or "value_mismatch")
+        if field_name == "total" and reason == "missing_or_zero_prediction":
+            reasons.append("total_missing_or_zero_prediction")
+        else:
+            reasons.append(f"{field_name}_{reason}")
+    return reasons
 
 
 def _external_metrics(dataset_key: str, records: list[EvaluationRecord], skipped: int, failed: int) -> dict[str, Any]:
@@ -765,11 +902,12 @@ def _external_field_scores(record: EvaluationRecord, fields: list[str]) -> dict[
 
 
 def _external_field_detected(record: EvaluationRecord, field_name: str) -> bool:
-    if field_name == "merchant":
-        return bool(record.transaction.merchant)
-    if field_name == "date":
-        return bool(record.transaction.date)
-    value = getattr(record.transaction, field_name, None)
+    if not hasattr(record.extraction, field_name):
+        return False
+    field = getattr(record.extraction, field_name)
+    value = field.value
+    if field_name in {"total", "subtotal", "tax"} and float(value or 0.0) == 0.0:
+        return False
     return value is not None
 
 

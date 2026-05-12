@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-12T13:55:08.248189+00:00",
+  "generated_at": "2026-05-12T14:43:13.101166+00:00",
   "summary": {
     "headline_source": "external",
     "external_available": true,
@@ -18,7 +18,7 @@
         "categorization_f1": 0.0,
         "duplicate_detection_rate": 1.0,
         "anomaly_recall": 0.0,
-        "avg_pipeline_time_seconds": 0.2462,
+        "avg_pipeline_time_seconds": 0.5109,
         "bills_processed": 47
       },
       "ocr": {
@@ -105,8 +105,8 @@
         "status": "correction_rate requires review-event logging"
       },
       "pipeline": {
-        "avg_pipeline_time_seconds": 0.2462,
-        "max_pipeline_time_seconds": 1.0245,
+        "avg_pipeline_time_seconds": 0.5109,
+        "max_pipeline_time_seconds": 2.5738,
         "bills_processed": 47,
         "pipeline_errors": 0
       },
@@ -161,23 +161,23 @@
       "purpose": "Real receipt field extraction benchmark",
       "limit": 25,
       "metrics": {
-        "field_extraction_accuracy": 0.0533,
+        "field_extraction_accuracy": 0.04,
         "field_accuracy_by_field": {
           "merchant": 0.0,
-          "date": 0.12,
+          "date": 0.08,
           "total": 0.04
         },
-        "field_detection_rate": 0.3333,
+        "field_detection_rate": 0.0,
         "field_detection_by_field": {
           "merchant": 0.0,
           "date": 0.0,
-          "total": 1.0
+          "total": 0.0
         },
         "cer": 0.9985,
         "wer": 1.0,
         "ocr_accuracy": 0.0015,
-        "avg_pipeline_time_seconds": 0.4205,
-        "max_pipeline_time_seconds": 1.7477,
+        "avg_pipeline_time_seconds": 0.8143,
+        "max_pipeline_time_seconds": 3.1166,
         "samples_processed": 25,
         "samples_failed": 0,
         "samples_skipped": 0,
@@ -186,12 +186,12 @@
             "range": "0.00-0.20",
             "count": 75,
             "avg_confidence": 0.0,
-            "accuracy": 0.0533,
-            "calibration_gap": 0.0533
+            "accuracy": 0.04,
+            "calibration_gap": 0.04
           }
         ],
         "merchant_accuracy": 0.0,
-        "date_accuracy": 0.12,
+        "date_accuracy": 0.08,
         "date_parse_rate": 0.0,
         "total_amount_accuracy_within_1": 0.04
       },
@@ -209,17 +209,17 @@
           "subtotal": 0.0,
           "tax": 0.0
         },
-        "field_detection_rate": 0.3333,
+        "field_detection_rate": 0.0,
         "field_detection_by_field": {
-          "total": 1.0,
+          "total": 0.0,
           "subtotal": 0.0,
           "tax": 0.0
         },
         "cer": 0.9924,
         "wer": 1.0,
         "ocr_accuracy": 0.0076,
-        "avg_pipeline_time_seconds": 0.2823,
-        "max_pipeline_time_seconds": 1.8211,
+        "avg_pipeline_time_seconds": 0.5879,
+        "max_pipeline_time_seconds": 3.8514,
         "samples_processed": 25,
         "samples_failed": 0,
         "samples_skipped": 0,
@@ -250,8 +250,8 @@
         "cer": 0.999,
         "wer": 1.0,
         "ocr_accuracy": 0.001,
-        "avg_pipeline_time_seconds": 0.1851,
-        "max_pipeline_time_seconds": 0.2776,
+        "avg_pipeline_time_seconds": 0.3781,
+        "max_pipeline_time_seconds": 0.5274,
         "samples_processed": 25,
         "samples_failed": 0,
         "samples_skipped": 0,

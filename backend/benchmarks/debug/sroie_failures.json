@@ -1,0 +1,461 @@
+{
+  "dataset": "sroie",
+  "generated_at": "2026-05-12T14:42:27.180009+00:00",
+  "limit": 25,
+  "debug_sample_limit": 10,
+  "processed": 25,
+  "skipped": 0,
+  "failed": 0,
+  "samples": [
+    {
+      "sample_id": "X00016469670",
+      "ground_truth": {
+        "company": "OJC MARKETING SDN BHD",
+        "date": "2019-01-15",
+        "total": 193.0
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "ojc marketing sdn bhd",
+        "date": "2019-01-15",
+        "total": 193.0
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X00016469671",
+      "ground_truth": {
+        "company": "OJC MARKETING SDN BHD",
+        "date": "2019-01-02",
+        "total": 170.0
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "ojc marketing sdn bhd",
+        "date": "2019-01-02",
+        "total": 170.0
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005200931",
+      "ground_truth": {
+        "company": "PERNIAGAAN ZHENG HUI",
+        "date": "2018-02-09",
+        "total": 436.2
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "perniagaan zheng hui",
+        "date": "2018-02-09",
+        "total": 436.2
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005230605",
+      "ground_truth": {
+        "company": "PETRON BKT LANJAN SB",
+        "date": "2018-02-01",
+        "total": 4.9
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "petron bkt lanjan sb",
+        "date": "2018-02-01",
+        "total": 4.9
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005230616",
+      "ground_truth": {
+        "company": "GERBANG ALAF RESTAURANTS SDN BHD",
+        "date": "2018-01-18",
+        "total": 38.9
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "gerbang alaf restaurants sdn bhd",
+        "date": "2018-01-18",
+        "total": 38.9
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005230621",
+      "ground_truth": {
+        "company": "SIN LIANHAP SDN BHD",
+        "date": "2018-02-05",
+        "total": 7.3
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "sin lianhap sdn bhd",
+        "date": "2018-02-05",
+        "total": 7.3
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005230648",
+      "ground_truth": {
+        "company": "CROSS CHANNEL NETWORK SDN. BHD.",
+        "date": "2018-01-29",
+        "total": 6.35
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "cross channel network sdn bhd",
+        "date": "2018-01-29",
+        "total": 6.35
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005230657",
+      "ground_truth": {
+        "company": "CROSS CHANNEL NETWORK SDN. BHD.",
+        "date": "2017-12-31",
+        "total": 7.95
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "cross channel network sdn bhd",
+        "date": "2017-12-31",
+        "total": 7.95
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005230659",
+      "ground_truth": {
+        "company": "SWC ENTERPRISE SDN BHD",
+        "date": "2018-01-08",
+        "total": 8.0
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "swc enterprise sdn bhd",
+        "date": "2018-01-08",
+        "total": 8.0
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    },
+    {
+      "sample_id": "X51005268275",
+      "ground_truth": {
+        "company": "LIGHTROOM GALLERY SDN BHD",
+        "date": "2017-11-20",
+        "total": 278.8
+      },
+      "raw_ocr_text": "",
+      "ocr_lines": [],
+      "predicted": {
+        "merchant": null,
+        "date": null,
+        "total": 0.0
+      },
+      "normalized_ground_truth": {
+        "merchant": "lightroom gallery sdn bhd",
+        "date": "2017-11-20",
+        "total": 278.8
+      },
+      "normalized_prediction": {
+        "merchant": "",
+        "date": null,
+        "total": 0.0
+      },
+      "field_results": {
+        "merchant": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "date": {
+          "passed": false,
+          "failure_reason": "missing_prediction"
+        },
+        "total": {
+          "passed": false,
+          "failure_reason": "missing_or_zero_prediction"
+        }
+      },
+      "diagnosis": [
+        "ocr_empty",
+        "merchant_missing_prediction",
+        "date_missing_prediction",
+        "total_missing_or_zero_prediction"
+      ]
+    }
+  ]
+}
