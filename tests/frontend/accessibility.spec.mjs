@@ -68,6 +68,7 @@ test('exposes accessible landmarks, live regions, and keyboard table controls', 
   await expect(page.locator('#drop-zone')).toHaveAttribute('role', 'button');
   await expect(page.locator('#transaction-table th button.sort-button')).toHaveCount(5);
 
+  await page.getByRole('link', { name: 'Transactions' }).click();
   await page.locator('#transaction-body tr.transaction-row').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.details-row')).toBeVisible();

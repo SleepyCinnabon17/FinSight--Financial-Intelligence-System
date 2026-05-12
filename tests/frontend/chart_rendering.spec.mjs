@@ -69,9 +69,8 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Dashboard' }).click();
 
-  await expect(page.locator('#transaction-body tr')).toHaveCount(1);
-  await expect(page.locator('#transaction-body')).toContainText('Metro Market');
   await expect(page.locator('.kpi-card strong')).toHaveText(['₹1,280.00', '₹1,280.00', '1', '1']);
 
   await expect
@@ -81,24 +80,28 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
         id: 'category-chart',
         type: 'doughnut',
         labels: ['Groceries'],
-        colors: ['#7aa2ff', '#4ade80', '#f59e0b', '#f87171', '#a78bfa', '#2dd4bf'],
+        colors: ['#f5c76b', '#33d58b', '#ff7384', '#f6ead1', '#7bb7ff', '#b89cff'],
         tickColor: null
       },
       {
         id: 'trend-chart',
         type: 'line',
         labels: ['2026-05-10'],
-        colors: ['#7aa2ff', '#4ade80', '#f59e0b', '#f87171', '#a78bfa', '#2dd4bf'],
-        tickColor: '#a8b0c2'
+        colors: ['#f5c76b', '#33d58b', '#ff7384', '#f6ead1', '#7bb7ff', '#b89cff'],
+        tickColor: '#c8c0ad'
       },
       {
         id: 'merchant-chart',
         type: 'bar',
         labels: ['Metro Market'],
-        colors: ['#7aa2ff', '#4ade80', '#f59e0b', '#f87171', '#a78bfa', '#2dd4bf'],
-        tickColor: '#a8b0c2'
+        colors: ['#f5c76b', '#33d58b', '#ff7384', '#f6ead1', '#7bb7ff', '#b89cff'],
+        tickColor: '#c8c0ad'
       }
     ]);
+
+  await page.getByRole('link', { name: 'Transactions' }).click();
+  await expect(page.locator('#transaction-body tr')).toHaveCount(1);
+  await expect(page.locator('#transaction-body')).toContainText('Metro Market');
 
   await page.setViewportSize({ width: 768, height: 900 });
   await expect.poll(() => page.evaluate(() => window.__resizeCalls.length)).toBeGreaterThan(0);
@@ -147,6 +150,7 @@ test('shows chart empty states instead of rendering empty datasets', async ({ pa
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Dashboard' }).click();
 
   await expect(page.locator('.chart-empty-state')).toHaveCount(3);
   await expect(page.locator('#charts')).toContainText('No category spend yet.');

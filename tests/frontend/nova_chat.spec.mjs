@@ -120,8 +120,6 @@ test('streams Nova messages with status, typing, copy, and stop controls', async
   await page.locator('#chat-input').fill('summarize spend');
   await page.locator('#chat-form button[type="submit"]').click();
 
-  await expect(page.locator('#chat-status-text')).toContainText('Connected');
-  await expect(page.locator('#chat-typing')).toBeVisible();
   await expect(page.locator('.bubble.user')).toContainText('summarize spend');
   await expect(page.locator('.bubble.nova')).toContainText('Nova reply');
   await expect(page.locator('#chat-status-text')).toContainText('Idle');
@@ -133,6 +131,8 @@ test('streams Nova messages with status, typing, copy, and stop controls', async
   await page.locator('#chat-input').fill('long answer');
   await page.locator('#chat-form button[type="submit"]').click();
   await expect(page.locator('#chat-stop-button')).toBeVisible();
+  await expect(page.locator('#chat-status-text')).toContainText('Connected');
+  await expect(page.locator('#chat-typing')).toBeVisible();
   await page.locator('#chat-stop-button').click();
   await expect(page.locator('#chat-status-text')).toContainText('Idle');
   await expect(page.locator('#chat-stop-button')).toBeHidden();

@@ -104,6 +104,7 @@ test('renders polished transaction status chips and inline resolution actions', 
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Transactions' }).click();
 
   await expect(page.locator('.status-badge')).toHaveCount(3);
   await expect(page.locator('.status-badge .status-icon')).toHaveCount(3);
@@ -189,6 +190,7 @@ test('resets demo transactions after a second confirmation click', async ({ page
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Transactions' }).click();
 
   const resetButton = page.locator('#reset-demo-data');
   await expect(resetButton).toBeVisible();
@@ -261,6 +263,7 @@ test('reset demo button disarms and reports delete failures', async ({ page }) =
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Transactions' }).click();
 
   const resetButton = page.locator('#reset-demo-data');
   await resetButton.click();

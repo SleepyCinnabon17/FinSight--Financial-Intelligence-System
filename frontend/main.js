@@ -18,10 +18,37 @@ const els = {
   metricsBody: document.getElementById('benchmark-metrics-body'),
   metricsSummary: document.getElementById('benchmark-metrics-summary'),
   metricsDetails: document.getElementById('benchmark-metrics-details'),
-  metricsEmpty: document.getElementById('benchmark-metrics-empty')
+  metricsEmpty: document.getElementById('benchmark-metrics-empty'),
+  viewTitle: document.getElementById('view-title'),
+  viewSubtitle: document.getElementById('view-subtitle'),
+  viewPanels: document.querySelectorAll('[data-view]'),
+  viewLinks: document.querySelectorAll('[data-view-link]')
 };
 
 const THEME_STORAGE_KEY = 'finsight-theme';
+const DEFAULT_VIEW = 'overview';
+const VIEW_COPY = {
+  overview: ['Overview', 'Upload receipts, reveal leaks, and let Nova explain where your money went.'],
+  dashboard: ['Dashboard', 'High-signal totals, anomaly pressure, and category leaks without the clutter.'],
+  upload: ['Upload / Review', 'Drop a receipt on the table, review the extraction, then confirm or discard.'],
+  transactions: ['Transactions', 'Confirmed receipts, anomalies, and duplicate resolution in one clean table.'],
+  nova: ['Nova', 'Ask for context while the assistant stays docked at the rail.'],
+  metrics: ['Benchmark Metrics', 'External evaluator metrics stay separate from synthetic regression checks.']
+};
+const VIEW_ALIASES = {
+  dashboard: 'dashboard',
+  'dashboard-view': 'dashboard',
+  upload: 'upload',
+  'upload-view': 'upload',
+  transactions: 'transactions',
+  'transactions-view': 'transactions',
+  nova: 'nova',
+  'nova-view': 'nova',
+  metrics: 'metrics',
+  'metrics-view': 'metrics',
+  'benchmark-metrics': 'metrics',
+  overview: 'overview'
+};
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
 const RESET_DISARM_MS = 4500;
@@ -45,6 +72,7 @@ const SROIE_DETAIL_METRICS = [
 let resetArmed = false;
 let resetTimer = null;
 let metricsLoaded = false;
+let currentView = DEFAULT_VIEW;
 
 function state() {
   return window.FinSightState;
@@ -56,7 +84,9 @@ export async function loadDashboard() {
   state().setAnalysis(analysis);
   renderTransactions();
   renderKpis(transactions, analysis);
-  document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+  if (currentView === 'dashboard') {
+    document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+  }
 }
 
 export function renderKpis(transactions = [], analysis = {}) {
@@ -289,16 +319,19 @@ export function setupTransactions() {
 function setupBenchmarkMetrics() {
   els.metricsToggle?.addEventListener('click', async () => {
     const isExpanded = els.metricsToggle.getAttribute('aria-expanded') === 'true';
-    els.metricsToggle.setAttribute('aria-expanded', String(!isExpanded));
-    els.metricsToggle.textContent = isExpanded ? 'Show metrics' : 'Hide metrics';
-    if (els.metricsBody) {
-      els.metricsBody.hidden = isExpanded;
-    }
-    if (!isExpanded && !metricsLoaded) {
-      metricsLoaded = true;
-      await loadBenchmarkMetrics();
-    }
+    await setBenchmarkMetricsExpanded(!isExpanded);
   });
+}
+
+async function setBenchmarkMetricsExpanded(expanded) {
+  if (!els.metricsToggle || !els.metricsBody) return;
+  els.metricsToggle.setAttribute('aria-expanded', String(expanded));
+  els.metricsToggle.textContent = expanded ? 'Hide metrics' : 'Show metrics';
+  els.metricsBody.hidden = !expanded;
+  if (expanded && !metricsLoaded) {
+    metricsLoaded = true;
+    await loadBenchmarkMetrics();
+  }
 }
 
 async function handleResetDemoData() {
@@ -368,7 +401,7 @@ loadDashboard().catch((error) => {
   els.uploadStatus.textContent = error.message;
 });
 
-window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, loadBenchmarkMetrics, renderBenchmarkMetrics, setupTransactions };
+window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, loadBenchmarkMetrics, renderBenchmarkMetrics, setupTransactions, showView };
 
 function setupLayoutShell() {
   els.sidebarToggle?.addEventListener('click', () => {
@@ -382,12 +415,73 @@ function setupLayoutShell() {
     els.novaToggle.textContent = isCollapsed ? 'Open' : 'Minimize';
   });
 
-  document.querySelectorAll('.sidebar-nav a').forEach((link) => {
-    link.addEventListener('click', () => {
+  els.viewLinks.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const view = link.dataset.viewLink;
+      if (view) {
+        event.preventDefault();
+        showView(view, { updateHash: true });
+      }
       els.sidebar?.classList.remove('is-open');
       els.sidebarToggle?.setAttribute('aria-expanded', 'false');
     });
   });
+
+  window.addEventListener('hashchange', () => {
+    showView(viewFromHash(), { updateHash: false });
+  });
+
+  showView(viewFromHash(), { updateHash: false });
+}
+
+function viewFromHash() {
+  const rawHash = window.location.hash.replace('#', '');
+  return VIEW_ALIASES[rawHash] || DEFAULT_VIEW;
+}
+
+export function showView(view, { updateHash = false } = {}) {
+  const targetView = VIEW_COPY[view] ? view : DEFAULT_VIEW;
+  currentView = targetView;
+  document.body.dataset.currentView = targetView;
+  els.viewPanels.forEach((panel) => {
+    const isActive = panel.dataset.view === targetView;
+    panel.hidden = !isActive;
+    panel.classList.toggle('is-active', isActive);
+  });
+  els.viewLinks.forEach((link) => {
+    const isActive = link.dataset.viewLink === targetView;
+    if (link.tagName === 'A') {
+      link.toggleAttribute('aria-current', isActive);
+      if (isActive) link.setAttribute('aria-current', 'page');
+    }
+  });
+  const [title, subtitle] = VIEW_COPY[targetView];
+  if (els.viewTitle) els.viewTitle.textContent = title;
+  if (els.viewSubtitle) els.viewSubtitle.textContent = subtitle;
+  if (updateHash) {
+    const hash = targetView === DEFAULT_VIEW ? '#overview' : `#${targetView}-view`;
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, '', hash);
+    }
+  }
+  if (targetView === 'dashboard') {
+    refreshChartLayout();
+  }
+  if (targetView === 'metrics') {
+    setBenchmarkMetricsExpanded(true);
+  }
+  if (targetView === 'nova') {
+    els.novaPanel?.classList.remove('is-collapsed');
+    els.novaToggle?.setAttribute('aria-expanded', 'true');
+    if (els.novaToggle) els.novaToggle.textContent = 'Minimize';
+  }
+}
+
+function refreshChartLayout() {
+  const analysis = state().getAnalysis();
+  if (analysis) {
+    document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+  }
 }
 
 function setupTheme() {

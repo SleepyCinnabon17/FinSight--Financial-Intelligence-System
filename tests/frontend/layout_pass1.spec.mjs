@@ -47,7 +47,11 @@ test('renders the pass 1 desktop shell with sidebar, KPI cards, and collapsible 
 
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.locator('.sidebar')).toBeVisible();
-  await expect(page.locator('.sidebar-nav a')).toHaveText(['Dashboard', 'Transactions', 'Upload', 'Nova Chat']);
+  await expect(page.locator('.sidebar-nav a')).toHaveText(['Overview', 'Dashboard', 'Upload', 'Transactions', 'Nova', 'Metrics']);
+  await expect(page.locator('#overview')).toBeVisible();
+  await expect(page.locator('#overview')).toContainText('99% of gamblers give up before making it big. Be the 1%.');
+
+  await page.getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.locator('.kpi-card')).toHaveCount(4);
   await expect(page.locator('.kpi-card')).toContainText(['Total Spend', 'This Month', 'Anomalies Flagged', 'Bills Processed']);
   await expect(page.locator('#nova.nova-panel')).toBeVisible();
@@ -76,6 +80,7 @@ test('keeps the pass 1 shell usable at tablet width', async ({ page }) => {
 
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.locator('.sidebar')).toBeVisible();
+  await page.getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.locator('.kpi-card')).toHaveCount(4);
   await expect(page.locator('#nova.nova-panel')).toBeVisible();
 });
@@ -101,10 +106,13 @@ test('includes skeleton shells and shows transaction empty state with no data', 
 
   await page.goto('/');
 
+  await page.getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.locator('.kpi-card .skeleton-loader')).toHaveCount(4);
-  await expect(page.locator('.table-skeleton.skeleton-loader')).toHaveCount(1);
   await expect(page.locator('.chart-skeleton.skeleton-loader')).toHaveCount(3);
   await expect(page.locator('.chat-skeleton.skeleton-loader')).toHaveCount(1);
+
+  await page.getByRole('link', { name: 'Transactions' }).click();
+  await expect(page.locator('.table-skeleton.skeleton-loader')).toHaveCount(1);
   await expect(page.locator('.transaction-empty-state')).toBeVisible();
   await expect(page.locator('.transaction-empty-state')).toContainText('No transactions yet.');
 });

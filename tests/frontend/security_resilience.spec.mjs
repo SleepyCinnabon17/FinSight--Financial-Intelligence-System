@@ -79,6 +79,7 @@ test('renders API-controlled transaction text without executing markup', async (
   ]);
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Transactions' }).click();
 
   await expect(page.locator('#transaction-body')).toContainText('<img src=x onerror="window.__xssFired = true">');
   await expect(page.locator('#transaction-body img')).toHaveCount(0);
@@ -109,6 +110,7 @@ test('blocks invalid confirmation edits with inline field errors', async ({ page
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',
@@ -163,6 +165,7 @@ test('shows upload previews, progress states, and confirm/discard toasts', async
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles([
     {
       name: 'bill.png',
@@ -209,6 +212,7 @@ test('shows a non-blocking upload toast on network failure', async ({ page }) =>
   });
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',
@@ -233,6 +237,7 @@ test('shows a degraded chart state when chart rendering fails', async ({ page })
   await mockDashboard(page);
 
   await page.goto('/');
+  await page.getByRole('link', { name: 'Dashboard' }).click();
 
   await expect(page.locator('#charts')).toContainText('Charts are temporarily unavailable.');
 });
