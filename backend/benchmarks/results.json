@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-12T14:43:13.101166+00:00",
+  "generated_at": "2026-05-12T18:54:42.494404+00:00",
   "summary": {
     "headline_source": "external",
     "external_available": true,
@@ -13,41 +13,41 @@
     "metrics": {
       "dataset": "synthetic",
       "summary": {
-        "ocr_accuracy": 0.0027,
-        "field_extraction_accuracy": 0.0,
-        "categorization_f1": 0.0,
+        "ocr_accuracy": 0.2744,
+        "field_extraction_accuracy": 0.2606,
+        "categorization_f1": 0.2356,
         "duplicate_detection_rate": 1.0,
-        "anomaly_recall": 0.0,
-        "avg_pipeline_time_seconds": 0.5109,
+        "anomaly_recall": 0.6,
+        "avg_pipeline_time_seconds": 1.1105,
         "bills_processed": 47
       },
       "ocr": {
-        "cer": 0.9973,
-        "wer": 1.0,
-        "field_detection_rate": 0.25,
-        "ocr_accuracy": 0.0027
+        "cer": 0.7256,
+        "wer": 0.7518,
+        "field_detection_rate": 0.9255,
+        "ocr_accuracy": 0.2744
       },
       "extraction": {
-        "field_accuracy_overall": 0.0,
+        "field_accuracy_overall": 0.2606,
         "field_accuracy_by_field": {
-          "merchant": 0.0,
-          "date": 0.0,
-          "amount": 0.0,
-          "category": 0.0
+          "merchant": 0.2766,
+          "date": 0.5106,
+          "amount": 0.0213,
+          "category": 0.234
         },
-        "amount_accuracy_within_1_inr": 0.0,
-        "date_parse_rate": 0.0,
-        "extraction_f1": 0.0
+        "amount_accuracy_within_1_inr": 0.0213,
+        "date_parse_rate": 0.7021,
+        "extraction_f1": 0.2606
       },
       "categorization": {
-        "accuracy": 0.0,
-        "macro_f1": 0.0,
-        "weighted_f1": 0.0,
+        "accuracy": 0.234,
+        "macro_f1": 0.2356,
+        "weighted_f1": 0.3182,
         "per_category": {
           "Food": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 1.0,
+            "recall": 0.25,
+            "f1": 0.4,
             "support": 16
           },
           "Shopping": {
@@ -63,9 +63,9 @@
             "support": 11
           },
           "Transport": {
-            "precision": 0.0,
-            "recall": 0.0,
-            "f1": 0.0,
+            "precision": 1.0,
+            "recall": 0.6364,
+            "f1": 0.7778,
             "support": 11
           },
           "Uncategorized": {
@@ -75,44 +75,65 @@
             "support": 0
           }
         },
-        "headline_f1": 0.0,
+        "headline_f1": 0.2356,
         "target_f1_min": 0.85,
         "target_pass": false
       },
       "duplicates_anomalies": {
-        "duplicate_precision": 0.0278,
+        "duplicate_precision": 1.0,
         "duplicate_detection_rate": 1.0,
         "duplicates_seeded": 1,
         "duplicates_caught": 1,
-        "anomaly_recall": 0.0,
+        "anomaly_recall": 0.6,
         "anomalies_seeded": 5,
-        "anomalies_detected": 0,
-        "false_positive_rate": 0.0
+        "anomalies_detected": 13,
+        "false_positive_rate": 0.3125
       },
       "self_correction": {
         "correction_rate": null,
-        "false_positive_rate": 0.0,
+        "false_positive_rate": 0.3125,
         "duplicate_detection_rate": 1.0,
         "confidence_calibration": [
           {
             "range": "0.00-0.20",
-            "count": 141,
+            "count": 14,
             "avg_confidence": 0.0,
             "accuracy": 0.0,
             "calibration_gap": 0.0
+          },
+          {
+            "range": "0.40-0.60",
+            "count": 28,
+            "avg_confidence": 0.5705,
+            "accuracy": 0.2143,
+            "calibration_gap": 0.3562
+          },
+          {
+            "range": "0.60-0.80",
+            "count": 65,
+            "avg_confidence": 0.6512,
+            "accuracy": 0.3231,
+            "calibration_gap": 0.3282
+          },
+          {
+            "range": "0.80-1.00",
+            "count": 34,
+            "avg_confidence": 0.8354,
+            "accuracy": 0.3235,
+            "calibration_gap": 0.5119
           }
         ],
         "status": "correction_rate requires review-event logging"
       },
       "pipeline": {
-        "avg_pipeline_time_seconds": 0.5109,
-        "max_pipeline_time_seconds": 2.5738,
+        "avg_pipeline_time_seconds": 1.1105,
+        "max_pipeline_time_seconds": 3.4862,
         "bills_processed": 47,
         "pipeline_errors": 0
       },
       "product": {
         "savings_identified": 0.0,
-        "anomalies_detected": 0,
+        "anomalies_detected": 13,
         "chatbot_relevance": null,
         "status": "chatbot relevance requires human review or persisted chat evaluation labels"
       },
@@ -125,14 +146,14 @@
         "status": "requires source logging or mocked chat evaluation cases; no live LLM calls in CI"
       },
       "field_accuracy": {
-        "merchant": 0.0,
-        "date": 0.0,
-        "total": 0.0,
-        "category": 0.0
+        "merchant": 0.2766,
+        "date": 0.5106,
+        "total": 0.0213,
+        "category": 0.234
       },
-      "anomaly_detection_recall": 0.0,
-      "duplicate_detection_precision": 0.0278,
-      "overall_extraction_f1": 0.0,
+      "anomaly_detection_recall": 0.6,
+      "duplicate_detection_precision": 1.0,
+      "overall_extraction_f1": 0.2606,
       "counts": {
         "evaluated_images": 47,
         "canonical_bills": 37,
@@ -149,7 +170,7 @@
         "total": false,
         "category": false,
         "anomaly_detection_recall": false,
-        "duplicate_detection_precision": false
+        "duplicate_detection_precision": true
       },
       "errors": []
     }
@@ -161,106 +182,78 @@
       "purpose": "Real receipt field extraction benchmark",
       "limit": 25,
       "metrics": {
-        "field_extraction_accuracy": 0.04,
+        "field_extraction_accuracy": 0.44,
         "field_accuracy_by_field": {
-          "merchant": 0.0,
-          "date": 0.08,
-          "total": 0.04
+          "merchant": 0.36,
+          "date": 0.6,
+          "total": 0.36
         },
-        "field_detection_rate": 0.0,
+        "field_detection_rate": 0.7867,
         "field_detection_by_field": {
-          "merchant": 0.0,
-          "date": 0.0,
-          "total": 0.0
+          "merchant": 0.88,
+          "date": 0.6,
+          "total": 0.88
         },
-        "cer": 0.9985,
-        "wer": 1.0,
-        "ocr_accuracy": 0.0015,
-        "avg_pipeline_time_seconds": 0.8143,
-        "max_pipeline_time_seconds": 3.1166,
+        "cer": 0.6586,
+        "wer": 0.7683,
+        "ocr_accuracy": 0.3414,
+        "avg_pipeline_time_seconds": 1.3468,
+        "max_pipeline_time_seconds": 2.8419,
         "samples_processed": 25,
         "samples_failed": 0,
         "samples_skipped": 0,
         "confidence_calibration": [
           {
             "range": "0.00-0.20",
-            "count": 75,
+            "count": 16,
             "avg_confidence": 0.0,
-            "accuracy": 0.04,
-            "calibration_gap": 0.04
+            "accuracy": 0.125,
+            "calibration_gap": 0.125
+          },
+          {
+            "range": "0.40-0.60",
+            "count": 3,
+            "avg_confidence": 0.5681,
+            "accuracy": 0.3333,
+            "calibration_gap": 0.2347
+          },
+          {
+            "range": "0.60-0.80",
+            "count": 16,
+            "avg_confidence": 0.6862,
+            "accuracy": 0.125,
+            "calibration_gap": 0.5612
+          },
+          {
+            "range": "0.80-1.00",
+            "count": 40,
+            "avg_confidence": 0.9015,
+            "accuracy": 0.7,
+            "calibration_gap": 0.2015
           }
         ],
-        "merchant_accuracy": 0.0,
-        "date_accuracy": 0.08,
-        "date_parse_rate": 0.0,
-        "total_amount_accuracy_within_1": 0.04
+        "merchant_accuracy": 0.36,
+        "date_accuracy": 0.6,
+        "date_parse_rate": 0.6,
+        "total_amount_accuracy_within_1": 0.36
       },
       "status": "generated"
     },
     "cord": {
-      "available": true,
+      "available": false,
       "dataset": "CORD v2",
       "purpose": "Receipt OCR/layout robustness benchmark",
       "limit": 25,
-      "metrics": {
-        "field_extraction_accuracy": 0.0,
-        "field_accuracy_by_field": {
-          "total": 0.0,
-          "subtotal": 0.0,
-          "tax": 0.0
-        },
-        "field_detection_rate": 0.0,
-        "field_detection_by_field": {
-          "total": 0.0,
-          "subtotal": 0.0,
-          "tax": 0.0
-        },
-        "cer": 0.9924,
-        "wer": 1.0,
-        "ocr_accuracy": 0.0076,
-        "avg_pipeline_time_seconds": 0.5879,
-        "max_pipeline_time_seconds": 3.8514,
-        "samples_processed": 25,
-        "samples_failed": 0,
-        "samples_skipped": 0,
-        "confidence_calibration": [
-          {
-            "range": "0.00-0.20",
-            "count": 75,
-            "avg_confidence": 0.0,
-            "accuracy": 0.0,
-            "calibration_gap": 0.0
-          }
-        ],
-        "total_amount_accuracy_within_1": 0.0,
-        "scope_note": "CORD metrics focus on receipt OCR/layout and totals where labels map cleanly to FinSight fields."
-      },
-      "status": "generated"
+      "metrics": {},
+      "status": "not generated"
     },
     "funsd": {
-      "available": true,
+      "available": false,
       "dataset": "FUNSD",
       "purpose": "Document key-value structure stress test; not a receipt benchmark",
       "limit": 25,
-      "metrics": {
-        "field_extraction_accuracy": null,
-        "field_accuracy_by_field": {},
-        "field_detection_rate": null,
-        "field_detection_by_field": {},
-        "cer": 0.999,
-        "wer": 1.0,
-        "ocr_accuracy": 0.001,
-        "avg_pipeline_time_seconds": 0.3781,
-        "max_pipeline_time_seconds": 0.5274,
-        "samples_processed": 25,
-        "samples_failed": 0,
-        "samples_skipped": 0,
-        "confidence_calibration": [],
-        "scope_note": "FUNSD is a document-structure stress test, not a receipt accuracy benchmark.",
-        "key_value_pairing_rate": null,
-        "key_value_pairing_status": "requires a dedicated form-understanding evaluator"
-      },
-      "status": "generated"
+      "metrics": {},
+      "status": "not generated"
     }
   },
   "deferred_metrics": {

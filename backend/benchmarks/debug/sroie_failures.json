@@ -1,6 +1,6 @@
 {
   "dataset": "sroie",
-  "generated_at": "2026-05-12T14:42:27.180009+00:00",
+  "generated_at": "2026-05-12T18:54:06.531191+00:00",
   "limit": 25,
   "debug_sample_limit": 10,
   "processed": 25,
@@ -14,12 +14,39 @@
         "date": "2019-01-15",
         "total": 193.0
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "tan chay yee\n*** COPY ***\nOJC MARKETING SDN BHD.\nROC NO: 538358-H\n4,\nBANDAR SERI ALAM,\n61750 MASAI, JOHOR\nTel:07-388 2218 Fax:07-388 8218\nEmail: ng@ojcgroup.com\nTAX INVOICE\nDate 11:05:16 AM\nCashier : NG CHUAN MIN\nSales Persor FATIN\nBill To THE PEAK QUARRY WORKS\nAddress te\n--Description Price\n000000111 1193.00 193.00 SR\nKINGS SAFETY SHOES KWD 805\nExclude\nTotal GST @6%: 0.00\nTotal Inclusive GST: 193.00\nTOTAL: 193,00\nVISA CARD\nApproval Code:000\nGoods Sold Are Not & Refundable\nYou, Please Come Again.****",
+      "ocr_lines": [
+        "tan chay yee",
+        "*** COPY ***",
+        "OJC MARKETING SDN BHD.",
+        "ROC NO: 538358-H",
+        "4,",
+        "BANDAR SERI ALAM,",
+        "61750 MASAI, JOHOR",
+        "Tel:07-388 2218 Fax:07-388 8218",
+        "Email: ng@ojcgroup.com",
+        "TAX INVOICE",
+        "Date 11:05:16 AM",
+        "Cashier : NG CHUAN MIN",
+        "Sales Persor FATIN",
+        "Bill To THE PEAK QUARRY WORKS",
+        "Address te",
+        "--Description Price",
+        "000000111 1193.00 193.00 SR",
+        "KINGS SAFETY SHOES KWD 805",
+        "Exclude",
+        "Total GST @6%: 0.00",
+        "Total Inclusive GST: 193.00",
+        "TOTAL: 193,00",
+        "VISA CARD",
+        "Approval Code:000",
+        "Goods Sold Are Not & Refundable",
+        "You, Please Come Again.****"
+      ],
       "predicted": {
-        "merchant": null,
+        "merchant": "OJC MARKETING SDN BHD.",
         "date": null,
-        "total": 0.0
+        "total": 19300.0
       },
       "normalized_ground_truth": {
         "merchant": "ojc marketing sdn bhd",
@@ -27,14 +54,14 @@
         "total": 193.0
       },
       "normalized_prediction": {
-        "merchant": "",
+        "merchant": "ojc marketing sdn bhd",
         "date": null,
-        "total": 0.0
+        "total": 19300.0
       },
       "field_results": {
         "merchant": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "date": {
           "passed": false,
@@ -42,14 +69,12 @@
         },
         "total": {
           "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "failure_reason": "value_mismatch"
         }
       },
       "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
         "date_missing_prediction",
-        "total_missing_or_zero_prediction"
+        "total_value_mismatch"
       ]
     },
     {
@@ -59,12 +84,37 @@
         "date": "2019-01-02",
         "total": 170.0
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "tan chay yee\nOJC MARKETING SDN BHD\nROC NO: 538358-H\nNO 2 & 4, JALAN BAYU 4,\nBANDAR SERI ALAM,\n81750 MASAI, JOHOR\nTel:07-388 2218 Fax:07-388 8218\nEmail: ng@ojegroup.com\nCash Bill\nDate 02/01/2019 2:47:14 PM\nCashier : RHYS TAN\nSales Persor : FATIN\n000000111. 1 170,00\nKINGS SAFETY \u2018004\nSHOES KWD 805\n\u201cQty T Total Ttem Discount! 0.00\"\nTotal Amount: 170,00\nAME\nTOTAL: 170.00\nVISA CARD 170,00\nApproval Code:123\nJ 0\nGoods Sold Are Not Returnable & Refundable\nYou. Please Come Again.****",
+      "ocr_lines": [
+        "tan chay yee",
+        "OJC MARKETING SDN BHD",
+        "ROC NO: 538358-H",
+        "NO 2 & 4, JALAN BAYU 4,",
+        "BANDAR SERI ALAM,",
+        "81750 MASAI, JOHOR",
+        "Tel:07-388 2218 Fax:07-388 8218",
+        "Email: ng@ojegroup.com",
+        "Cash Bill",
+        "Date 02/01/2019 2:47:14 PM",
+        "Cashier : RHYS TAN",
+        "Sales Persor : FATIN",
+        "000000111. 1 170,00",
+        "KINGS SAFETY \u2018004",
+        "SHOES KWD 805",
+        "\u201cQty T Total Ttem Discount! 0.00\"",
+        "Total Amount: 170,00",
+        "AME",
+        "TOTAL: 170.00",
+        "VISA CARD 170,00",
+        "Approval Code:123",
+        "J 0",
+        "Goods Sold Are Not Returnable & Refundable",
+        "You. Please Come Again.****"
+      ],
       "predicted": {
-        "merchant": null,
-        "date": null,
-        "total": 0.0
+        "merchant": "OJC MARKETING SDN BHD",
+        "date": "2019-01-02",
+        "total": 170.0
       },
       "normalized_ground_truth": {
         "merchant": "ojc marketing sdn bhd",
@@ -72,30 +122,25 @@
         "total": 170.0
       },
       "normalized_prediction": {
-        "merchant": "",
-        "date": null,
-        "total": 0.0
+        "merchant": "ojc marketing sdn bhd",
+        "date": "2019-01-02",
+        "total": 170.0
       },
       "field_results": {
         "merchant": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "date": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "total": {
-          "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "passed": true,
+          "failure_reason": null
         }
       },
-      "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
-        "date_missing_prediction",
-        "total_missing_or_zero_prediction"
-      ]
+      "diagnosis": []
     },
     {
       "sample_id": "X51005200931",
@@ -104,12 +149,48 @@
         "date": "2018-02-09",
         "total": 436.2
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "PERNIAGAAN ZHENG HU!\nJALAN PERMAS 916\nBANDAR BARU PERMAS JAYA\n81750 JOHOR BAHRU\n7524 3794\nGST NO: 000800580824\nSIMPLIFIED TAX INVOICE\nGOGIANT ENGINEERING (i) ~\n\u2018Salesperson, Date. 09/02/2078\nCashier: USER\nQty Amount\n6783\nCERAMIC CAP\n2084 $804 380 114.00\nSR: SISTEEL 1/2\" STREET ELBOW\n1760 GA 4\nSR: STARWELD RED HEAD TUNGSTEN ROD\n3496 64 3 9900\nSR: ESICUT 4\" CUTTING DISC (1BOX)-50PCS\n2480 GA 2\nSR: WELDRO PICKLING GEL 1k\n9428 Ge 4 i900\nSR: 13.5\" WELDING GLOVE- GREEN\nTOT\n(Excluded GST) Sub Total 411.50\nDiscount (RM)\nGST (RM) 24,69\nRounding (RM) : 0.0%\n436.20\nCASH : 436.20\nGhange (RM} : 0.00\nGST SUMMARY\nSR 6 417.50 24.69\nGOONS SOLD ARE NOT RETURNABLE.\nTHANK YOU.",
+      "ocr_lines": [
+        "PERNIAGAAN ZHENG HU!",
+        "JALAN PERMAS 916",
+        "BANDAR BARU PERMAS JAYA",
+        "81750 JOHOR BAHRU",
+        "7524 3794",
+        "GST NO: 000800580824",
+        "SIMPLIFIED TAX INVOICE",
+        "GOGIANT ENGINEERING (i) ~",
+        "\u2018Salesperson, Date. 09/02/2078",
+        "Cashier: USER",
+        "Qty Amount",
+        "6783",
+        "CERAMIC CAP",
+        "2084 $804 380 114.00",
+        "SR: SISTEEL 1/2\" STREET ELBOW",
+        "1760 GA 4",
+        "SR: STARWELD RED HEAD TUNGSTEN ROD",
+        "3496 64 3 9900",
+        "SR: ESICUT 4\" CUTTING DISC (1BOX)-50PCS",
+        "2480 GA 2",
+        "SR: WELDRO PICKLING GEL 1k",
+        "9428 Ge 4 i900",
+        "SR: 13.5\" WELDING GLOVE- GREEN",
+        "TOT",
+        "(Excluded GST) Sub Total 411.50",
+        "Discount (RM)",
+        "GST (RM) 24,69",
+        "Rounding (RM) : 0.0%",
+        "436.20",
+        "CASH : 436.20",
+        "Ghange (RM} : 0.00",
+        "GST SUMMARY",
+        "SR 6 417.50 24.69",
+        "GOONS SOLD ARE NOT RETURNABLE.",
+        "THANK YOU."
+      ],
       "predicted": {
-        "merchant": null,
-        "date": null,
-        "total": 0.0
+        "merchant": "PERNIAGAAN ZHENG HU!",
+        "date": "2078-02-09",
+        "total": 411.5
       },
       "normalized_ground_truth": {
         "merchant": "perniagaan zheng hui",
@@ -117,29 +198,28 @@
         "total": 436.2
       },
       "normalized_prediction": {
-        "merchant": "",
-        "date": null,
-        "total": 0.0
+        "merchant": "perniagaan zheng hu",
+        "date": "2078-02-09",
+        "total": 411.5
       },
       "field_results": {
         "merchant": {
           "passed": false,
-          "failure_reason": "missing_prediction"
+          "failure_reason": "value_mismatch"
         },
         "date": {
           "passed": false,
-          "failure_reason": "missing_prediction"
+          "failure_reason": "value_mismatch"
         },
         "total": {
           "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "failure_reason": "value_mismatch"
         }
       },
       "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
-        "date_missing_prediction",
-        "total_missing_or_zero_prediction"
+        "merchant_value_mismatch",
+        "date_value_mismatch",
+        "total_value_mismatch"
       ]
     },
     {
@@ -149,12 +229,28 @@
         "date": "2018-02-01",
         "total": 4.9
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "LANJAN $B\n= ALSERKAN ENTERPRISE a\n03-6156 8757 Co No: 001083069-M\nKM 456.4 BKT LANJAN UTARA,\nUTARA SELATAN,SG BULOH\n47000 BUL\nID No\nWo: 19729058\nStore No.: 129077 Babu\nPM\n01/02/2018 4:43:17\n& sandwich\nTotal RM\nTAL INCLUDES 6.00% GST\n: points to pay for",
+      "ocr_lines": [
+        "LANJAN $B",
+        "= ALSERKAN ENTERPRISE a",
+        "03-6156 8757 Co No: 001083069-M",
+        "KM 456.4 BKT LANJAN UTARA,",
+        "UTARA SELATAN,SG BULOH",
+        "47000 BUL",
+        "ID No",
+        "Wo: 19729058",
+        "Store No.: 129077 Babu",
+        "PM",
+        "01/02/2018 4:43:17",
+        "& sandwich",
+        "Total RM",
+        "TAL INCLUDES 6.00% GST",
+        ": points to pay for"
+      ],
       "predicted": {
-        "merchant": null,
-        "date": null,
-        "total": 0.0
+        "merchant": "= ALSERKAN ENTERPRISE a",
+        "date": "2018-02-01",
+        "total": 6.0
       },
       "normalized_ground_truth": {
         "merchant": "petron bkt lanjan sb",
@@ -162,29 +258,27 @@
         "total": 4.9
       },
       "normalized_prediction": {
-        "merchant": "",
-        "date": null,
-        "total": 0.0
+        "merchant": "alserkan enterprise a",
+        "date": "2018-02-01",
+        "total": 6.0
       },
       "field_results": {
         "merchant": {
           "passed": false,
-          "failure_reason": "missing_prediction"
+          "failure_reason": "value_mismatch"
         },
         "date": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "total": {
           "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "failure_reason": "value_mismatch"
         }
       },
       "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
-        "date_missing_prediction",
-        "total_missing_or_zero_prediction"
+        "merchant_value_mismatch",
+        "total_value_mismatch"
       ]
     },
     {
@@ -194,12 +288,51 @@
         "date": "2018-01-18",
         "total": 38.9
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "Gerbang Alaf Restaurants Sdn Bhd\n(65351-M)\nformerly known as\nGolden Arches Restaurants Sdn Bhd\nLicensee of McDonald's\nLevel 6, Bangunan TH, Damansara Uptown3\nNo.3, Jalan Petaling Jaya\nSelangor\n(GST ID No: 000504664064)\nMcDonald's Petronas Taman Melati DT |\nTel No. : 03-4147-3107\nTAX INVOICE\nMFY Side 1\nORD #90 -REG #19- 18/01/2018 17:09:21\n|\nQTY ITEM TOTAL\n2 M SpicyDeluxe 25.40\nCoke\nFries\n1M GrilChicBgr 12.50\n1M Coke\n1M Fries\n1 Smal] Cone 1.00\nTakeOut Total {incl GST) 38.90\nTotal Rounded 38.90\nCash Tendered 50.00\nChange 11.10\n|\n|\nTOTAL INCLUDES 6% GST 2.20\nlove to hear your feedback! |\nVisit .com.my\nOR\nDownload My McD Feedback from |\nGoogle Play/App Store\nto share your experience\nThank You and Please Come Again.\nustomer Service Hotline : 03-2726-5600",
+      "ocr_lines": [
+        "Gerbang Alaf Restaurants Sdn Bhd",
+        "(65351-M)",
+        "formerly known as",
+        "Golden Arches Restaurants Sdn Bhd",
+        "Licensee of McDonald's",
+        "Level 6, Bangunan TH, Damansara Uptown3",
+        "No.3, Jalan Petaling Jaya",
+        "Selangor",
+        "(GST ID No: 000504664064)",
+        "McDonald's Petronas Taman Melati DT |",
+        "Tel No. : 03-4147-3107",
+        "TAX INVOICE",
+        "MFY Side 1",
+        "ORD #90 -REG #19- 18/01/2018 17:09:21",
+        "|",
+        "QTY ITEM TOTAL",
+        "2 M SpicyDeluxe 25.40",
+        "Coke",
+        "Fries",
+        "1M GrilChicBgr 12.50",
+        "1M Coke",
+        "1M Fries",
+        "1 Smal] Cone 1.00",
+        "TakeOut Total {incl GST) 38.90",
+        "Total Rounded 38.90",
+        "Cash Tendered 50.00",
+        "Change 11.10",
+        "|",
+        "|",
+        "TOTAL INCLUDES 6% GST 2.20",
+        "love to hear your feedback! |",
+        "Visit .com.my",
+        "OR",
+        "Download My McD Feedback from |",
+        "Google Play/App Store",
+        "to share your experience",
+        "Thank You and Please Come Again.",
+        "ustomer Service Hotline : 03-2726-5600"
+      ],
       "predicted": {
-        "merchant": null,
-        "date": null,
-        "total": 0.0
+        "merchant": "Gerbang Alaf Restaurants Sdn Bhd",
+        "date": "2018-01-18",
+        "total": 38.9
       },
       "normalized_ground_truth": {
         "merchant": "gerbang alaf restaurants sdn bhd",
@@ -207,30 +340,25 @@
         "total": 38.9
       },
       "normalized_prediction": {
-        "merchant": "",
-        "date": null,
-        "total": 0.0
+        "merchant": "gerbang alaf restaurants sdn bhd",
+        "date": "2018-01-18",
+        "total": 38.9
       },
       "field_results": {
         "merchant": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "date": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "total": {
-          "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "passed": true,
+          "failure_reason": null
         }
       },
-      "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
-        "date_missing_prediction",
-        "total_missing_or_zero_prediction"
-      ]
+      "diagnosis": []
     },
     {
       "sample_id": "X51005230621",
@@ -239,8 +367,22 @@
         "date": "2018-02-05",
         "total": 7.3
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "\\\nYoo]\n|\n#209\n|\n@ x\nmy\nfew\n|\nDLE\nmin\u2018\n107\n:",
+      "ocr_lines": [
+        "\\",
+        "Yoo]",
+        "|",
+        "#209",
+        "|",
+        "@ x",
+        "my",
+        "few",
+        "|",
+        "DLE",
+        "min\u2018",
+        "107",
+        ":"
+      ],
       "predicted": {
         "merchant": null,
         "date": null,
@@ -271,7 +413,6 @@
         }
       },
       "diagnosis": [
-        "ocr_empty",
         "merchant_missing_prediction",
         "date_missing_prediction",
         "total_missing_or_zero_prediction"
@@ -284,12 +425,37 @@
         "date": "2018-01-29",
         "total": 6.35
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "CROSS CHANNEL NETWORK SDN. BHD.\n47, JALAN MERANTI 1, SEK. 3,\nBANDAR UTAMA BATANG KALI,\n|\n44300 BATANG KALI, SELANGOR.\nTel : 03-6057 9688 Fax : 03-6057 9678\nGST ID : 001151500288\nTax Invoice\nNo. : BTG-052332\nRM Tax\nSCHNEIDER E15R 13ASWITCH 1 636\nSOCKET OUTLET @ 6.0000\nTotal Amt Incl. 6%: 6.36\nTotal Amt ble: 635\nPaid unt 19.99\n:\nange:\n3,\nGST Summary Amount Tax:\n|\n|\nt\nFor any enquiry, email us:\n29/01/2018 4:40:40 PM",
+      "ocr_lines": [
+        "CROSS CHANNEL NETWORK SDN. BHD.",
+        "47, JALAN MERANTI 1, SEK. 3,",
+        "BANDAR UTAMA BATANG KALI,",
+        "|",
+        "44300 BATANG KALI, SELANGOR.",
+        "Tel : 03-6057 9688 Fax : 03-6057 9678",
+        "GST ID : 001151500288",
+        "Tax Invoice",
+        "No. : BTG-052332",
+        "RM Tax",
+        "SCHNEIDER E15R 13ASWITCH 1 636",
+        "SOCKET OUTLET @ 6.0000",
+        "Total Amt Incl. 6%: 6.36",
+        "Total Amt ble: 635",
+        "Paid unt 19.99",
+        ":",
+        "ange:",
+        "3,",
+        "GST Summary Amount Tax:",
+        "|",
+        "|",
+        "t",
+        "For any enquiry, email us:",
+        "29/01/2018 4:40:40 PM"
+      ],
       "predicted": {
-        "merchant": null,
-        "date": null,
-        "total": 0.0
+        "merchant": "CROSS CHANNEL NETWORK SDN. BHD.",
+        "date": "2018-01-29",
+        "total": 635.0
       },
       "normalized_ground_truth": {
         "merchant": "cross channel network sdn bhd",
@@ -297,29 +463,26 @@
         "total": 6.35
       },
       "normalized_prediction": {
-        "merchant": "",
-        "date": null,
-        "total": 0.0
+        "merchant": "cross channel network sdn bhd",
+        "date": "2018-01-29",
+        "total": 635.0
       },
       "field_results": {
         "merchant": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "date": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "total": {
           "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "failure_reason": "value_mismatch"
         }
       },
       "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
-        "date_missing_prediction",
-        "total_missing_or_zero_prediction"
+        "total_value_mismatch"
       ]
     },
     {
@@ -329,12 +492,39 @@
         "date": "2017-12-31",
         "total": 7.95
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "CROSS CHANNEL\nJALAN MERANTI 1, SEK. 3,\nUTAMA BATANG KALI,\n44300 BATANG KALI, SELANGOR.\n: 03-6057 9688 Fax : 03-6057 9678\nGST ID 001151500288\n:\nTax Invoice\nNo.\n:\nQty\u201d RM Tax\n1 180\n@ 1.7000\nJ\n1 1.91\nR & B-C/CLIP 8MM X 100PCS 1 37180\nCABLE CLIPS @ 35000\n1\nGST @6%:\nTotal Amt Payable 7.95\n1000\n205\nTender: =\nGST Summary Amount\nFor any enquiry, please mail us:\n4 \u2018 31/12/2017 10:33:59 AM",
+      "ocr_lines": [
+        "CROSS CHANNEL",
+        "JALAN MERANTI 1, SEK. 3,",
+        "UTAMA BATANG KALI,",
+        "44300 BATANG KALI, SELANGOR.",
+        ": 03-6057 9688 Fax : 03-6057 9678",
+        "GST ID 001151500288",
+        ":",
+        "Tax Invoice",
+        "No.",
+        ":",
+        "Qty\u201d RM Tax",
+        "1 180",
+        "@ 1.7000",
+        "J",
+        "1 1.91",
+        "R & B-C/CLIP 8MM X 100PCS 1 37180",
+        "CABLE CLIPS @ 35000",
+        "1",
+        "GST @6%:",
+        "Total Amt Payable 7.95",
+        "1000",
+        "205",
+        "Tender: =",
+        "GST Summary Amount",
+        "For any enquiry, please mail us:",
+        "4 \u2018 31/12/2017 10:33:59 AM"
+      ],
       "predicted": {
-        "merchant": null,
-        "date": null,
-        "total": 0.0
+        "merchant": "CROSS CHANNEL",
+        "date": "2017-12-31",
+        "total": 7.95
       },
       "normalized_ground_truth": {
         "merchant": "cross channel network sdn bhd",
@@ -342,29 +532,26 @@
         "total": 7.95
       },
       "normalized_prediction": {
-        "merchant": "",
-        "date": null,
-        "total": 0.0
+        "merchant": "cross channel",
+        "date": "2017-12-31",
+        "total": 7.95
       },
       "field_results": {
         "merchant": {
           "passed": false,
-          "failure_reason": "missing_prediction"
+          "failure_reason": "value_mismatch"
         },
         "date": {
-          "passed": false,
-          "failure_reason": "missing_prediction"
+          "passed": true,
+          "failure_reason": null
         },
         "total": {
-          "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "passed": true,
+          "failure_reason": null
         }
       },
       "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
-        "date_missing_prediction",
-        "total_missing_or_zero_prediction"
+        "merchant_value_mismatch"
       ]
     },
     {
@@ -374,8 +561,19 @@
         "date": "2018-01-08",
         "total": 8.0
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "ATup\ni\n> 00\u00b001\nINQOWY TYLOL\na 93a\n\"ON GI\nTAL\n*p _\nNGS\nj",
+      "ocr_lines": [
+        "ATup",
+        "i",
+        "> 00\u00b001",
+        "INQOWY TYLOL",
+        "a 93a",
+        "\"ON GI",
+        "TAL",
+        "*p _",
+        "NGS",
+        "j"
+      ],
       "predicted": {
         "merchant": null,
         "date": null,
@@ -406,7 +604,6 @@
         }
       },
       "diagnosis": [
-        "ocr_empty",
         "merchant_missing_prediction",
         "date_missing_prediction",
         "total_missing_or_zero_prediction"
@@ -419,12 +616,51 @@
         "date": "2017-11-20",
         "total": 278.8
       },
-      "raw_ocr_text": "",
-      "ocr_lines": [],
+      "raw_ocr_text": "000\n#9 US\n888 YNVENY YNVE\nYNVE\n\u2018ox\nWd\n: 410\np\nWa\n08\u00b0822\nWa > LOL\n: %9\n00\u00b00 Wal\nWa JUNODS\n: qns\n* 0\nTIGOONDT A 08\nus\n) INN I\nYALAWT\n99\u00b0SST ) INN x I\nMA ASE\nS\n) INN WH x\nJHOTT AM AST YE\nus\n\u201cON\n5\n:\ni :\nNd\nL10G/11/06\n[ VIGONY : 3\nTe]\n: \u201cON\nVISAVIVW\nOT NVIVI\nNGS WOOULHD",
+      "ocr_lines": [
+        "000",
+        "#9 US",
+        "888 YNVENY YNVE",
+        "YNVE",
+        "\u2018ox",
+        "Wd",
+        ": 410",
+        "p",
+        "Wa",
+        "08\u00b0822",
+        "Wa > LOL",
+        ": %9",
+        "00\u00b00 Wal",
+        "Wa JUNODS",
+        ": qns",
+        "* 0",
+        "TIGOONDT A 08",
+        "us",
+        ") INN I",
+        "YALAWT",
+        "99\u00b0SST ) INN x I",
+        "MA ASE",
+        "S",
+        ") INN WH x",
+        "JHOTT AM AST YE",
+        "us",
+        "\u201cON",
+        "5",
+        ":",
+        "i :",
+        "Nd",
+        "L10G/11/06",
+        "[ VIGONY : 3",
+        "Te]",
+        ": \u201cON",
+        "VISAVIVW",
+        "OT NVIVI",
+        "NGS WOOULHD"
+      ],
       "predicted": {
-        "merchant": null,
+        "merchant": "#9 US",
         "date": null,
-        "total": 0.0
+        "total": 888.0
       },
       "normalized_ground_truth": {
         "merchant": "lightroom gallery sdn bhd",
@@ -432,14 +668,14 @@
         "total": 278.8
       },
       "normalized_prediction": {
-        "merchant": "",
+        "merchant": "9 us",
         "date": null,
-        "total": 0.0
+        "total": 888.0
       },
       "field_results": {
         "merchant": {
           "passed": false,
-          "failure_reason": "missing_prediction"
+          "failure_reason": "value_mismatch"
         },
         "date": {
           "passed": false,
@@ -447,14 +683,13 @@
         },
         "total": {
           "passed": false,
-          "failure_reason": "missing_or_zero_prediction"
+          "failure_reason": "value_mismatch"
         }
       },
       "diagnosis": [
-        "ocr_empty",
-        "merchant_missing_prediction",
+        "merchant_value_mismatch",
         "date_missing_prediction",
-        "total_missing_or_zero_prediction"
+        "total_value_mismatch"
       ]
     }
   ]
