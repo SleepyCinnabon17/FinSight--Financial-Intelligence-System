@@ -48,6 +48,42 @@ def test_confirm_get_delete_transaction(monkeypatch, tmp_path: Path) -> None:
     assert client.get("/api/v1/transactions").json()["data"] == []
 
 
+def test_confirm_accepts_blank_optional_ui_numeric_edits(monkeypatch, tmp_path: Path) -> None:
+    client = _client_store(monkeypatch, tmp_path)
+    extraction = {
+        "merchant": {"value": "UI Store", "confidence": 1.0, "raw_text": "UI Store"},
+        "date": {"value": "2026-05-01", "confidence": 1.0, "raw_text": "2026-05-01"},
+        "items": {"value": [], "confidence": 1.0, "raw_text": ""},
+        "subtotal": {"value": None, "confidence": 0.0, "raw_text": ""},
+        "tax": {"value": None, "confidence": 0.0, "raw_text": ""},
+        "total": {"value": 25.0, "confidence": 1.0, "raw_text": "25"},
+        "payment_method": {"value": None, "confidence": 0.0, "raw_text": ""},
+        "bill_number": {"value": None, "confidence": 0.0, "raw_text": ""},
+        "raw_ocr_text": "UI Store",
+        "metadata": {"file_name": "ui-confirm.txt"},
+    }
+    response = client.post(
+        "/api/v1/transactions/confirm",
+        json={
+            "extraction_result": extraction,
+            "user_edits": {
+                "merchant": "UI Store",
+                "date": "2026-05-01",
+                "subtotal": "",
+                "tax": "",
+                "total": "25.0",
+                "payment_method": "",
+                "bill_number": "",
+            },
+        },
+    )
+    assert response.status_code == 200, response.text
+    transaction = response.json()["data"]
+    assert transaction["subtotal"] is None
+    assert transaction["tax"] is None
+    assert transaction["total"] == 25.0
+
+
 def test_expired_pending_upload_cannot_be_confirmed(monkeypatch, tmp_path: Path) -> None:
     client = _client_store(monkeypatch, tmp_path)
     image = sorted(Path("synthetic/synthetic_bill_images").glob("BILL-*.png"))[0]

@@ -274,7 +274,9 @@ def _extraction_from_payload(payload: dict[str, Any]) -> ExtractionResult:
 
 
 def _coerce_numeric_edit(field_name: str, value: Any) -> Any:
-    if field_name in {"subtotal", "tax", "total"} and value not in {None, ""}:
+    if field_name in {"subtotal", "tax", "total"}:
+        if value in {None, ""}:
+            return None
         return float(value)
     if field_name in SANITIZED_EDIT_FIELDS:
         return sanitize_text_field(value, field_name)
