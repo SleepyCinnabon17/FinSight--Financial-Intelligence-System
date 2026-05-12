@@ -56,6 +56,8 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
         success: true,
         data: {
           total_spend: 1280,
+          transaction_count: 1,
+          anomalies: [{ id: 'txn-1' }],
           category_totals: { Groceries: 1280 },
           daily_trend: [['2026-05-10', 1280]],
           top_merchants: [['Metro Market', 1280]],
@@ -70,6 +72,7 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
 
   await expect(page.locator('#transaction-body tr')).toHaveCount(1);
   await expect(page.locator('#transaction-body')).toContainText('Metro Market');
+  await expect(page.locator('.kpi-card strong')).toHaveText(['₹1,280.00', '₹1,280.00', '1', '1']);
 
   await expect
     .poll(() => page.evaluate(() => window.__chartCalls))

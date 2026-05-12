@@ -1,5 +1,5 @@
 import { confirmDuplicate, dismissAnomaly, fetchAnalysis, fetchTransactions } from './api.js';
-import { createTransactionDetailsRow, createTransactionRow } from './ui_components.js';
+import { createTransactionDetailsRow, createTransactionRow, formatCurrency } from './ui_components.js';
 
 const els = {
   uploadStatus: document.getElementById('upload-status'),
@@ -10,7 +10,8 @@ const els = {
   sidebarToggle: document.getElementById('sidebar-toggle'),
   novaPanel: document.getElementById('nova'),
   novaToggle: document.querySelector('.nova-toggle'),
-  themeToggle: document.querySelector('.theme-toggle')
+  themeToggle: document.querySelector('.theme-toggle'),
+  kpiValues: document.querySelectorAll('.kpi-card strong')
 };
 
 const THEME_STORAGE_KEY = 'finsight-theme';
@@ -24,7 +25,44 @@ export async function loadDashboard() {
   state().setTransactions(transactions);
   state().setAnalysis(analysis);
   renderTransactions();
+  renderKpis(transactions, analysis);
   document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+}
+
+export function renderKpis(transactions = [], analysis = {}) {
+  const totalSpend = Number(analysis?.total_spend || 0);
+  const thisMonthSpend = calculateCurrentMonthSpend(transactions, analysis);
+  const anomalyCount = Array.isArray(analysis?.anomalies)
+    ? analysis.anomalies.length
+    : transactions.filter((transaction) => transaction.is_anomaly).length;
+  const billsProcessed = Number.isFinite(Number(analysis?.transaction_count))
+    ? Number(analysis.transaction_count)
+    : transactions.length;
+  const values = [formatCurrency(totalSpend), formatCurrency(thisMonthSpend), String(anomalyCount), String(billsProcessed)];
+  els.kpiValues.forEach((element, index) => {
+    element.textContent = values[index] || '--';
+  });
+}
+
+function calculateCurrentMonthSpend(transactions, analysis) {
+  const trendEntries = Array.isArray(analysis?.daily_trend) ? analysis.daily_trend : [];
+  const monthKey = getCurrentAnalysisMonth(trendEntries);
+  if (trendEntries.length) {
+    return trendEntries
+      .filter(([date]) => String(date || '').startsWith(monthKey))
+      .reduce((sum, [, amount]) => sum + Number(amount || 0), 0);
+  }
+  return transactions
+    .filter((transaction) => String(transaction.date || '').startsWith(monthKey))
+    .reduce((sum, transaction) => sum + Number(transaction.total || 0), 0);
+}
+
+function getCurrentAnalysisMonth(trendEntries) {
+  for (let index = trendEntries.length - 1; index >= 0; index -= 1) {
+    const date = String(trendEntries[index]?.[0] || '');
+    if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 7);
+  }
+  return new Date().toISOString().slice(0, 7);
 }
 
 export function renderTransactions() {
@@ -86,7 +124,7 @@ loadDashboard().catch((error) => {
   els.uploadStatus.textContent = error.message;
 });
 
-window.FinSightMain = { loadDashboard, renderTransactions, setupTransactions };
+window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, setupTransactions };
 
 function setupLayoutShell() {
   els.sidebarToggle?.addEventListener('click', () => {
