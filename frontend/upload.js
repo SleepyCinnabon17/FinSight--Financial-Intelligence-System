@@ -8,6 +8,7 @@ const els = {
   previewStrip: document.getElementById('preview-strip'),
   uploadStatus: document.getElementById('upload-status'),
   extractionPreview: document.getElementById('extraction-preview'),
+  processButton: document.getElementById('process-btn'),
   toastContainer: document.getElementById('toast-container')
 };
 
@@ -20,12 +21,25 @@ const UPLOAD_STATUS_CLASSES = [
   'upload-state-error'
 ];
 
+let stagedFiles = [];
+
 function state() {
   return window.FinSightState;
 }
 
 function requestDashboardRefresh() {
   document.dispatchEvent(new CustomEvent('finsight:refresh-dashboard'));
+}
+
+function machineEvent(name, detail = {}) {
+  document.dispatchEvent(new CustomEvent(`finsight:machine-${name}`, { detail }));
+}
+
+function setProcessReady(isReady) {
+  if (!els.processButton) return;
+  els.processButton.disabled = !isReady;
+  els.processButton.setAttribute('aria-disabled', String(!isReady));
+  els.processButton.classList.toggle('ready', isReady);
 }
 
 function setUploadState(status, message) {
@@ -51,13 +65,16 @@ function showToast(message, type = 'success') {
 }
 
 export async function uploadFiles(files) {
-  if (!files.length) return;
+  const selectedFiles = [...files];
+  if (!selectedFiles.length) return;
   let processingTimer = null;
   try {
-    renderPreviews(els.previewStrip, files);
+    renderPreviews(els.previewStrip, selectedFiles);
+    machineEvent('processing', { fileCount: selectedFiles.length });
+    setProcessReady(false);
     setUploadState('uploading', 'Uploading bills...');
     const formData = new FormData();
-    for (const file of files) formData.append('files', file);
+    for (const file of selectedFiles) formData.append('files', file);
     processingTimer = window.setTimeout(() => {
       setUploadState('processing', 'Processing OCR...');
     }, 120);
@@ -73,10 +90,13 @@ export async function uploadFiles(files) {
       onDiscard: discardCurrentExtraction
     });
     setUploadState('review', 'Extraction ready for review.');
+    machineEvent('review', { extraction: results[0].extraction });
   } catch (error) {
     if (processingTimer) window.clearTimeout(processingTimer);
     const message = error.message || 'Upload failed.';
     setUploadState('error', message);
+    if (stagedFiles.length) setProcessReady(true);
+    machineEvent('error', { message });
     showToast(message, 'error');
   }
 }
@@ -95,12 +115,15 @@ export async function confirmCurrentExtraction() {
     await confirmTransaction(currentExtraction.upload_id, currentExtraction.extraction, edits);
     state().setCurrentExtraction(null);
     clearExtractionPreview(els.extractionPreview);
+    clearStagedFiles();
     setUploadState('confirmed', 'Transaction confirmed.');
+    machineEvent('confirmed');
     showToast('Transaction confirmed.', 'success');
     requestDashboardRefresh();
   } catch (error) {
     const message = error.message || 'Could not confirm this extraction.';
     setUploadState('error', message);
+    machineEvent('error', { message });
     showToast(message, 'error');
   }
 }
@@ -110,11 +133,14 @@ export async function discardCurrentExtraction() {
     await discardTransaction(state().getCurrentExtraction()?.upload_id || null);
     state().setCurrentExtraction(null);
     clearExtractionPreview(els.extractionPreview);
+    clearStagedFiles();
     setUploadState('discarded', 'Upload discarded.');
+    machineEvent('discarded');
     showToast('Upload discarded.', 'warning');
   } catch (error) {
     const message = error.message || 'Could not discard this extraction.';
     setUploadState('error', message);
+    machineEvent('error', { message });
     showToast(message, 'error');
   }
 }
@@ -166,9 +192,40 @@ function showFieldErrors(errors) {
   });
 }
 
+export function stageFiles(files) {
+  stagedFiles = [...files].filter(Boolean);
+  if (!stagedFiles.length) return;
+  renderPreviews(els.previewStrip, stagedFiles);
+  clearExtractionPreview(els.extractionPreview);
+  state().setCurrentExtraction(null);
+  els.dropZone.classList.add('armed');
+  setProcessReady(true);
+  setUploadState('uploading', stagedFiles.length > 1 ? `${stagedFiles.length} files staged. Press Process to extract.` : 'File staged. Press Process to extract.');
+  machineEvent('armed', { fileCount: stagedFiles.length, fileNames: stagedFiles.map((file) => file.name) });
+}
+
+function clearStagedFiles() {
+  stagedFiles = [];
+  setProcessReady(false);
+  els.dropZone.classList.remove('armed', 'is-processing');
+  els.fileInput.value = '';
+}
+
+async function processStagedFiles() {
+  if (!stagedFiles.length) {
+    showToast('Choose a file before processing.', 'warning');
+    return;
+  }
+  await uploadFiles(stagedFiles);
+}
+
 export function setupUpload() {
   els.fileButton.addEventListener('click', () => els.fileInput.click());
-  els.fileInput.addEventListener('change', () => uploadFiles([...els.fileInput.files]));
+  els.processButton?.addEventListener('click', processStagedFiles);
+  els.fileInput.addEventListener('change', () => stageFiles([...els.fileInput.files]));
+  els.dropZone.addEventListener('click', () => {
+    if (!els.processButton?.classList.contains('ready')) els.fileInput.click();
+  });
   els.dropZone.addEventListener('dragover', (event) => {
     event.preventDefault();
     els.dropZone.classList.add('dragover');
@@ -177,7 +234,7 @@ export function setupUpload() {
   els.dropZone.addEventListener('drop', (event) => {
     event.preventDefault();
     els.dropZone.classList.remove('dragover');
-    uploadFiles([...event.dataTransfer.files]);
+    stageFiles([...event.dataTransfer.files]);
   });
   els.dropZone.addEventListener('keydown', (event) => {
     if (event.target !== els.dropZone) return;
@@ -189,4 +246,4 @@ export function setupUpload() {
 
 setupUpload();
 
-window.FinSightUpload = { uploadFiles, confirmCurrentExtraction, discardCurrentExtraction, setupUpload };
+window.FinSightUpload = { uploadFiles, stageFiles, confirmCurrentExtraction, discardCurrentExtraction, setupUpload };

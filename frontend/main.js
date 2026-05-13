@@ -8,12 +8,16 @@ const els = {
   refreshData: document.getElementById('refresh-data'),
   resetDemoData: document.getElementById('reset-demo-data'),
   toastContainer: document.getElementById('toast-container'),
-  sidebar: document.querySelector('.sidebar'),
-  sidebarToggle: document.getElementById('sidebar-toggle'),
   novaPanel: document.getElementById('nova'),
-  novaToggle: document.querySelector('.nova-toggle'),
   themeToggle: document.querySelector('.theme-toggle'),
+  themeToggleLabel: document.querySelector('.theme-toggle .util-btn-label'),
   kpiValues: document.querySelectorAll('.kpi-card strong'),
+  marqueeValues: [
+    document.getElementById('marquee-total-spend'),
+    document.getElementById('marquee-this-month'),
+    document.getElementById('marquee-anomalies'),
+    document.getElementById('marquee-bills')
+  ],
   metricsToggle: document.getElementById('benchmark-metrics-toggle'),
   metricsBody: document.getElementById('benchmark-metrics-body'),
   metricsSummary: document.getElementById('benchmark-metrics-summary'),
@@ -26,9 +30,8 @@ const els = {
 };
 
 const THEME_STORAGE_KEY = 'finsight-theme';
-const DEFAULT_VIEW = 'overview';
+const DEFAULT_VIEW = 'dashboard';
 const VIEW_COPY = {
-  overview: ['Overview', 'Upload receipts, reveal leaks, and let Nova explain where your money went.'],
   dashboard: ['Dashboard', 'High-signal totals, anomaly pressure, and category leaks without the clutter.'],
   upload: ['Upload / Review', 'Drop a receipt on the table, review the extraction, then confirm or discard.'],
   transactions: ['Transactions', 'Confirmed receipts, anomalies, and duplicate resolution in one clean table.'],
@@ -47,7 +50,7 @@ const VIEW_ALIASES = {
   metrics: 'metrics',
   'metrics-view': 'metrics',
   'benchmark-metrics': 'metrics',
-  overview: 'overview'
+  overview: 'dashboard'
 };
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
@@ -101,6 +104,9 @@ export function renderKpis(transactions = [], analysis = {}) {
   const values = [formatCurrency(totalSpend), formatCurrency(thisMonthSpend), String(anomalyCount), String(billsProcessed)];
   els.kpiValues.forEach((element, index) => {
     element.textContent = values[index] || '--';
+  });
+  els.marqueeValues.forEach((element, index) => {
+    if (element) element.textContent = values[index] || '--';
   });
 }
 
@@ -404,17 +410,6 @@ loadDashboard().catch((error) => {
 window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, loadBenchmarkMetrics, renderBenchmarkMetrics, setupTransactions, showView };
 
 function setupLayoutShell() {
-  els.sidebarToggle?.addEventListener('click', () => {
-    const isOpen = els.sidebar?.classList.toggle('is-open') || false;
-    els.sidebarToggle.setAttribute('aria-expanded', String(isOpen));
-  });
-
-  els.novaToggle?.addEventListener('click', () => {
-    const isCollapsed = els.novaPanel?.classList.toggle('is-collapsed') || false;
-    els.novaToggle.setAttribute('aria-expanded', String(!isCollapsed));
-    els.novaToggle.textContent = isCollapsed ? 'Open' : 'Minimize';
-  });
-
   els.viewLinks.forEach((link) => {
     link.addEventListener('click', (event) => {
       const view = link.dataset.viewLink;
@@ -422,8 +417,6 @@ function setupLayoutShell() {
         event.preventDefault();
         showView(view, { updateHash: true });
       }
-      els.sidebar?.classList.remove('is-open');
-      els.sidebarToggle?.setAttribute('aria-expanded', 'false');
     });
   });
 
@@ -450,7 +443,15 @@ export function showView(view, { updateHash = false } = {}) {
   });
   els.viewLinks.forEach((link) => {
     const isActive = link.dataset.viewLink === targetView;
+    link.classList.toggle('active', isActive);
+    if (link.getAttribute('role') === 'tab') {
+      link.setAttribute('aria-selected', String(isActive));
+      link.tabIndex = isActive ? 0 : -1;
+    }
     if (link.tagName === 'A') {
+      link.toggleAttribute('aria-current', isActive);
+      if (isActive) link.setAttribute('aria-current', 'page');
+    } else {
       link.toggleAttribute('aria-current', isActive);
       if (isActive) link.setAttribute('aria-current', 'page');
     }
@@ -459,7 +460,7 @@ export function showView(view, { updateHash = false } = {}) {
   if (els.viewTitle) els.viewTitle.textContent = title;
   if (els.viewSubtitle) els.viewSubtitle.textContent = subtitle;
   if (updateHash) {
-    const hash = targetView === DEFAULT_VIEW ? '#overview' : `#${targetView}-view`;
+    const hash = targetView === DEFAULT_VIEW ? '#dashboard-view' : `#${targetView}-view`;
     if (window.location.hash !== hash) {
       window.history.pushState(null, '', hash);
     }
@@ -472,8 +473,6 @@ export function showView(view, { updateHash = false } = {}) {
   }
   if (targetView === 'nova') {
     els.novaPanel?.classList.remove('is-collapsed');
-    els.novaToggle?.setAttribute('aria-expanded', 'true');
-    if (els.novaToggle) els.novaToggle.textContent = 'Minimize';
   }
 }
 
@@ -505,7 +504,11 @@ function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   if (els.themeToggle) {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    els.themeToggle.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+    if (els.themeToggleLabel) {
+      els.themeToggleLabel.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+    } else {
+      els.themeToggle.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+    }
     els.themeToggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
   }
   try {

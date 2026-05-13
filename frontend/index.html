@@ -3,293 +3,352 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FinSight</title>
+    <title>FinSight - The House Always Knows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@1,300;1,600&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <div class="casino-ambient" aria-hidden="true">
-      <span class="ambient-chip chip-one"></span>
-      <span class="ambient-chip chip-two"></span>
-      <span class="ambient-chip chip-three"></span>
-      <span class="ambient-chip chip-four"></span>
-      <span class="suit-particle suit-spade">♠</span>
-      <span class="suit-particle suit-diamond">♦</span>
-      <span class="suit-particle suit-club">♣</span>
-    </div>
+    <div class="cabinet" id="cabinet">
+      <div class="cab-rail left" aria-hidden="true"></div>
+      <div class="cab-rail right" aria-hidden="true"></div>
+      <div class="asset-tag" aria-hidden="true">ASSET: FS-902-VIP</div>
 
-    <div class="app-shell">
-      <aside id="primary-sidebar" class="sidebar" aria-label="Primary navigation">
-        <div class="sidebar-brand">
-          <span class="brand-mark" aria-hidden="true">F</span>
-          <div>
-            <h1>FinSight</h1>
-            <p class="tagline">Track bills, spot leaks, and plan smarter.</p>
-          </div>
+      <header class="marquee" aria-label="FinSight system summary">
+        <div class="marquee-meter marquee-left">
+          <div class="meter-label">Total Spend</div>
+          <div class="meter-value gold" id="marquee-total-spend">--</div>
+          <div class="meter-label meter-secondary">This Month</div>
+          <div class="meter-value green compact" id="marquee-this-month">--</div>
         </div>
-        <nav class="sidebar-nav" aria-label="Main sections">
-          <a href="#overview" data-view-link="overview" aria-current="page">Overview</a>
-          <a href="#dashboard-view" data-view-link="dashboard">Dashboard</a>
-          <a href="#upload-view" data-view-link="upload">Upload</a>
-          <a href="#transactions-view" data-view-link="transactions">Transactions</a>
-          <a href="#nova-view" data-view-link="nova">Nova</a>
-          <a href="#metrics-view" data-view-link="metrics">Metrics</a>
-        </nav>
-        <button class="theme-toggle" type="button" aria-label="Switch to light theme">Light mode</button>
-      </aside>
 
-      <main id="dashboard" class="main-content">
-        <header class="app-header">
-          <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="primary-sidebar" aria-expanded="false">Menu</button>
-          <div>
-            <span class="eyebrow">Financial intelligence lounge</span>
-            <h2 id="view-title">Overview</h2>
-            <p id="view-subtitle" class="subheadline">Upload receipts, reveal leaks, and let Nova explain where your money went.</p>
-          </div>
-        </header>
-
-        <section id="overview" class="view-panel hero-view is-active" data-view="overview" aria-labelledby="overview-title">
-          <div class="hero-copy">
-            <span class="eyebrow">Welcome to the felt</span>
-            <h2 id="overview-title">FinSight</h2>
-            <p class="hero-quote">&ldquo;99% of gamblers give up before making it big. Be the 1%.&rdquo;</p>
-            <p class="hero-subtitle">Upload receipts, reveal leaks, and let Nova explain where your money went.</p>
-            <div class="hero-actions">
-              <button type="button" class="primary-cta" data-view-link="upload">Start tracking</button>
-              <button type="button" class="secondary-cta" data-view-link="metrics">View benchmark metrics</button>
-            </div>
-          </div>
-          <div class="hero-visual" aria-hidden="true">
-            <div class="playing-card card-front">
-              <span>A</span>
-              <strong>₹</strong>
-              <span>♠</span>
-            </div>
-            <div class="playing-card card-back"></div>
-            <span class="hero-chip hero-chip-gold"></span>
-            <span class="hero-chip hero-chip-red"></span>
-            <span class="hero-chip hero-chip-green"></span>
-          </div>
-        </section>
-
-        <section id="dashboard-view" class="view-panel" data-view="dashboard" aria-labelledby="dashboard-title" hidden>
-          <div class="view-heading">
-            <div>
-              <span class="eyebrow">Table stakes</span>
-              <h2 id="dashboard-title">Dashboard</h2>
-              <p>High-signal totals, anomaly pressure, and category leaks without the clutter.</p>
-            </div>
-          </div>
-
-          <section class="kpi-grid" aria-label="Financial summary">
-            <article class="kpi-card">
-              <span>Total Spend</span>
-              <strong>--</strong>
-              <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
-            </article>
-            <article class="kpi-card">
-              <span>This Month</span>
-              <strong>--</strong>
-              <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
-            </article>
-            <article class="kpi-card">
-              <span>Anomalies Flagged</span>
-              <strong>--</strong>
-              <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
-            </article>
-            <article class="kpi-card">
-              <span>Bills Processed</span>
-              <strong>--</strong>
-              <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
-            </article>
-          </section>
-
-          <section id="charts" aria-labelledby="charts-title">
-            <div class="section-header">
-              <div>
-                <h2 id="charts-title">Analysis</h2>
-                <p>Where the stack is thinning out.</p>
-              </div>
-            </div>
-            <div class="chart-grid">
-              <div class="chart-box">
-                <h3>By Category</h3>
-                <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
-                <canvas id="category-chart" role="img" aria-label="Spend by category chart"></canvas>
-              </div>
-              <div class="chart-box">
-                <h3>Daily Trend</h3>
-                <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
-                <canvas id="trend-chart" role="img" aria-label="Daily spending trend chart"></canvas>
-              </div>
-              <div class="chart-box">
-                <h3>Top Merchants</h3>
-                <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
-                <canvas id="merchant-chart" role="img" aria-label="Top merchants chart"></canvas>
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <section id="upload-view" class="view-panel" data-view="upload" aria-labelledby="upload-title" hidden>
-          <section id="upload" aria-labelledby="upload-title">
-            <div class="view-heading">
-              <div>
-                <span class="eyebrow">Place your slip</span>
-                <h2 id="upload-title">Upload / Review</h2>
-                <p>Drop a receipt on the table, review the extraction, then confirm or discard.</p>
-              </div>
-            </div>
-            <div class="upload-layout">
-              <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Choose or drop bill files" aria-describedby="upload-help">
-                <strong>Come see where you lost money</strong>
-                <span>Drop bills here or choose files</span>
-                <button id="file-picker-button" type="button">Choose files</button>
-                <input id="file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" hidden />
-                <small id="upload-help">PDF, JPEG, PNG, WEBP, HEIC. Max 10 MB each.</small>
-              </div>
-              <div class="review-rail">
-                <div id="preview-strip" class="preview-strip" aria-live="polite"></div>
-                <div id="upload-status" class="status-line" role="status" aria-live="polite" aria-atomic="true"></div>
-                <div id="extraction-preview" class="extraction-preview" hidden></div>
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <section id="transactions-view" class="view-panel" data-view="transactions" aria-labelledby="transactions-title" hidden>
-          <section id="transactions" aria-labelledby="transactions-title">
-            <div class="section-header">
-              <div>
-                <span class="eyebrow">Ledger</span>
-                <h2 id="transactions-title">Transactions</h2>
-                <p>Confirmed receipts, anomalies, and duplicate resolution in one clean table.</p>
-              </div>
-              <div class="section-actions">
-                <button id="refresh-data" type="button">Refresh</button>
-                <button
-                  id="reset-demo-data"
-                  class="danger-action"
-                  type="button"
-                  aria-label="Reset shared demo data to zero"
-                  title="Resets shared demo data because this deployment has no auth"
-                >
-                  Reset demo
-                </button>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <div class="table-skeleton skeleton-loader" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <table id="transaction-table">
-                <thead>
-                  <tr>
-                    <th data-sort="date" scope="col"><button class="sort-button" type="button">Date</button></th>
-                    <th data-sort="merchant" scope="col"><button class="sort-button" type="button">Merchant</button></th>
-                    <th data-sort="category" scope="col"><button class="sort-button" type="button">Category</button></th>
-                    <th data-sort="total" scope="col"><button class="sort-button" type="button">Amount</button></th>
-                    <th data-sort="status" scope="col"><button class="sort-button" type="button">Status</button></th>
-                  </tr>
-                </thead>
-                <tbody id="transaction-body"></tbody>
-              </table>
-            </div>
-            <div class="transaction-empty-state" hidden>
-              <div class="empty-state-illustration" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <strong>No transactions yet.</strong>
-              <p>Upload and confirm a bill to start building your spending timeline.</p>
-            </div>
-          </section>
-        </section>
-
-        <section id="nova-view" class="view-panel nova-focus-view" data-view="nova" aria-labelledby="nova-view-title" hidden>
-          <div class="view-heading">
-            <div>
-              <span class="eyebrow">Nova lounge</span>
-              <h2 id="nova-view-title">Ask Nova</h2>
-              <p>The assistant panel stays docked here so spending context is always within reach.</p>
-            </div>
-          </div>
-          <div class="nova-stage-card">
-            <strong>Nova is ready at the rail.</strong>
-            <p>Use the chat panel to ask about spending patterns, anomaly context, or what changed after a reset.</p>
-          </div>
-        </section>
-
-        <section id="metrics-view" class="view-panel" data-view="metrics" aria-labelledby="benchmark-metrics-title" hidden>
-          <section id="benchmark-metrics" class="metrics-panel" aria-labelledby="benchmark-metrics-title">
-            <div class="section-header">
-              <div>
-                <span class="eyebrow">Evaluator table</span>
-                <h2 id="benchmark-metrics-title">Benchmark Metrics</h2>
-                <p class="metrics-caption">External evaluator benchmarks with synthetic checks separated for regression.</p>
-              </div>
-              <button
-                id="benchmark-metrics-toggle"
-                class="metrics-toggle"
-                type="button"
-                aria-expanded="false"
-                aria-controls="benchmark-metrics-body"
-              >
-                Show metrics
-              </button>
-            </div>
-            <div id="benchmark-metrics-body" class="metrics-body" hidden>
-              <div id="benchmark-metrics-summary" class="metrics-grid" aria-label="Benchmark metric summary"></div>
-              <dl id="benchmark-metrics-details" class="metrics-details"></dl>
-              <p id="benchmark-metrics-empty" class="metrics-empty" hidden>Run the benchmark to populate system metrics.</p>
-            </div>
-          </section>
-        </section>
-      </main>
-
-      <section id="nova" class="nova-panel" aria-labelledby="nova-title">
-        <div class="nova-panel-header">
-          <div>
-            <span class="eyebrow">Assistant</span>
-            <h2 id="nova-title">Nova</h2>
-          </div>
-          <div class="chat-connection" role="status" aria-live="polite" aria-atomic="true">
-            <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
-            <span id="chat-status-text">Idle</span>
-            <button id="chat-retry-button" type="button" hidden>Retry</button>
-          </div>
-          <button class="nova-toggle" type="button" aria-expanded="true">Minimize</button>
+        <div class="marquee-center">
+          <h1 class="brand-title" data-text="FINSIGHT">FINSIGHT</h1>
+          <p class="brand-sub">&ldquo;99% of gamblers give up before making it big. Be the 1%.&rdquo;</p>
         </div>
-        <div class="nova-panel-body">
-          <div class="chat-skeleton skeleton-loader" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div id="chat-bubbles" class="chat-bubbles" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Nova conversation"></div>
-          <div id="chat-typing" class="typing-indicator" hidden role="status" aria-live="polite">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            Nova is typing
-          </div>
-          <form id="chat-form" class="chat-form">
-            <input id="chat-input" type="text" placeholder="Where did I lose money?" autocomplete="off" aria-label="Message Nova" />
-            <button id="chat-stop-button" type="button" hidden aria-label="Stop Nova response">Stop</button>
-            <button type="submit">Send</button>
-          </form>
-          <p class="disclaimer">Nova does not provide certified financial advice.</p>
+
+        <div class="marquee-meter marquee-right">
+          <div class="meter-label">Anomalies</div>
+          <div class="meter-value red" id="marquee-anomalies">--</div>
+          <div class="meter-label meter-secondary">Bills Processed</div>
+          <div class="meter-value amber compact" id="marquee-bills">--</div>
+        </div>
+      </header>
+
+      <section class="reel-housing" aria-label="Extraction machine status">
+        <div class="payline" id="payline" aria-hidden="true"></div>
+        <div class="payline-bracket left" aria-hidden="true">
+          <svg viewBox="0 0 28 44" fill="none" focusable="false">
+            <path d="M26 1 L4 1 L4 43 L26 43" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="4" cy="22" r="3" fill="currentColor" />
+          </svg>
+        </div>
+        <div class="payline-bracket right" aria-hidden="true">
+          <svg viewBox="0 0 28 44" fill="none" focusable="false">
+            <path d="M2 1 L24 1 L24 43 L2 43" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="24" cy="22" r="3" fill="currentColor" />
+          </svg>
+        </div>
+
+        <div class="reels-track" id="reels-track" aria-hidden="true">
+          <div class="reel-col"><div class="reel-tape idle" id="reel-0" style="--dur: 31s"></div></div>
+          <div class="reel-col"><div class="reel-tape idle reverse" id="reel-1" style="--dur: 27s"></div></div>
+          <div class="reel-col"><div class="reel-tape idle" id="reel-2" style="--dur: 34s"></div></div>
+          <div class="reel-col"><div class="reel-tape idle reverse" id="reel-3" style="--dur: 23s"></div></div>
+          <div class="reel-col"><div class="reel-tape idle" id="reel-4" style="--dur: 29s"></div></div>
+        </div>
+
+        <div class="machine-copy">
+          <p class="machine-kicker">The house always knows</p>
+          <p class="machine-heading">Upload receipts, reveal leaks, and let Nova explain where your money went.</p>
+        </div>
+        <div id="machine-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          System ready. Awaiting document.
         </div>
       </section>
+
+      <main id="dashboard" class="ideck" aria-label="FinSight workspace">
+        <nav class="ideck-nav" aria-label="Main sections">
+          <button class="deck-tab active" type="button" role="tab" aria-selected="true" data-view-link="dashboard">
+            <span class="tab-icon" aria-hidden="true">01</span>
+            <span class="tab-text">Dashboard</span>
+          </button>
+          <button class="deck-tab" type="button" role="tab" aria-selected="false" data-view-link="upload">
+            <span class="tab-icon" aria-hidden="true">02</span>
+            <span class="tab-text">Upload</span>
+          </button>
+          <button class="deck-tab" type="button" role="tab" aria-selected="false" data-view-link="transactions">
+            <span class="tab-icon" aria-hidden="true">03</span>
+            <span class="tab-text">Transactions</span>
+          </button>
+          <button class="deck-tab" type="button" role="tab" aria-selected="false" data-view-link="metrics">
+            <span class="tab-icon" aria-hidden="true">04</span>
+            <span class="tab-text">Metrics</span>
+          </button>
+          <button class="deck-tab" type="button" role="tab" aria-selected="false" data-view-link="nova">
+            <span class="tab-icon" aria-hidden="true">05</span>
+            <span class="tab-text">Nova</span>
+          </button>
+        </nav>
+
+        <div class="ideck-screen">
+          <section id="dashboard-view" class="view-panel screen-pane is-active" data-view="dashboard" aria-labelledby="dashboard-title">
+            <div class="pane-title">
+              <div>
+                <span class="eyebrow">Telemetry</span>
+                <h2 id="dashboard-title">Dashboard</h2>
+              </div>
+              <p>Where the stack is thinning out.</p>
+            </div>
+
+            <section class="kpi-grid" aria-label="Financial summary">
+              <article class="kpi-card">
+                <span>Total Spend</span>
+                <strong>--</strong>
+                <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
+              </article>
+              <article class="kpi-card">
+                <span>This Month</span>
+                <strong>--</strong>
+                <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
+              </article>
+              <article class="kpi-card">
+                <span>Anomalies Flagged</span>
+                <strong>--</strong>
+                <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
+              </article>
+              <article class="kpi-card">
+                <span>Bills Processed</span>
+                <strong>--</strong>
+                <span class="kpi-skeleton skeleton-loader" aria-hidden="true"></span>
+              </article>
+            </section>
+
+            <section id="charts" aria-labelledby="charts-title">
+              <div class="section-header">
+                <div>
+                  <h2 id="charts-title">Analysis</h2>
+                  <p>Category leaks, daily swings, and merchants taking the pot.</p>
+                </div>
+              </div>
+              <div class="chart-grid">
+                <div class="chart-box">
+                  <h3>By Category</h3>
+                  <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
+                  <canvas id="category-chart" role="img" aria-label="Spend by category chart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <h3>Daily Trend</h3>
+                  <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
+                  <canvas id="trend-chart" role="img" aria-label="Daily spending trend chart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <h3>Top Merchants</h3>
+                  <div class="chart-skeleton skeleton-loader" aria-hidden="true"></div>
+                  <canvas id="merchant-chart" role="img" aria-label="Top merchants chart"></canvas>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <section id="upload-view" class="view-panel screen-pane" data-view="upload" aria-labelledby="upload-title" hidden>
+            <section id="upload" aria-labelledby="upload-title">
+              <div class="pane-title">
+                <div>
+                  <span class="eyebrow">Document feed</span>
+                  <h2 id="upload-title">Upload / Review</h2>
+                </div>
+                <p>Load a receipt through the acceptor, press Process, then review the extraction ticket.</p>
+              </div>
+              <div class="upload-layout">
+                <div class="upload-console">
+                  <h3>Bill Acceptor</h3>
+                  <p>Use the glowing document slot at the bottom deck, or choose files here.</p>
+                  <button id="file-picker-button" class="secondary-cta" type="button">Choose files</button>
+                  <small id="upload-help">PDF, JPEG, PNG, WEBP, HEIC. Max 10 MB each.</small>
+                  <div id="preview-strip" class="preview-strip" aria-live="polite"></div>
+                  <div id="upload-status" class="status-line" role="status" aria-live="polite" aria-atomic="true"></div>
+                </div>
+                <div class="review-rail">
+                  <div id="extraction-preview" class="extraction-preview" hidden></div>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <section id="transactions-view" class="view-panel screen-pane" data-view="transactions" aria-labelledby="transactions-title" hidden>
+            <section id="transactions" aria-labelledby="transactions-title">
+              <div class="section-header">
+                <div>
+                  <span class="eyebrow">Ledger</span>
+                  <h2 id="transactions-title">Transactions</h2>
+                  <p>Confirmed receipts, anomalies, and duplicate resolution.</p>
+                </div>
+                <div class="section-actions">
+                  <button id="refresh-data" type="button">Refresh</button>
+                  <button
+                    id="reset-demo-data"
+                    class="danger-action"
+                    type="button"
+                    aria-label="Reset shared demo data to zero"
+                    title="Resets shared demo data because this deployment has no auth"
+                  >
+                    Reset demo
+                  </button>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <div class="table-skeleton skeleton-loader" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <table id="transaction-table">
+                  <thead>
+                    <tr>
+                      <th data-sort="date" scope="col"><button class="sort-button" type="button">Date</button></th>
+                      <th data-sort="merchant" scope="col"><button class="sort-button" type="button">Merchant</button></th>
+                      <th data-sort="category" scope="col"><button class="sort-button" type="button">Category</button></th>
+                      <th data-sort="total" scope="col"><button class="sort-button" type="button">Amount</button></th>
+                      <th data-sort="status" scope="col"><button class="sort-button" type="button">Status</button></th>
+                    </tr>
+                  </thead>
+                  <tbody id="transaction-body"></tbody>
+                </table>
+              </div>
+              <div class="transaction-empty-state" hidden>
+                <div class="empty-state-illustration" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <strong>No transactions yet.</strong>
+                <p>Upload and confirm a bill to start building your spending timeline.</p>
+              </div>
+            </section>
+          </section>
+
+          <section id="metrics-view" class="view-panel screen-pane" data-view="metrics" aria-labelledby="benchmark-metrics-title" hidden>
+            <section id="benchmark-metrics" class="metrics-panel" aria-labelledby="benchmark-metrics-title">
+              <div class="section-header">
+                <div>
+                  <span class="eyebrow">Evaluator table</span>
+                  <h2 id="benchmark-metrics-title">Benchmark Metrics</h2>
+                  <p class="metrics-caption">External evaluator benchmarks with synthetic checks separated for regression.</p>
+                </div>
+                <button
+                  id="benchmark-metrics-toggle"
+                  class="metrics-toggle"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="benchmark-metrics-body"
+                >
+                  Show metrics
+                </button>
+              </div>
+              <div id="benchmark-metrics-body" class="metrics-body" hidden>
+                <div id="benchmark-metrics-summary" class="metrics-grid" aria-label="Benchmark metric summary"></div>
+                <dl id="benchmark-metrics-details" class="metrics-details"></dl>
+                <p id="benchmark-metrics-empty" class="metrics-empty" hidden>Run the benchmark to populate system metrics.</p>
+              </div>
+            </section>
+          </section>
+
+          <section id="nova-view" class="view-panel screen-pane" data-view="nova" aria-labelledby="nova-title" hidden>
+            <section id="nova" class="nova-panel" aria-labelledby="nova-title">
+              <div class="nova-panel-header">
+                <div>
+                  <span class="eyebrow">Assistant</span>
+                  <h2 id="nova-title">Nova Concierge</h2>
+                </div>
+                <div class="chat-connection" role="status" aria-live="polite" aria-atomic="true">
+                  <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
+                  <span id="chat-status-text">Idle</span>
+                  <button id="chat-retry-button" type="button" hidden>Retry</button>
+                </div>
+              </div>
+              <div class="nova-panel-body">
+                <div class="chat-skeleton skeleton-loader" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div
+                  id="chat-bubbles"
+                  class="chat-bubbles"
+                  role="log"
+                  aria-live="polite"
+                  aria-relevant="additions text"
+                  aria-label="Nova conversation"
+                ></div>
+                <div id="chat-typing" class="typing-indicator" hidden role="status" aria-live="polite">
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  Nova is typing
+                </div>
+                <form id="chat-form" class="chat-form">
+                  <input id="chat-input" type="text" placeholder="Where did I lose money?" autocomplete="off" aria-label="Message Nova" />
+                  <button id="chat-stop-button" type="button" hidden aria-label="Stop Nova response">Stop</button>
+                  <button type="submit">Send</button>
+                </form>
+                <p class="disclaimer">Nova does not provide certified financial advice.</p>
+              </div>
+            </section>
+          </section>
+        </div>
+      </main>
+
+      <footer class="btn-deck" aria-label="Machine controls">
+        <div class="util-btns">
+          <button class="util-btn theme-toggle" type="button" aria-label="Switch to light theme">
+            <span class="util-btn-icon" aria-hidden="true">SRV</span>
+            <span class="util-btn-label">Light mode</span>
+          </button>
+          <button class="util-btn" type="button" data-view-link="transactions">
+            <span class="util-btn-icon" aria-hidden="true">LOG</span>
+            <span class="util-btn-label">Ledger</span>
+          </button>
+        </div>
+
+        <div class="status-ticker" role="status" aria-live="polite" aria-atomic="true">
+          <div class="ticker-pip" id="ticker-pip" aria-hidden="true"></div>
+          <span class="ticker-text" id="ticker-text">SYSTEM READY - AWAITING DOCUMENT</span>
+        </div>
+
+        <button class="process-btn" id="process-btn" type="button" disabled aria-disabled="true">
+          <span class="btn-label-main">PROCESS</span>
+          <span class="btn-label-sub">Extract</span>
+        </button>
+
+        <div
+          id="drop-zone"
+          class="acceptor drop-zone"
+          tabindex="0"
+          role="button"
+          aria-label="Choose or drop bill files"
+          aria-describedby="upload-help"
+        >
+          <div class="acceptor-slot" aria-hidden="true"></div>
+          <div class="acceptor-label">Insert Document</div>
+          <span class="acceptor-help">Drop files here</span>
+        </div>
+        <input id="file-input" class="upload-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" hidden />
+      </footer>
+
+      <div class="flash-overlay" aria-hidden="true"></div>
     </div>
 
     <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <script type="module" src="/state.js"></script>
     <script type="module" src="/charts.js"></script>
+    <script type="module" src="/machine.js"></script>
     <script type="module" src="/upload.js"></script>
     <script type="module" src="/chat.js"></script>
     <script type="module" src="/main.js"></script>

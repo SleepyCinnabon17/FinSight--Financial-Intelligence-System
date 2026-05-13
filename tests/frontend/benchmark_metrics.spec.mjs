@@ -90,7 +90,7 @@ test('renders external SROIE metrics as the headline evaluator section', async (
   });
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Metrics' }).click();
+  await page.getByRole('tab', { name: 'Metrics' }).click();
 
   const toggle = page.locator('#benchmark-metrics-toggle');
   await expect(toggle).toBeVisible();
@@ -108,7 +108,6 @@ test('renders external SROIE metrics as the headline evaluator section', async (
   await expect(page.locator('#synthetic-regression-body')).toBeHidden();
   await expect(page.locator('#benchmark-metrics-summary')).not.toContainText('100%');
 });
-
 test('shows a graceful external benchmark empty state when external results are unavailable', async ({ page }) => {
   await mockShell(page);
   await page.route('**/api/v1/benchmark/results', async (route) => {
@@ -140,7 +139,7 @@ test('shows a graceful external benchmark empty state when external results are 
   });
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Metrics' }).click();
+  await page.getByRole('tab', { name: 'Metrics' }).click();
 
   await expect(page.locator('#benchmark-metrics-empty')).toBeVisible();
   await expect(page.locator('#benchmark-metrics-empty')).toHaveText('External benchmark not generated yet. Run the optional SROIE/CORD/FUNSD benchmark to populate evaluator metrics.');

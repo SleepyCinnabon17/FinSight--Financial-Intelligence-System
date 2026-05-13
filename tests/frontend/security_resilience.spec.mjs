@@ -79,7 +79,7 @@ test('renders API-controlled transaction text without executing markup', async (
   ]);
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Transactions' }).click();
+  await page.getByRole('tab', { name: 'Transactions' }).click();
 
   await expect(page.locator('#transaction-body')).toContainText('<img src=x onerror="window.__xssFired = true">');
   await expect(page.locator('#transaction-body img')).toHaveCount(0);
@@ -110,12 +110,13 @@ test('blocks invalid confirmation edits with inline field errors', async ({ page
   });
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Upload' }).click();
+  await page.getByRole('tab', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',
     buffer: Buffer.from('fake image bytes')
   });
+  await page.locator('#process-btn').click();
 
   await expect(page.locator('#extraction-preview')).toBeVisible();
   await page.locator('#extraction-preview input[name="merchant"]').fill('');
@@ -128,7 +129,6 @@ test('blocks invalid confirmation edits with inline field errors', async ({ page
   await expect(page.locator('#extraction-preview [data-field-error="date"]')).toContainText('Date must use YYYY-MM-DD.');
   expect(confirmRequests).toBe(0);
 });
-
 test('shows upload previews, progress states, and confirm/discard toasts', async ({ page }) => {
   await mockChart(page);
   await mockDashboard(page);
@@ -165,7 +165,7 @@ test('shows upload previews, progress states, and confirm/discard toasts', async
   });
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Upload' }).click();
+  await page.getByRole('tab', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles([
     {
       name: 'bill.png',
@@ -178,6 +178,8 @@ test('shows upload previews, progress states, and confirm/discard toasts', async
       buffer: Buffer.from('%PDF-1.4 fake pdf bytes')
     }
   ]);
+  await expect(page.locator('#process-btn')).toHaveClass(/ready/);
+  await page.locator('#process-btn').click();
 
   await expect(page.locator('#preview-strip img')).toHaveCount(1);
   await expect(page.locator('#preview-strip')).toContainText('statement.pdf');
@@ -193,6 +195,7 @@ test('shows upload previews, progress states, and confirm/discard toasts', async
     mimeType: 'application/pdf',
     buffer: Buffer.from('%PDF-1.4 second fake pdf bytes')
   });
+  await page.locator('#process-btn').click();
   await expect(page.locator('#extraction-preview')).toBeVisible();
   await page.locator('#extraction-preview button', { hasText: 'Discard' }).click();
   await expect(page.locator('#toast-container')).toContainText('Upload discarded.');
@@ -212,12 +215,13 @@ test('shows a non-blocking upload toast on network failure', async ({ page }) =>
   });
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Upload' }).click();
+  await page.getByRole('tab', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',
     buffer: Buffer.from('fake image bytes')
   });
+  await page.locator('#process-btn').click();
 
   await expect(page.locator('#upload-status')).toContainText('OCR service unavailable');
   await expect(page.locator('#toast-container .toast.error')).toContainText('OCR service unavailable');
@@ -237,7 +241,6 @@ test('shows a degraded chart state when chart rendering fails', async ({ page })
   await mockDashboard(page);
 
   await page.goto('/');
-  await page.getByRole('link', { name: 'Dashboard' }).click();
 
   await expect(page.locator('#charts')).toContainText('Charts are temporarily unavailable.');
 });

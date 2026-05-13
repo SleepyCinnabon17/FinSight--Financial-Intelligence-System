@@ -116,6 +116,7 @@ test('streams Nova messages with status, typing, copy, and stop controls', async
   await installChatStreamMock(page);
   await mockShellData(page);
   await page.goto('/');
+  await page.getByRole('tab', { name: 'Nova' }).click();
 
   await page.locator('#chat-input').fill('summarize spend');
   await page.locator('#chat-form button[type="submit"]').click();
