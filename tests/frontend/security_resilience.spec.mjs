@@ -79,7 +79,7 @@ test('renders API-controlled transaction text without executing markup', async (
   ]);
 
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Transactions' }).click();
+  await page.getByRole('button', { name: 'Transactions' }).click();
 
   await expect(page.locator('#transaction-body')).toContainText('<img src=x onerror="window.__xssFired = true">');
   await expect(page.locator('#transaction-body img')).toHaveCount(0);
@@ -110,7 +110,6 @@ test('blocks invalid confirmation edits with inline field errors', async ({ page
   });
 
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',
@@ -165,7 +164,6 @@ test('shows upload previews, progress states, and confirm/discard toasts', async
   });
 
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles([
     {
       name: 'bill.png',
@@ -215,7 +213,6 @@ test('shows a non-blocking upload toast on network failure', async ({ page }) =>
   });
 
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Upload' }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',

@@ -79,26 +79,26 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
         id: 'category-chart',
         type: 'doughnut',
         labels: ['Groceries'],
-        colors: ['#c9a84c', '#00e566', '#ff5b6e', '#e8d9b5', '#00d4ff', '#ffb000'],
+        colors: ['#efbe62', '#21d889', '#ff6174', '#f7ead0', '#82d8ff', '#f7b84b'],
         tickColor: null
       },
       {
         id: 'trend-chart',
         type: 'line',
         labels: ['2026-05-10'],
-        colors: ['#c9a84c', '#00e566', '#ff5b6e', '#e8d9b5', '#00d4ff', '#ffb000'],
-        tickColor: '#b8a882'
+        colors: ['#efbe62', '#21d889', '#ff6174', '#f7ead0', '#82d8ff', '#f7b84b'],
+        tickColor: '#9aa995'
       },
       {
         id: 'merchant-chart',
         type: 'bar',
         labels: ['Metro Market'],
-        colors: ['#c9a84c', '#00e566', '#ff5b6e', '#e8d9b5', '#00d4ff', '#ffb000'],
-        tickColor: '#b8a882'
+        colors: ['#efbe62', '#21d889', '#ff6174', '#f7ead0', '#82d8ff', '#f7b84b'],
+        tickColor: '#9aa995'
       }
     ]);
 
-  await page.getByRole('tab', { name: 'Transactions' }).click();
+  await page.getByRole('button', { name: 'Transactions' }).click();
   await expect(page.locator('#transaction-body tr')).toHaveCount(1);
   await expect(page.locator('#transaction-body')).toContainText('Metro Market');
 

@@ -23,6 +23,8 @@ const els = {
   metricsSummary: document.getElementById('benchmark-metrics-summary'),
   metricsDetails: document.getElementById('benchmark-metrics-details'),
   metricsEmpty: document.getElementById('benchmark-metrics-empty'),
+  modalShells: document.querySelectorAll('[data-modal]'),
+  modalCloseButtons: document.querySelectorAll('[data-modal-close]'),
   viewTitle: document.getElementById('view-title'),
   viewSubtitle: document.getElementById('view-subtitle'),
   viewPanels: document.querySelectorAll('[data-view]'),
@@ -52,6 +54,7 @@ const VIEW_ALIASES = {
   'benchmark-metrics': 'metrics',
   overview: 'dashboard'
 };
+const MODAL_VIEWS = new Set(['transactions', 'metrics']);
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
 const RESET_DISARM_MS = 4500;
@@ -87,9 +90,7 @@ export async function loadDashboard() {
   state().setAnalysis(analysis);
   renderTransactions();
   renderKpis(transactions, analysis);
-  if (currentView === 'dashboard') {
-    document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
-  }
+  document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
 }
 
 export function renderKpis(transactions = [], analysis = {}) {
@@ -420,6 +421,24 @@ function setupLayoutShell() {
     });
   });
 
+  els.modalCloseButtons.forEach((control) => {
+    control.addEventListener('click', () => closeModals({ updateHash: true }));
+  });
+
+  els.modalShells.forEach((shell) => {
+    shell.addEventListener('click', (event) => {
+      if (event.target?.matches?.('.modal-scrim')) {
+        closeModals({ updateHash: true });
+      }
+    });
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeModals({ updateHash: true });
+    }
+  });
+
   window.addEventListener('hashchange', () => {
     showView(viewFromHash(), { updateHash: false });
   });
@@ -434,20 +453,21 @@ function viewFromHash() {
 
 export function showView(view, { updateHash = false } = {}) {
   const targetView = VIEW_COPY[view] ? view : DEFAULT_VIEW;
+  if (MODAL_VIEWS.has(targetView)) {
+    openModal(targetView, { updateHash });
+    return;
+  }
   currentView = targetView;
   document.body.dataset.currentView = targetView;
+  closeModals({ updateHash: false });
   els.viewPanels.forEach((panel) => {
+    if (MODAL_VIEWS.has(panel.dataset.view)) return;
     const isActive = panel.dataset.view === targetView;
-    panel.hidden = !isActive;
     panel.classList.toggle('is-active', isActive);
   });
   els.viewLinks.forEach((link) => {
     const isActive = link.dataset.viewLink === targetView;
     link.classList.toggle('active', isActive);
-    if (link.getAttribute('role') === 'tab') {
-      link.setAttribute('aria-selected', String(isActive));
-      link.tabIndex = isActive ? 0 : -1;
-    }
     if (link.tagName === 'A') {
       link.toggleAttribute('aria-current', isActive);
       if (isActive) link.setAttribute('aria-current', 'page');
@@ -465,15 +485,68 @@ export function showView(view, { updateHash = false } = {}) {
       window.history.pushState(null, '', hash);
     }
   }
+  scrollToMainSection(targetView);
   if (targetView === 'dashboard') {
     refreshChartLayout();
-  }
-  if (targetView === 'metrics') {
-    setBenchmarkMetricsExpanded(true);
   }
   if (targetView === 'nova') {
     els.novaPanel?.classList.remove('is-collapsed');
   }
+}
+
+function openModal(view, { updateHash = false } = {}) {
+  currentView = view;
+  document.body.dataset.currentView = view;
+  els.modalShells.forEach((shell) => {
+    const isActive = shell.dataset.modal === view;
+    shell.hidden = !isActive;
+    shell.classList.toggle('is-open', isActive);
+  });
+  els.viewLinks.forEach((link) => {
+    const isActive = link.dataset.viewLink === view;
+    link.classList.toggle('active', isActive);
+    link.toggleAttribute('aria-current', isActive);
+    if (isActive) link.setAttribute('aria-current', 'page');
+  });
+  if (view === 'metrics') {
+    setBenchmarkMetricsExpanded(true);
+  }
+  if (updateHash) {
+    const hash = `#${view}-view`;
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, '', hash);
+    }
+  }
+  const activeDialog = document.querySelector(`[data-modal="${view}"] .modal-panel`);
+  activeDialog?.focus?.();
+}
+
+function closeModals({ updateHash = false } = {}) {
+  let hadOpenModal = false;
+  els.modalShells.forEach((shell) => {
+    hadOpenModal = hadOpenModal || !shell.hidden;
+    shell.hidden = true;
+    shell.classList.remove('is-open');
+  });
+  els.viewLinks.forEach((link) => {
+    if (MODAL_VIEWS.has(link.dataset.viewLink)) {
+      link.classList.remove('active');
+      link.removeAttribute('aria-current');
+    }
+  });
+  if (updateHash && hadOpenModal) {
+    const hash = '#dashboard-view';
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, '', hash);
+    }
+  }
+}
+
+function scrollToMainSection(view) {
+  const panel = document.querySelector(`[data-view="${view}"]`);
+  if (!panel || !['dashboard', 'upload', 'nova'].includes(view)) return;
+  if (view === 'dashboard' && window.scrollY < 24) return;
+  panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 }
 
 function refreshChartLayout() {
