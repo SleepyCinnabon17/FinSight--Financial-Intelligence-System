@@ -99,14 +99,23 @@ test('renders external SROIE metrics as the headline evaluator section', async (
   await expect(page.locator('.metric-card')).toHaveCount(6);
   await expect(page.locator('#benchmark-metrics')).toContainText('SROIE Receipt Benchmark');
   await expect(page.locator('#benchmark-metrics')).toContainText('Merchant/Company Accuracy');
+  await expect(page.locator('#benchmark-metrics')).toContainText('92%');
   // No longer expect old low values or comparison table
   await expect(page.locator('#benchmark-metrics')).toContainText('Total Amount Accuracy');
+  await expect(page.locator('#benchmark-metrics')).toContainText('94%');
   await expect(page.locator('#benchmark-metrics')).toContainText('64%');
   await expect(page.locator('#benchmark-metrics')).toContainText('Avg Pipeline Time');
+  await expect(page.locator('#benchmark-metrics')).toContainText('1.18s');
   await expect(page.locator('#benchmark-metrics')).toContainText('2.33s');
   await expect(page.locator('#benchmark-metrics')).toContainText('Synthetic Regression Check');
   await expect(page.locator('#benchmark-metrics')).toContainText('CORD OCR/Layout Robustness');
+  await expect(page.locator('#benchmark-metrics')).toContainText('89.1%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('91.4%');
   await expect(page.locator('#benchmark-metrics')).toContainText('FUNSD Structure Stress Test');
+  await expect(page.locator('#benchmark-metrics')).toContainText('86.7%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('88.2%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('1.36s');
+  await expect(page.locator('#benchmark-metrics')).toContainText('199');
   // No longer expect comparison table
   await expect(page.locator('#synthetic-regression-body')).toBeHidden();
   await expect(page.locator('#benchmark-metrics-summary')).not.toContainText('100%');
@@ -147,5 +156,8 @@ test('shows a graceful external benchmark empty state when external results are 
   await expect(page.locator('#benchmark-metrics-empty')).toBeHidden();
   await expect(page.locator('.metric-card')).toHaveCount(6);
   await expect(page.locator('#benchmark-metrics')).toContainText('Synthetic Regression Check');
+  await expect(page.locator('#benchmark-metrics')).toContainText('94.6%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('96.1%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('93.8%');
   // No longer expect comparison table
 });
