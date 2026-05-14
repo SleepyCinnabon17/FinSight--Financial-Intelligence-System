@@ -3400,6 +3400,10 @@ html[data-theme="light"] .network-bg {
   padding: 0;
 }
 
+.network-main .view-panel.dashboard-section {
+  padding: clamp(40px, 5vw, 76px) clamp(36px, 4.5vw, 64px);
+}
+
 .network-section {
   scroll-margin-top: 22px;
 }
