@@ -174,6 +174,7 @@ export function setupChat() {
     const message = els.chatInput.value.trim();
     if (!message) return;
     els.chatInput.value = '';
+    els.chatInput.dispatchEvent(new Event('input', { bubbles: true }));
     try {
       await sendNovaMessage(message);
     } catch (error) {
