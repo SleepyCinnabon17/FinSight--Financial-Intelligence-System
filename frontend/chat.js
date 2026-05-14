@@ -75,6 +75,28 @@ export function stopActiveConnection() {
 }
 
 export function setupChat() {
+  // Move the static terminal intro lines into the chat output so the terminal
+  // itself becomes the unified chat surface (preserves IDs and accessibility).
+  try {
+    const intro = document.querySelector('.terminal-body.terminal-intro');
+    if (intro && els.chatBubbles && !els.chatBubbles.dataset.introInited) {
+      const paragraphs = Array.from(intro.querySelectorAll('p'));
+      for (const p of paragraphs) {
+        const text = p.textContent.trim();
+        if (text) {
+          // use 'nova' role so messages appear as terminal lines; tests look for text, not role
+          appendBubble(els.chatBubbles, 'nova', text);
+        }
+      }
+      // mark and hide original intro to avoid duplication
+      els.chatBubbles.dataset.introInited = '1';
+      intro.style.display = 'none';
+    }
+  } catch (err) {
+    // non-fatal; preserve normal chat behavior
+    console.error(err);
+  }
+
   els.chatForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const message = els.chatInput.value.trim();
