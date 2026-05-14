@@ -18,6 +18,12 @@ const STATUS_CLASSES = ['idle', 'connected', 'error'];
 let activeStream = null;
 let lastMessage = '';
 
+// Prompt overlay elements (created once)
+let promptOverlay = null;
+let promptMirror = null;
+let promptPlaceholder = null;
+let promptCursor = null;
+
 function state() {
   return window.FinSightState;
 }
@@ -97,6 +103,72 @@ export function setupChat() {
     console.error(err);
   }
 
+  // Create a visible prompt overlay that mirrors the invisible input's value
+  // and shows a block cursor. This keeps the native input (for form
+  // submissions and tests) but replaces the visual caret with a terminal
+  // style cursor and inline prompt text.
+  function ensurePromptOverlay() {
+    if (promptOverlay || !els.chatForm || !els.chatInput) return;
+    promptOverlay = document.createElement('div');
+    promptOverlay.className = 'prompt-overlay';
+
+    const symbol = document.createElement('span');
+    symbol.className = 'prompt-symbol';
+    symbol.textContent = '$';
+
+    const display = document.createElement('span');
+    display.className = 'prompt-display';
+
+    promptMirror = document.createElement('span');
+    promptMirror.className = 'prompt-mirror';
+
+    promptPlaceholder = document.createElement('span');
+    promptPlaceholder.className = 'prompt-placeholder';
+    promptPlaceholder.textContent = els.chatInput.placeholder || '';
+
+    promptCursor = document.createElement('span');
+    promptCursor.className = 'prompt-cursor';
+    // use a non-breaking space so block has width even on empty lines
+    promptCursor.textContent = '\u00A0';
+
+    display.appendChild(promptMirror);
+    display.appendChild(promptPlaceholder);
+    display.appendChild(promptCursor);
+
+    promptOverlay.appendChild(symbol);
+    promptOverlay.appendChild(display);
+
+    // Place overlay into the form (after input so it renders above)
+    els.chatForm.appendChild(promptOverlay);
+
+    // Keep the overlay interactive so clicks focus the real input
+    promptOverlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      els.chatInput.focus();
+    });
+
+    // Mirror input changes into the overlay
+    const updateMirror = () => {
+      const v = els.chatInput.value || '';
+      if (v.length === 0) {
+        promptMirror.textContent = '';
+        promptPlaceholder.style.display = '';
+      } else {
+        promptMirror.textContent = v;
+        promptPlaceholder.style.display = 'none';
+      }
+      // keep terminal scrolled to bottom when typing
+      try { scrollToLatest(); } catch (e) {}
+    };
+
+    // Update on input and on programmatic value changes
+    els.chatInput.addEventListener('input', updateMirror);
+    // initialize
+    updateMirror();
+  }
+
+  ensurePromptOverlay();
+
   els.chatForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const message = els.chatInput.value.trim();
@@ -115,8 +187,10 @@ export function setupChat() {
   // Make the terminal container act like a CLI: clicking anywhere focuses the input prompt.
   if (terminalEl) {
     terminalEl.addEventListener('click', (event) => {
-      // Avoid stealing focus when interacting with form controls or copy buttons
-      if (event.target.closest('#chat-form') || event.target.closest('.bubble-copy') || event.target.closest('button')) return;
+      // Avoid stealing focus when interacting with copy buttons or other
+      // actionable buttons, but allow clicks anywhere else (including the
+      // prompt area) to focus the invisible input.
+      if (event.target.closest('.bubble-copy') || event.target.closest('button')) return;
       els.chatInput.focus();
     });
   }

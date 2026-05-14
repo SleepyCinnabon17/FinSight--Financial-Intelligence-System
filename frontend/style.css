@@ -4104,3 +4104,83 @@ html[data-theme="light"] .toast {
   padding: 4px 6px;
   font-size: 0.72rem;
 }
+
+/* Hide the pseudo-$ we used earlier and replace with a richer overlay prompt */
+.hero-terminal .chat-form::before {
+  display: none !important;
+}
+
+/* Make the native input visually invisible but still focusable and usable
+   for form submission and automated tests. The overlay displays the text
+   and the custom block cursor. */
+.hero-terminal #chat-input {
+  position: absolute;
+  inset: 0;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: transparent !important;
+  caret-color: transparent !important;
+  padding: 8px 12px;
+  z-index: 1;
+}
+
+/* Remove visual send button (keeps DOM for tests but hides it visually).
+   The terminal UI will use Enter to submit like a real CLI. */
+.hero-terminal #chat-form button[type="submit"] {
+  display: none !important;
+}
+
+/* Prompt overlay mirrors the input value and shows a block cursor */
+.hero-terminal .prompt-overlay {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  pointer-events: auto;
+  font-family: "JetBrains Mono", var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.hero-terminal .prompt-symbol {
+  color: #c084fc;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.hero-terminal .prompt-display {
+  display: inline-block;
+  min-height: 20px;
+}
+
+.hero-terminal .prompt-mirror {
+  white-space: pre-wrap;
+  color: var(--text-primary);
+}
+
+.hero-terminal .prompt-placeholder {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.hero-terminal .prompt-cursor {
+  display: inline-block;
+  width: 10px;
+  height: 18px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  margin-left: 6px;
+  vertical-align: text-bottom;
+  animation: terminal-blink 1s step-end infinite;
+}
+
+/* Ensure the bubble gutter for copy buttons remains consistent */
+.hero-terminal .bubble {
+  padding-left: 48px;
+}
+
