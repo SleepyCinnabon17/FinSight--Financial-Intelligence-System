@@ -4168,6 +4168,39 @@ html[data-theme="light"] .toast {
   opacity: 0.85;
 }
 
+/* Strong overrides to ensure terminal output is left-aligned and not
+   visually overlapped by the prompt overlay. These are placed late in the
+   stylesheet so they win over earlier, more general rules. */
+.hero-terminal .chat-bubbles {
+  align-items: flex-start !important;
+  text-align: left !important;
+  padding-bottom: 140px !important; /* ensure last lines sit above prompt */
+}
+
+.hero-terminal .bubble {
+  width: 100% !important;
+  padding-left: 56px !important; /* keep room for copy button */
+}
+
+.hero-terminal .bubble .bubble-text {
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+}
+
+/* Hide native input placeholder to avoid ghost text showing behind the
+   mirrored prompt overlay. Keep input focusable via terminal clicks. */
+.hero-terminal #chat-input::placeholder {
+  color: transparent !important;
+}
+
+/* Prevent pointer interactions with the native input so clicks go to the
+   overlay which will focus the input programmatically. */
+.hero-terminal #chat-input {
+  pointer-events: none !important;
+}
+
+
 .hero-terminal .prompt-cursor {
   display: inline-block;
   width: 10px;
