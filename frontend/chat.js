@@ -12,6 +12,8 @@ const els = {
   statusText: document.getElementById('chat-status-text')
 };
 
+const terminalEl = document.querySelector('.hero-terminal');
+
 const STATUS_CLASSES = ['idle', 'connected', 'error'];
 let activeStream = null;
 let lastMessage = '';
@@ -88,6 +90,14 @@ export function setupChat() {
   els.retryButton.addEventListener('click', () => {
     if (lastMessage) sendNovaMessage(lastMessage);
   });
+  // Make the terminal container act like a CLI: clicking anywhere focuses the input prompt.
+  if (terminalEl) {
+    terminalEl.addEventListener('click', (event) => {
+      // Avoid stealing focus when interacting with form controls or copy buttons
+      if (event.target.closest('#chat-form') || event.target.closest('.bubble-copy') || event.target.closest('button')) return;
+      els.chatInput.focus();
+    });
+  }
 }
 
 setupChat();
