@@ -28,6 +28,22 @@ function state() {
   return window.FinSightState;
 }
 
+function syncPromptOverlay() {
+  if (!promptMirror || !promptPlaceholder || !els.chatInput) return;
+  const value = els.chatInput.value || '';
+  if (value.length === 0) {
+    promptMirror.textContent = '';
+    promptPlaceholder.style.display = '';
+  } else {
+    promptMirror.textContent = value;
+    promptPlaceholder.style.display = 'none';
+  }
+  try {
+    scrollToLatest();
+  } catch (error) {
+  }
+}
+
 export async function sendNovaMessage(message) {
   if (activeStream) stopActiveConnection();
   lastMessage = message;
@@ -148,23 +164,10 @@ export function setupChat() {
     });
 
     // Mirror input changes into the overlay
-    const updateMirror = () => {
-      const v = els.chatInput.value || '';
-      if (v.length === 0) {
-        promptMirror.textContent = '';
-        promptPlaceholder.style.display = '';
-      } else {
-        promptMirror.textContent = v;
-        promptPlaceholder.style.display = 'none';
-      }
-      // keep terminal scrolled to bottom when typing
-      try { scrollToLatest(); } catch (e) {}
-    };
-
     // Update on input and on programmatic value changes
-    els.chatInput.addEventListener('input', updateMirror);
+    els.chatInput.addEventListener('input', syncPromptOverlay);
     // initialize
-    updateMirror();
+    syncPromptOverlay();
   }
 
   ensurePromptOverlay();
@@ -175,6 +178,7 @@ export function setupChat() {
     if (!message) return;
     els.chatInput.value = '';
     els.chatInput.dispatchEvent(new Event('input', { bubbles: true }));
+    syncPromptOverlay();
     try {
       await sendNovaMessage(message);
     } catch (error) {
