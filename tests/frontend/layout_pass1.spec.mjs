@@ -39,7 +39,7 @@ async function mockDashboard(page) {
   });
 }
 
-test('renders the Enigma-style network shell with dashboard, Nova, upload, and popup controls', async ({ page }) => {
+test('renders the Enigma-style network shell with dashboard, terminal Nova, and popup controls', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await mockDashboard(page);
 
@@ -53,22 +53,22 @@ test('renders the Enigma-style network shell with dashboard, Nova, upload, and p
   await expect(page.locator('.hero-gradient')).toContainText('Know where your money went.');
   await expect(page.locator('.hero-tagline')).toContainText('Upload receipts, reveal leaks, and let Nova explain your spending');
   await expect(page.locator('.hero-terminal')).toBeVisible();
+  await expect(page.locator('.hero-terminal')).toContainText('99% of gamblers give up before making it big. Be the 1%.');
+  await expect(page.locator('.hero-terminal #nova')).toBeVisible();
+  await expect(page.locator('#nova-view')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Transactions' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Metrics' })).toBeVisible();
   await expect(page.locator('.kpi-card')).toHaveCount(4);
-  await expect(page.locator('#nova.nova-panel')).toBeVisible();
-  await expect(page.locator('#drop-zone')).toBeVisible();
+  await expect(page.locator('#upload-view')).toBeHidden();
 
   const order = await page.evaluate(() => {
     const rect = (selector) => document.querySelector(selector).getBoundingClientRect().top;
     return {
       dashboard: rect('#dashboard-view'),
-      nova: rect('#nova-view'),
-      upload: rect('#upload-view')
+      terminal: rect('.hero-terminal')
     };
   });
-  expect(order.dashboard).toBeLessThan(order.nova);
-  expect(order.nova).toBeLessThan(order.upload);
+  expect(order.terminal).toBeLessThan(order.dashboard);
 });
 
 test('keeps popup buttons usable at mobile width without horizontal overflow', async ({ page }) => {
@@ -93,8 +93,9 @@ test('keeps the network layout usable at tablet width', async ({ page }) => {
   await expect(page.locator('.cabinet.network-shell')).toBeVisible();
   await expect(page.locator('.top-actions')).toBeVisible();
   await expect(page.locator('.kpi-card')).toHaveCount(4);
-  await expect(page.locator('#nova.nova-panel')).toBeVisible();
-  await expect(page.locator('#upload')).toBeVisible();
+  await expect(page.locator('.hero-terminal #nova')).toBeVisible();
+  await page.getByRole('button', { name: 'Upload', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Upload a Receipt' })).toBeVisible();
 });
 
 test('toggles light and dark theme with localStorage persistence', async ({ page }) => {
@@ -135,6 +136,5 @@ test('reduced-motion mode disables terminal cursor animation', async ({ page }) 
 
   await page.goto('/');
 
-  const animationName = await page.locator('.terminal-cursor').evaluate((element) => getComputedStyle(element).animationName);
-  expect(animationName).toBe('none');
+  await expect(page.locator('.terminal-cursor')).toHaveCount(0);
 });

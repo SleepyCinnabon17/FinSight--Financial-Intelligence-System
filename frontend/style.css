@@ -3320,6 +3320,8 @@ html[data-theme="light"] .network-bg {
 .hero-terminal {
   min-height: clamp(320px, 42vh, 440px);
   padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .terminal-header {
@@ -3902,4 +3904,51 @@ html[data-theme="light"] .toast {
   .terminal-cursor {
     animation: none !important;
   }
+}
+
+/* Keep the real Nova chat integrated into the hero terminal, not as a second page panel. */
+.terminal-intro {
+  margin-bottom: 18px;
+}
+
+.hero-terminal .nova-panel {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.hero-terminal .nova-panel-header {
+  padding: 0 0 10px;
+  background: transparent;
+}
+
+.hero-terminal .nova-panel-header h2 {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.hero-terminal .nova-panel-body {
+  display: grid;
+  grid-template-rows: minmax(120px, 1fr) auto auto auto;
+  min-height: 0;
+  padding: 0;
+}
+
+.hero-terminal .chat-bubbles {
+  min-height: 118px;
+  max-height: 220px;
+  font-family: var(--font-mono);
+}
+
+.hero-terminal .chat-form {
+  margin-top: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
 }

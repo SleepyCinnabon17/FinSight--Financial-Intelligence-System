@@ -110,6 +110,7 @@ test('blocks invalid confirmation edits with inline field errors', async ({ page
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: 'Upload', exact: true }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',
@@ -164,6 +165,7 @@ test('shows upload previews, progress states, and confirm/discard toasts', async
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: 'Upload', exact: true }).click();
   await page.locator('#file-input').setInputFiles([
     {
       name: 'bill.png',
@@ -213,6 +215,7 @@ test('shows a non-blocking upload toast on network failure', async ({ page }) =>
   });
 
   await page.goto('/');
+  await page.getByRole('button', { name: 'Upload', exact: true }).click();
   await page.locator('#file-input').setInputFiles({
     name: 'bill.png',
     mimeType: 'image/png',

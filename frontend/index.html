@@ -48,19 +48,57 @@
               <button class="secondary-cta" type="button" data-view-link="upload">Upload a receipt</button>
             </div>
           </div>
-          <div class="terminal-window hero-terminal" aria-label="FinSight terminal preview">
+          <div class="terminal-window hero-terminal" aria-label="Nova terminal chat">
             <div class="terminal-header" aria-hidden="true">
               <span class="dot red"></span>
               <span class="dot yellow"></span>
               <span class="dot green"></span>
             </div>
-            <div class="terminal-body">
+            <div class="terminal-body terminal-intro">
               <p><span class="prompt">$</span> finsight analyze latest-receipt</p>
-              <p class="terminal-muted">OCR pipeline ready</p>
-              <p class="terminal-muted">KIE extraction loaded</p>
-              <p class="terminal-accent">Nova context: spend leaks, anomalies, duplicates</p>
-              <p><span class="prompt">$</span> <span class="terminal-cursor">_</span></p>
+              <p class="terminal-muted">&ldquo;99% of gamblers give up before making it big. Be the 1%.&rdquo;</p>
+              <p class="terminal-accent">Nova is ready to explain spend leaks, anomalies, and duplicates.</p>
             </div>
+            <section id="nova" class="nova-panel hero-nova" data-view="nova" aria-labelledby="nova-title">
+              <div class="nova-panel-header">
+                <div>
+                  <span class="eyebrow">Nova</span>
+                  <h2 id="nova-title">Ask Nova</h2>
+                </div>
+                <div class="chat-connection" role="status" aria-live="polite" aria-atomic="true">
+                  <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
+                  <span id="chat-status-text">Idle</span>
+                  <button id="chat-retry-button" type="button" hidden>Retry</button>
+                </div>
+              </div>
+              <div class="nova-panel-body">
+                <div class="chat-skeleton skeleton-loader" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div
+                  id="chat-bubbles"
+                  class="chat-bubbles"
+                  role="log"
+                  aria-live="polite"
+                  aria-relevant="additions text"
+                  aria-label="Nova conversation"
+                ></div>
+                <div id="chat-typing" class="typing-indicator" hidden role="status" aria-live="polite">
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  Nova is typing
+                </div>
+                <form id="chat-form" class="chat-form">
+                  <input id="chat-input" type="text" placeholder="Where did I lose money?" autocomplete="off" aria-label="Message Nova" />
+                  <button id="chat-stop-button" type="button" hidden aria-label="Stop Nova response">Stop</button>
+                  <button type="submit">Send</button>
+                </form>
+                <p class="disclaimer">Nova does not provide certified financial advice.</p>
+              </div>
+            </section>
           </div>
         </div>
       </header>
@@ -125,59 +163,27 @@
           </section>
         </section>
 
-        <section id="nova-view" class="view-panel network-section nova-stage is-active" data-view="nova" aria-labelledby="nova-title">
-          <section id="nova" class="nova-panel" aria-labelledby="nova-title">
-            <div class="nova-panel-header">
-              <div>
-                <span class="eyebrow">Nova</span>
-                <h2 id="nova-title">Ask Nova</h2>
-              </div>
-              <div class="chat-connection" role="status" aria-live="polite" aria-atomic="true">
-                <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
-                <span id="chat-status-text">Idle</span>
-                <button id="chat-retry-button" type="button" hidden>Retry</button>
-              </div>
-            </div>
-            <div class="nova-panel-body">
-              <div class="chat-skeleton skeleton-loader" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div
-                id="chat-bubbles"
-                class="chat-bubbles"
-                role="log"
-                aria-live="polite"
-                aria-relevant="additions text"
-                aria-label="Nova conversation"
-              ></div>
-              <div id="chat-typing" class="typing-indicator" hidden role="status" aria-live="polite">
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                Nova is typing
-              </div>
-              <form id="chat-form" class="chat-form">
-                <input id="chat-input" type="text" placeholder="Where did I lose money?" autocomplete="off" aria-label="Message Nova" />
-                <button id="chat-stop-button" type="button" hidden aria-label="Stop Nova response">Stop</button>
-                <button type="submit">Send</button>
-              </form>
-              <p class="disclaimer">Nova does not provide certified financial advice.</p>
-            </div>
-          </section>
-        </section>
+      </main>
 
-        <section id="upload-view" class="view-panel network-section upload-stage is-active" data-view="upload" aria-labelledby="upload-title">
-          <section id="upload" aria-labelledby="upload-title">
-            <div class="pane-title">
-              <div>
-                <span class="eyebrow">Document intake</span>
-                <h2 id="upload-title">Upload a Receipt</h2>
-              </div>
+      <div id="upload-modal" class="modal-shell" data-modal="upload" hidden>
+        <div class="modal-scrim" data-modal-close aria-hidden="true"></div>
+        <section
+          id="upload-view"
+          class="view-panel screen-pane modal-panel upload-stage"
+          data-view="upload"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="upload-title"
+        >
+          <div class="modal-header">
+            <div>
+              <span class="eyebrow">Document intake</span>
+              <h2 id="upload-title">Upload a Receipt</h2>
               <p>Drop a bill, press Process, then confirm or discard the extraction preview.</p>
             </div>
-
+            <button class="modal-close" type="button" data-modal-close aria-label="Close upload panel">Close</button>
+          </div>
+          <section id="upload" aria-labelledby="upload-title">
             <div class="upload-layout">
               <div class="upload-console">
                 <div
@@ -210,7 +216,7 @@
             </div>
           </section>
         </section>
-      </main>
+      </div>
 
       <div id="transactions-modal" class="modal-shell" data-modal="transactions" hidden>
         <div class="modal-scrim" data-modal-close aria-hidden="true"></div>

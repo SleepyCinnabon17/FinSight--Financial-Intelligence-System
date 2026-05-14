@@ -54,7 +54,7 @@ const VIEW_ALIASES = {
   'benchmark-metrics': 'metrics',
   overview: 'dashboard'
 };
-const MODAL_VIEWS = new Set(['transactions', 'metrics']);
+const MODAL_VIEWS = new Set(['upload', 'transactions', 'metrics']);
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
 const RESET_DISARM_MS = 4500;
