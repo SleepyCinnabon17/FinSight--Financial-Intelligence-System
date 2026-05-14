@@ -3327,6 +3327,8 @@ html[data-theme="light"] .network-bg {
   /* Use Fira Code in the terminal for a real CLI feel */
   font-family: "Fira Code", var(--font-mono);
   cursor: text;
+  border: none;
+  box-shadow: none;
 }
 
 .terminal-header {
@@ -3507,6 +3509,7 @@ html[data-theme="light"] .network-bg {
   color: var(--text-primary);
   font-size: 0.92rem;
   font-weight: 800;
+  font-style: normal;
 }
 
 .chart-box canvas {
