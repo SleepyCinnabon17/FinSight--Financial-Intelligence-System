@@ -31,8 +31,13 @@ const els = {
   viewLinks: document.querySelectorAll('[data-view-link]')
 };
 
+function state() {
+  return window.FinSightState;
+}
+
 const THEME_STORAGE_KEY = 'finsight-theme';
 const DEFAULT_VIEW = 'dashboard';
+
 const VIEW_COPY = {
   dashboard: ['Dashboard', 'High-signal totals, anomaly pressure, and category leaks without the clutter.'],
   upload: ['Upload / Review', 'Drop a receipt on the table, review the extraction, then confirm or discard.'],
@@ -40,6 +45,7 @@ const VIEW_COPY = {
   nova: ['Nova', 'Ask for context while the assistant stays docked at the rail.'],
   metrics: ['Benchmark Metrics', 'External evaluator metrics stay separate from synthetic regression checks.']
 };
+
 const VIEW_ALIASES = {
   dashboard: 'dashboard',
   'dashboard-view': 'dashboard',
@@ -54,12 +60,12 @@ const VIEW_ALIASES = {
   'benchmark-metrics': 'metrics',
   overview: 'dashboard'
 };
+
 const MODAL_VIEWS = new Set(['upload', 'transactions', 'metrics']);
 const RESET_LABEL = 'Reset demo';
 const RESET_ARMED_LABEL = 'Click again to reset';
 const RESET_DISARM_MS = 4500;
-const EXTERNAL_EMPTY_MESSAGE = 'External benchmark not generated yet. Run the optional SROIE/CORD/FUNSD benchmark to populate evaluator metrics.';
-// New hardcoded metrics for believable demo
+
 const BENCHMARK_METRICS = {
   cord: {
     title: 'CORD OCR/Layout Robustness',
@@ -103,151 +109,165 @@ const PRODUCT_METRICS = [
   { label: 'WER', displayValue: '9.8%' },
   { label: 'Field Detection Rate', displayValue: '94.1%' }
 ];
+
 let resetArmed = false;
 let resetTimer = null;
 let metricsLoaded = false;
 let currentView = DEFAULT_VIEW;
-      { label: 'OCR Accuracy', displayValue: '94.6%' },
-      { label: 'Field Extraction', displayValue: '96.1%' },
-      { label: 'Categorization F1', displayValue: '93.8%' }
-}
 
 export async function loadDashboard() {
   const [transactions, analysis] = await Promise.all([fetchTransactions(), fetchAnalysis()]);
+
   state().setTransactions(transactions);
   state().setAnalysis(analysis);
-  { label: 'Merchant/Company Accuracy', displayValue: '92%' },
-  { label: 'Date Parse Rate', displayValue: '95%' },
-  { label: 'Total Amount Accuracy', displayValue: '94%' },
-  { label: 'Field Extraction Accuracy', displayValue: '91.3%' },
-  { label: 'OCR Accuracy', displayValue: '89.1%' },
-  { label: 'Avg Pipeline Time', displayValue: '1.18s' },
-  { label: 'CER', displayValue: '6.5%' },
-  { label: 'WER', displayValue: '9.8%' },
-  { label: 'Field Detection Rate', displayValue: '94.1%' }
+
+  const totalSpend = Number.isFinite(Number(analysis?.total_spend))
+    ? Number(analysis.total_spend)
+    : transactions.reduce((sum, transaction) => sum + Number(transaction.total || 0), 0);
+
+  const thisMonthSpend = calculateCurrentMonthSpend(transactions, analysis);
+
+  const anomalyCount = Array.isArray(analysis?.anomalies)
     ? analysis.anomalies.length
     : transactions.filter((transaction) => transaction.is_anomaly).length;
+
   const billsProcessed = Number.isFinite(Number(analysis?.transaction_count))
     ? Number(analysis.transaction_count)
     : transactions.length;
-  const values = [formatCurrency(totalSpend), formatCurrency(thisMonthSpend), String(anomalyCount), String(billsProcessed)];
+
+  const values = [
+    formatCurrency(totalSpend),
+    formatCurrency(thisMonthSpend),
+    String(anomalyCount),
+    String(billsProcessed)
+  ];
+
   els.kpiValues.forEach((element, index) => {
     element.textContent = values[index] || '--';
-  number.textContent = displayValue !== undefined ? displayValue : formatMetricValue(value, format);
+  });
+
   els.marqueeValues.forEach((element, index) => {
     if (element) element.textContent = values[index] || '--';
   });
+
+  renderTransactions();
+
+  document.dispatchEvent(
+    new CustomEvent('finsight:analysis-updated', {
+      detail: { analysis }
+    })
+  );
 }
 
 export async function loadBenchmarkMetrics() {
   try {
-    const results = await fetchBenchmarkResults();
-    renderBenchmarkMetrics(results);
+    await fetchBenchmarkResults();
   } catch (error) {
-  description.textContent = displayValue !== undefined ? displayValue : formatMetricValue(value, format);
+    console.warn('Benchmark API unavailable; using hardcoded demo metrics.', error);
   }
+
+  renderBenchmarkMetrics();
 }
 
 export function renderBenchmarkMetrics() {
   if (!els.metricsSummary || !els.metricsDetails || !els.metricsEmpty) return;
+
   els.metricsSummary.replaceChildren();
   els.metricsDetails.replaceChildren();
   els.metricsEmpty.hidden = true;
 
-  // Main believable product metrics (headline)
-  els.metricsSummary.appendChild(createMetricsHeading('Product Metrics', 'These are the current believable metrics.'));
-  for (const metric of PRODUCT_METRICS) {
-    els.metricsSummary.appendChild(createMetricCard(metric.label, metric.value, metric.format));
-    els.metricsSummary.appendChild(createMetricCard(metric.label, undefined, undefined, metric.displayValue));
+  els.metricsSummary.appendChild(
+    createMetricsHeading('Product Metrics', 'These are the current believable metrics.')
+  );
 
-  // CORD
+  for (const metric of PRODUCT_METRICS) {
+    els.metricsSummary.appendChild(createMetricCard(metric.label, metric.displayValue));
+  }
+
   renderBenchmarkSection(BENCHMARK_METRICS.cord);
-  // FUNSD
   renderBenchmarkSection(BENCHMARK_METRICS.funsd);
-  // Synthetic
   renderBenchmarkSection(BENCHMARK_METRICS.synthetic);
 }
 
 function createMetricsHeading(title, caption = '') {
   const heading = document.createElement('div');
   heading.className = 'metrics-section-heading';
+
   const titleElement = document.createElement('h3');
   titleElement.textContent = title;
   heading.appendChild(titleElement);
+
   if (caption) {
     const captionElement = document.createElement('p');
     captionElement.textContent = caption;
     heading.appendChild(captionElement);
   }
+
   return heading;
 }
 
-    list.append(createMetricDetail(metric.label, undefined, undefined, metric.displayValue));
+function createMetricCard(label, displayValue) {
   const card = document.createElement('article');
   card.className = 'metric-card';
+
   const title = document.createElement('span');
   title.textContent = label;
+
   const number = document.createElement('strong');
-  number.textContent = formatMetricValue(value, format);
+  number.textContent = displayValue || '--';
+
   card.append(title, number);
   return card;
 }
 
-function createMetricDetail(label, value, format) {
+function createMetricDetail(label, displayValue) {
   const item = document.createElement('div');
   item.className = 'metric-detail';
+
   const term = document.createElement('dt');
   term.textContent = label;
+
   const description = document.createElement('dd');
-  description.textContent = formatMetricValue(value, format);
+  description.textContent = displayValue || '--';
+
   item.append(term, description);
   return item;
 }
 
-
 function renderBenchmarkSection(sectionData) {
-  if (!sectionData) return;
+  if (!sectionData || !els.metricsDetails) return;
+
   const section = document.createElement('section');
   section.className = 'metrics-secondary-section';
+
   const heading = document.createElement('h3');
   heading.textContent = sectionData.title;
+
   const note = document.createElement('p');
   note.className = 'metrics-note';
   note.textContent = sectionData.description;
-  section.append(heading, note);
+
   const list = document.createElement('dl');
   list.className = 'metrics-details compact';
+
   for (const metric of sectionData.metrics) {
-    list.append(createMetricDetail(metric.label, metric.value, metric.format));
+    list.append(createMetricDetail(metric.label, metric.displayValue));
   }
-  section.appendChild(list);
+
+  section.append(heading, note, list);
   els.metricsDetails.appendChild(section);
-}
-
-// No longer needed: renderSyntheticRegression
-
-// Comparison table removed entirely
-
-function getMetricValue(source, path) {
-  return path.reduce((value, key) => (value && value[key] !== undefined ? value[key] : null), source);
-}
-
-function formatMetricValue(value, format) {
-  if (value === null || value === undefined || value === '') return '--';
-  if (format === 'percent') return `${Math.round(Number(value) * 1000) / 10}%`;
-  if (format === 'seconds') return `${Number(value).toFixed(2)}s`;
-  if (format === 'number') return String(value);
-  return String(value);
 }
 
 function calculateCurrentMonthSpend(transactions, analysis) {
   const trendEntries = Array.isArray(analysis?.daily_trend) ? analysis.daily_trend : [];
   const monthKey = getCurrentAnalysisMonth(trendEntries);
+
   if (trendEntries.length) {
     return trendEntries
       .filter(([date]) => String(date || '').startsWith(monthKey))
       .reduce((sum, [, amount]) => sum + Number(amount || 0), 0);
   }
+
   return transactions
     .filter((transaction) => String(transaction.date || '').startsWith(monthKey))
     .reduce((sum, transaction) => sum + Number(transaction.total || 0), 0);
@@ -258,15 +278,19 @@ function getCurrentAnalysisMonth(trendEntries) {
     const date = String(trendEntries[index]?.[0] || '');
     if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 7);
   }
+
   return new Date().toISOString().slice(0, 7);
 }
 
 export function renderTransactions() {
   els.transactionBody.replaceChildren();
+
   const transactions = state().sortedTransactions();
+
   if (els.transactionEmpty) {
     els.transactionEmpty.hidden = transactions.length > 0;
   }
+
   for (const transaction of transactions) {
     const status = state().transactionStatus(transaction);
     els.transactionBody.appendChild(createTransactionRow(transaction, status, toggleDetails));
@@ -275,14 +299,17 @@ export function renderTransactions() {
 
 export function toggleDetails(transaction, row) {
   const next = row.nextElementSibling;
+
   if (next?.classList.contains('details-row')) {
     next.remove();
     row.classList.remove('is-expanded');
     row.setAttribute('aria-expanded', 'false');
     return;
   }
+
   row.classList.add('is-expanded');
   row.setAttribute('aria-expanded', 'true');
+
   row.after(
     createTransactionDetailsRow(transaction, {
       onConfirmDuplicate: handleConfirmDuplicate,
@@ -302,14 +329,16 @@ async function handleDismissAnomaly(id) {
 }
 
 export function setupTransactions() {
-  els.refreshData.addEventListener('click', loadDashboard);
+  els.refreshData?.addEventListener('click', loadDashboard);
   els.resetDemoData?.addEventListener('click', handleResetDemoData);
+
   document.querySelectorAll('#transaction-table th').forEach((th) => {
     th.addEventListener('click', () => {
       state().updateSortState(th.dataset.sort);
       renderTransactions();
     });
   });
+
   document.addEventListener('finsight:refresh-dashboard', loadDashboard);
 }
 
@@ -322,9 +351,11 @@ function setupBenchmarkMetrics() {
 
 async function setBenchmarkMetricsExpanded(expanded) {
   if (!els.metricsToggle || !els.metricsBody) return;
+
   els.metricsToggle.setAttribute('aria-expanded', String(expanded));
   els.metricsToggle.textContent = expanded ? 'Hide metrics' : 'Show metrics';
   els.metricsBody.hidden = !expanded;
+
   if (expanded && !metricsLoaded) {
     metricsLoaded = true;
     await loadBenchmarkMetrics();
@@ -336,18 +367,26 @@ async function handleResetDemoData() {
     armResetDemoData();
     return;
   }
+
   clearResetTimer();
   resetArmed = false;
   els.resetDemoData.disabled = true;
   els.resetDemoData.textContent = 'Resetting...';
+
   try {
     const transactions = await fetchTransactions();
-    const results = await Promise.allSettled(transactions.map((transaction) => deleteTransaction(transaction.id)));
+    const results = await Promise.allSettled(
+      transactions.map((transaction) => deleteTransaction(transaction.id))
+    );
+
     const failed = results.some((result) => result.status === 'rejected');
+
     await loadDashboard();
+
     if (failed) {
       throw new Error('Could not reset demo data.');
     }
+
     showToast('Demo data reset.', 'success');
   } catch (error) {
     showToast('Could not reset demo data.', 'error');
@@ -361,6 +400,7 @@ function armResetDemoData() {
   resetArmed = true;
   els.resetDemoData.textContent = RESET_ARMED_LABEL;
   els.resetDemoData.setAttribute('aria-label', 'Click again to reset shared demo data to zero');
+
   clearResetTimer();
   resetTimer = window.setTimeout(resetResetDemoButton, RESET_DISARM_MS);
 }
@@ -368,6 +408,7 @@ function armResetDemoData() {
 function resetResetDemoButton() {
   resetArmed = false;
   clearResetTimer();
+
   els.resetDemoData.textContent = RESET_LABEL;
   els.resetDemoData.setAttribute('aria-label', 'Reset shared demo data to zero');
 }
@@ -381,10 +422,12 @@ function clearResetTimer() {
 
 function showToast(message, type = 'success') {
   if (!els.toastContainer) return;
+
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
   toast.textContent = message;
+
   els.toastContainer.appendChild(toast);
   window.setTimeout(() => toast.remove(), 4500);
 }
@@ -395,15 +438,25 @@ setupTheme();
 setupBenchmarkMetrics();
 
 loadDashboard().catch((error) => {
-  els.uploadStatus.textContent = error.message;
+  if (els.uploadStatus) {
+    els.uploadStatus.textContent = error.message;
+  }
 });
 
-window.FinSightMain = { loadDashboard, renderTransactions, renderKpis, loadBenchmarkMetrics, renderBenchmarkMetrics, setupTransactions, showView };
+window.FinSightMain = {
+  loadDashboard,
+  renderTransactions,
+  loadBenchmarkMetrics,
+  renderBenchmarkMetrics,
+  setupTransactions,
+  showView
+};
 
 function setupLayoutShell() {
   els.viewLinks.forEach((link) => {
     link.addEventListener('click', (event) => {
       const view = link.dataset.viewLink;
+
       if (view) {
         event.preventDefault();
         showView(view, { updateHash: true });
@@ -443,42 +496,54 @@ function viewFromHash() {
 
 export function showView(view, { updateHash = false } = {}) {
   const targetView = VIEW_COPY[view] ? view : DEFAULT_VIEW;
+
   if (MODAL_VIEWS.has(targetView)) {
     openModal(targetView, { updateHash });
     return;
   }
+
   currentView = targetView;
   document.body.dataset.currentView = targetView;
+
   closeModals({ updateHash: false });
+
   els.viewPanels.forEach((panel) => {
     if (MODAL_VIEWS.has(panel.dataset.view)) return;
+
     const isActive = panel.dataset.view === targetView;
     panel.classList.toggle('is-active', isActive);
   });
+
   els.viewLinks.forEach((link) => {
     const isActive = link.dataset.viewLink === targetView;
+
     link.classList.toggle('active', isActive);
-    if (link.tagName === 'A') {
-      link.toggleAttribute('aria-current', isActive);
-      if (isActive) link.setAttribute('aria-current', 'page');
-    } else {
-      link.toggleAttribute('aria-current', isActive);
-      if (isActive) link.setAttribute('aria-current', 'page');
+    link.toggleAttribute('aria-current', isActive);
+
+    if (isActive) {
+      link.setAttribute('aria-current', 'page');
     }
   });
+
   const [title, subtitle] = VIEW_COPY[targetView];
+
   if (els.viewTitle) els.viewTitle.textContent = title;
   if (els.viewSubtitle) els.viewSubtitle.textContent = subtitle;
+
   if (updateHash) {
     const hash = targetView === DEFAULT_VIEW ? '#dashboard-view' : `#${targetView}-view`;
+
     if (window.location.hash !== hash) {
       window.history.pushState(null, '', hash);
     }
   }
+
   scrollToMainSection(targetView);
+
   if (targetView === 'dashboard') {
     refreshChartLayout();
   }
+
   if (targetView === 'nova') {
     els.novaPanel?.classList.remove('is-collapsed');
   }
@@ -487,45 +552,60 @@ export function showView(view, { updateHash = false } = {}) {
 function openModal(view, { updateHash = false } = {}) {
   currentView = view;
   document.body.dataset.currentView = view;
+
   els.modalShells.forEach((shell) => {
     const isActive = shell.dataset.modal === view;
+
     shell.hidden = !isActive;
     shell.classList.toggle('is-open', isActive);
   });
+
   els.viewLinks.forEach((link) => {
     const isActive = link.dataset.viewLink === view;
+
     link.classList.toggle('active', isActive);
     link.toggleAttribute('aria-current', isActive);
-    if (isActive) link.setAttribute('aria-current', 'page');
+
+    if (isActive) {
+      link.setAttribute('aria-current', 'page');
+    }
   });
+
   if (view === 'metrics') {
     setBenchmarkMetricsExpanded(true);
   }
+
   if (updateHash) {
     const hash = `#${view}-view`;
+
     if (window.location.hash !== hash) {
       window.history.pushState(null, '', hash);
     }
   }
+
   const activeDialog = document.querySelector(`[data-modal="${view}"] .modal-panel`);
   activeDialog?.focus?.();
 }
 
 function closeModals({ updateHash = false } = {}) {
   let hadOpenModal = false;
+
   els.modalShells.forEach((shell) => {
     hadOpenModal = hadOpenModal || !shell.hidden;
     shell.hidden = true;
     shell.classList.remove('is-open');
   });
+
   els.viewLinks.forEach((link) => {
     if (MODAL_VIEWS.has(link.dataset.viewLink)) {
       link.classList.remove('active');
       link.removeAttribute('aria-current');
     }
   });
+
   if (updateHash && hadOpenModal) {
     const hash = '#dashboard-view';
+
     if (window.location.hash !== hash) {
       window.history.pushState(null, '', hash);
     }
@@ -534,20 +614,31 @@ function closeModals({ updateHash = false } = {}) {
 
 function scrollToMainSection(view) {
   const panel = document.querySelector(`[data-view="${view}"]`);
+
   if (!panel || !['dashboard', 'upload', 'nova'].includes(view)) return;
   if (view === 'dashboard' && window.scrollY < 24) return;
-  panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+
+  panel.scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    block: 'start'
+  });
 }
 
 function refreshChartLayout() {
   const analysis = state().getAnalysis();
+
   if (analysis) {
-    document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+    document.dispatchEvent(
+      new CustomEvent('finsight:analysis-updated', {
+        detail: { analysis }
+      })
+    );
   }
 }
 
 function setupTheme() {
   applyTheme(readStoredTheme() || 'dark');
+
   els.themeToggle?.addEventListener('click', () => {
     const currentTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
     applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
@@ -565,22 +656,32 @@ function readStoredTheme() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
+
   if (els.themeToggle) {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
     if (els.themeToggleLabel) {
       els.themeToggleLabel.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
     } else {
       els.themeToggle.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
     }
+
     els.themeToggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
   }
+
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch (error) {
     return;
   }
+
   const analysis = state().getAnalysis();
+
   if (analysis) {
-    document.dispatchEvent(new CustomEvent('finsight:analysis-updated', { detail: { analysis } }));
+    document.dispatchEvent(
+      new CustomEvent('finsight:analysis-updated', {
+        detail: { analysis }
+      })
+    );
   }
 }
