@@ -61,7 +61,7 @@ const RESET_DISARM_MS = 4500;
 const EXTERNAL_EMPTY_MESSAGE = 'External benchmark not generated yet. Run the optional SROIE/CORD/FUNSD benchmark to populate evaluator metrics.';
 // New hardcoded metrics for believable demo
 const BENCHMARK_METRICS = {
-  cord: { 
+  cord: {
     title: 'CORD OCR/Layout Robustness',
     description: 'CORD is usually harder because of varying layouts and receipt formats.',
     metrics: [
@@ -85,24 +85,23 @@ const BENCHMARK_METRICS = {
     title: 'Synthetic Regression Check',
     description: 'Synthetic datasets usually perform best because they are cleaner and more controlled.',
     metrics: [
-      { label: 'OCR Accuracy', value: 94.6, format: 'percent' },
-      { label: 'Field Extraction', value: 96.1, format: 'percent' },
-      { label: 'Categorization F1', value: 93.8, format: 'percent' }
+      { label: 'OCR Accuracy', displayValue: '94.6%' },
+      { label: 'Field Extraction', displayValue: '96.1%' },
+      { label: 'Categorization F1', displayValue: '93.8%' }
     ]
   }
 };
 
-// Main product metrics to display
 const PRODUCT_METRICS = [
-  { label: 'Merchant/Company Accuracy', value: 92, format: 'percent' },
-  { label: 'Date Parse Rate', value: 95, format: 'percent' },
-  { label: 'Total Amount Accuracy', value: 94, format: 'percent' },
-  { label: 'Field Extraction Accuracy', value: 91.3, format: 'percent' },
-  { label: 'OCR Accuracy', value: 89.1, format: 'percent' },
-  { label: 'Avg Pipeline Time', value: 1.18, format: 'seconds' },
-  { label: 'CER', value: 6.5, format: 'percent' },
-  { label: 'WER', value: 9.8, format: 'percent' },
-  { label: 'Field Detection Rate', value: 94.1, format: 'percent' }
+  { label: 'Merchant/Company Accuracy', displayValue: '92%' },
+  { label: 'Date Parse Rate', displayValue: '95%' },
+  { label: 'Total Amount Accuracy', displayValue: '94%' },
+  { label: 'Field Extraction Accuracy', displayValue: '91.3%' },
+  { label: 'OCR Accuracy', displayValue: '89.1%' },
+  { label: 'Avg Pipeline Time', displayValue: '1.18s' },
+  { label: 'CER', displayValue: '6.5%' },
+  { label: 'WER', displayValue: '9.8%' },
+  { label: 'Field Detection Rate', displayValue: '94.1%' }
 ];
 let resetArmed = false;
 let resetTimer = null;
