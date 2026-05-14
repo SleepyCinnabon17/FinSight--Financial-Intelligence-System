@@ -132,8 +132,8 @@ export function setupChat() {
     promptCursor.textContent = '\u00A0';
 
     display.appendChild(promptMirror);
-    display.appendChild(promptPlaceholder);
     display.appendChild(promptCursor);
+    display.appendChild(promptPlaceholder);
 
     promptOverlay.appendChild(symbol);
     promptOverlay.appendChild(display);
