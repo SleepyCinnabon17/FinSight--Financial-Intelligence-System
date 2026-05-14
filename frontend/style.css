@@ -2447,7 +2447,8 @@ body {
 }
 
 .dashboard-section {
-  padding: clamp(12px, 1.7vw, 18px);
+  padding: clamp(18px, 2.4vw, 28px);
+  border-width: 2px;
 }
 
 .kpi-grid {

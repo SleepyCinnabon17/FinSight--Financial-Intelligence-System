@@ -41,6 +41,12 @@ def _parse_date(value: str | None) -> date | None:
             return None
 
 
+def _transaction_date(transaction: Transaction, use_upload_fallback: bool) -> date | None:
+    if use_upload_fallback:
+        return _parse_date(transaction.upload_timestamp) or _parse_date(transaction.date)
+    return _parse_date(transaction.date)
+
+
 def _coerce_date(value: str | date | datetime | None) -> date | None:
     if value is None:
         return None
@@ -59,12 +65,13 @@ def compute_category_totals(
     transactions: Iterable[Transaction],
     start_date: str | date | datetime | None,
     end_date: str | date | datetime | None,
+    use_upload_fallback: bool = False,
 ) -> dict[str, float]:
     start = _coerce_date(start_date)
     end = _coerce_date(end_date)
     totals: dict[str, float] = defaultdict(float)
     for transaction in transactions:
-        tx_date = _parse_date(transaction.date)
+        tx_date = _transaction_date(transaction, use_upload_fallback)
         if tx_date is None:
             continue
         if start and tx_date < start:
@@ -75,23 +82,31 @@ def compute_category_totals(
     return {category: round(total, 2) for category, total in totals.items()}
 
 
-def compute_merchant_totals(transactions: Iterable[Transaction], days: int = ANALYSIS_WINDOW_DAYS) -> list[tuple[str, float]]:
+def compute_merchant_totals(
+    transactions: Iterable[Transaction],
+    days: int = ANALYSIS_WINDOW_DAYS,
+    use_upload_fallback: bool = False,
+) -> list[tuple[str, float]]:
     cutoff = _today() - timedelta(days=days)
     totals: dict[str, float] = defaultdict(float)
     for transaction in transactions:
-        tx_date = _parse_date(transaction.date)
+        tx_date = _transaction_date(transaction, use_upload_fallback)
         if tx_date is None or tx_date < cutoff:
             continue
         totals[transaction.merchant or "Unknown"] += transaction.total
     return sorted(((merchant, round(total, 2)) for merchant, total in totals.items()), key=lambda item: item[1], reverse=True)[:5]
 
 
-def compute_daily_trend(transactions: Iterable[Transaction], days: int = ANALYSIS_WINDOW_DAYS) -> list[tuple[str, float]]:
+def compute_daily_trend(
+    transactions: Iterable[Transaction],
+    days: int = ANALYSIS_WINDOW_DAYS,
+    use_upload_fallback: bool = False,
+) -> list[tuple[str, float]]:
     end = _today()
     start = end - timedelta(days=days - 1)
     totals: dict[date, float] = defaultdict(float)
     for transaction in transactions:
-        tx_date = _parse_date(transaction.date)
+        tx_date = _transaction_date(transaction, use_upload_fallback)
         if tx_date is None or tx_date < start or tx_date > end:
             continue
         totals[tx_date] += transaction.total
@@ -188,6 +203,14 @@ def generate_analysis(transactions: Iterable[Transaction]) -> AnalysisResult:
     category_totals = compute_category_totals(txs, start, end)
     merchant_totals = compute_merchant_totals(txs)
     daily_trend = compute_daily_trend(txs)
+    has_trend_activity = any(amount for _, amount in daily_trend)
+    if txs and (not category_totals or not merchant_totals or not has_trend_activity):
+        if not category_totals:
+            category_totals = compute_category_totals(txs, start, end, use_upload_fallback=True)
+        if not merchant_totals:
+            merchant_totals = compute_merchant_totals(txs, use_upload_fallback=True)
+        if not has_trend_activity:
+            daily_trend = compute_daily_trend(txs, use_upload_fallback=True)
     savings = compute_savings_opportunity(txs, BUDGET_CONFIG)
     anomalies = [
         {
