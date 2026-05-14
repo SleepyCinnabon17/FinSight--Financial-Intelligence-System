@@ -39,18 +39,20 @@ async function mockDashboard(page) {
   });
 }
 
-test('renders the centered lounge shell with dashboard, Nova, upload, and popup controls', async ({ page }) => {
+test('renders the Enigma-style network shell with dashboard, Nova, upload, and popup controls', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await mockDashboard(page);
 
   await page.goto('/');
 
-  await expect(page.locator('.cabinet.lounge-shell')).toBeVisible();
+  await expect(page.locator('.cabinet.network-shell')).toBeVisible();
+  await expect(page.locator('.network-bg')).toBeVisible();
   await expect(page.locator('.ideck-nav')).toHaveCount(0);
   await expect(page.locator('.cab-rail')).toHaveCount(0);
   await expect(page.locator('.brand-title')).toContainText('FinSight');
-  await expect(page.locator('.brand-sub')).toContainText('99% of gamblers give up before making it big. Be the 1%.');
-  await expect(page.locator('.hero-tagline')).toContainText('Upload receipts, reveal leaks, and let Nova explain where your money went.');
+  await expect(page.locator('.hero-gradient')).toContainText('Know where your money went.');
+  await expect(page.locator('.hero-tagline')).toContainText('Upload receipts, reveal leaks, and let Nova explain your spending');
+  await expect(page.locator('.hero-terminal')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Transactions' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Metrics' })).toBeVisible();
   await expect(page.locator('.kpi-card')).toHaveCount(4);
@@ -82,13 +84,13 @@ test('keeps popup buttons usable at mobile width without horizontal overflow', a
   expect(hasOverflow).toBe(false);
 });
 
-test('keeps the lounge layout usable at tablet width', async ({ page }) => {
+test('keeps the network layout usable at tablet width', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await mockDashboard(page);
 
   await page.goto('/');
 
-  await expect(page.locator('.cabinet.lounge-shell')).toBeVisible();
+  await expect(page.locator('.cabinet.network-shell')).toBeVisible();
   await expect(page.locator('.top-actions')).toBeVisible();
   await expect(page.locator('.kpi-card')).toHaveCount(4);
   await expect(page.locator('#nova.nova-panel')).toBeVisible();
@@ -126,13 +128,13 @@ test('includes skeleton shells and shows transaction empty state with no data', 
   await expect(page.locator('.transaction-empty-state')).toContainText('No transactions yet.');
 });
 
-test('reduced-motion mode disables ambient casino loops', async ({ page }) => {
+test('reduced-motion mode disables terminal cursor animation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 1280, height: 900 });
   await mockDashboard(page);
 
   await page.goto('/');
 
-  const animationName = await page.locator('.chip-one').evaluate((element) => getComputedStyle(element).animationName);
+  const animationName = await page.locator('.terminal-cursor').evaluate((element) => getComputedStyle(element).animationName);
   expect(animationName).toBe('none');
 });

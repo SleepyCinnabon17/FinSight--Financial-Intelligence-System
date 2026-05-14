@@ -60,7 +60,7 @@ test('exposes accessible landmarks, live regions, and keyboard table controls', 
   await mockDashboard(page);
   await page.goto('/');
 
-  await expect(page.getByRole('navigation', { name: 'Popup panels' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.locator('#chat-bubbles')).toHaveAttribute('role', 'log');
   await expect(page.locator('#upload-status')).toHaveAttribute('aria-live', 'polite');

@@ -3,55 +3,74 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FinSight - The House Always Knows</title>
+    <title>FinSight - Financial Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@1,300;1,600&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <div class="cabinet lounge-shell" id="cabinet">
-      <div class="lounge-ambient" aria-hidden="true">
-        <span class="chip chip-one"></span>
-        <span class="chip chip-two"></span>
-        <span class="chip chip-three"></span>
-        <span class="suit suit-one">&spades;</span>
-        <span class="suit suit-two">&diams;</span>
-        <span class="suit suit-three">&clubs;</span>
-      </div>
+    <div class="cabinet network-shell" id="cabinet">
+      <div class="network-bg" aria-hidden="true"></div>
 
-      <header class="lounge-hero" aria-label="FinSight overview">
-        <div class="hero-topline">
-          <div class="brand-lockup" aria-label="FinSight financial intelligence">
-            <span class="brand-mark" aria-hidden="true">FS</span>
-            <span>Financial Intelligence</span>
+      <header class="network-header" aria-label="FinSight overview">
+        <a class="brand-lockup" href="#dashboard-view" data-view-link="dashboard" aria-label="FinSight dashboard">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M4 7h7M4 12h5M4 17h7M13 5l-4 14M14 7h6M14 12h5M14 17h6" />
+            </svg>
+          </span>
+          <span>FinSight</span>
+        </a>
+        <nav class="top-actions" aria-label="Primary navigation">
+          <button class="top-action" type="button" data-view-link="dashboard">Dashboard</button>
+          <button class="top-action" type="button" data-view-link="nova">Nova</button>
+          <button class="top-action" type="button" data-view-link="upload">Upload</button>
+          <button class="top-action" type="button" data-view-link="transactions" aria-haspopup="dialog">Transactions</button>
+          <button class="top-action" type="button" data-view-link="metrics" aria-haspopup="dialog">Metrics</button>
+          <button class="top-action theme-toggle" type="button" aria-label="Switch to light theme">
+            <span class="util-btn-label">Light mode</span>
+          </button>
+        </nav>
+
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="hero-kicker">Receipt intelligence for spending leaks</p>
+            <h1 class="brand-title" data-text="FINSIGHT">FinSight</h1>
+            <h2 class="hero-gradient">Know where your money went.</h2>
+            <p class="hero-tagline">Upload receipts, reveal leaks, and let Nova explain your spending with benchmarked OCR and extraction metrics.</p>
+            <div class="hero-actions">
+              <button class="primary-cta" type="button" data-view-link="nova">Ask Nova</button>
+              <button class="secondary-cta" type="button" data-view-link="upload">Upload a receipt</button>
+            </div>
           </div>
-          <nav class="top-actions" aria-label="Popup panels">
-            <button class="top-action" type="button" data-view-link="transactions" aria-haspopup="dialog">Transactions</button>
-            <button class="top-action" type="button" data-view-link="metrics" aria-haspopup="dialog">Metrics</button>
-            <button class="top-action theme-toggle" type="button" aria-label="Switch to light theme">
-              <span class="util-btn-label">Light mode</span>
-            </button>
-          </nav>
-        </div>
-
-        <div class="hero-copy">
-          <h1 class="brand-title" data-text="FINSIGHT">FinSight</h1>
-          <p class="brand-sub">&ldquo;99% of gamblers give up before making it big. Be the 1%.&rdquo;</p>
-          <p class="hero-tagline">Upload receipts, reveal leaks, and let Nova explain where your money went.</p>
+          <div class="terminal-window hero-terminal" aria-label="FinSight terminal preview">
+            <div class="terminal-header" aria-hidden="true">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="terminal-body">
+              <p><span class="prompt">$</span> finsight analyze latest-receipt</p>
+              <p class="terminal-muted">OCR pipeline ready</p>
+              <p class="terminal-muted">KIE extraction loaded</p>
+              <p class="terminal-accent">Nova context: spend leaks, anomalies, duplicates</p>
+              <p><span class="prompt">$</span> <span class="terminal-cursor">_</span></p>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main id="dashboard" class="lounge-main" aria-label="FinSight workspace">
-        <section id="dashboard-view" class="view-panel lounge-section dashboard-section is-active" data-view="dashboard" aria-labelledby="dashboard-title">
+      <main id="dashboard" class="network-main" aria-label="FinSight workspace">
+        <section id="dashboard-view" class="view-panel network-section dashboard-section is-active" data-view="dashboard" aria-labelledby="dashboard-title">
           <div class="pane-title">
             <div>
               <span class="eyebrow">Dashboard</span>
-              <h2 id="dashboard-title">Table Stakes</h2>
+              <h2 id="dashboard-title">Financial Signal</h2>
             </div>
             <p>Fast totals, anomaly pressure, and category leaks before you ask Nova for the story.</p>
           </div>
@@ -83,7 +102,7 @@
             <div class="section-header">
               <div>
                 <h2 id="charts-title">Where You Lost Money</h2>
-                <p>Category leaks, daily swings, and merchants taking the pot.</p>
+                <p>Category leaks, daily swings, and merchants driving spend.</p>
               </div>
             </div>
             <div class="chart-grid">
@@ -106,12 +125,12 @@
           </section>
         </section>
 
-        <section id="nova-view" class="view-panel lounge-section nova-stage is-active" data-view="nova" aria-labelledby="nova-title">
+        <section id="nova-view" class="view-panel network-section nova-stage is-active" data-view="nova" aria-labelledby="nova-title">
           <section id="nova" class="nova-panel" aria-labelledby="nova-title">
             <div class="nova-panel-header">
               <div>
                 <span class="eyebrow">Nova</span>
-                <h2 id="nova-title">Ask the House</h2>
+                <h2 id="nova-title">Ask Nova</h2>
               </div>
               <div class="chat-connection" role="status" aria-live="polite" aria-atomic="true">
                 <span id="chat-status-dot" class="chat-status-dot idle" aria-hidden="true"></span>
@@ -149,14 +168,14 @@
           </section>
         </section>
 
-        <section id="upload-view" class="view-panel lounge-section upload-stage is-active" data-view="upload" aria-labelledby="upload-title">
+        <section id="upload-view" class="view-panel network-section upload-stage is-active" data-view="upload" aria-labelledby="upload-title">
           <section id="upload" aria-labelledby="upload-title">
             <div class="pane-title">
               <div>
-                <span class="eyebrow">Document Feed</span>
-                <h2 id="upload-title">Insert a Receipt</h2>
+                <span class="eyebrow">Document intake</span>
+                <h2 id="upload-title">Upload a Receipt</h2>
               </div>
-              <p>Drop a bill onto the felt, press Process, then confirm or discard the extraction ticket.</p>
+              <p>Drop a bill, press Process, then confirm or discard the extraction preview.</p>
             </div>
 
             <div class="upload-layout">
@@ -170,7 +189,7 @@
                   aria-describedby="upload-help"
                 >
                   <div class="acceptor-slot" aria-hidden="true"></div>
-                  <div class="acceptor-label">Insert Document</div>
+                  <div class="acceptor-label">Drop receipt files</div>
                   <span class="acceptor-help">Click to choose or drop files here</span>
                 </div>
                 <input id="file-input" class="upload-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic" hidden />

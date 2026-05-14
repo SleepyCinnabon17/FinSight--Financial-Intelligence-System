@@ -79,22 +79,22 @@ test('renders dashboard charts with mocked transaction analysis data', async ({ 
         id: 'category-chart',
         type: 'doughnut',
         labels: ['Groceries'],
-        colors: ['#efbe62', '#21d889', '#ff6174', '#f7ead0', '#82d8ff', '#f7b84b'],
+        colors: ['#a855f7', '#3b82f6', '#22c55e', '#f97316', '#ec4899', '#e5e7eb'],
         tickColor: null
       },
       {
         id: 'trend-chart',
         type: 'line',
         labels: ['2026-05-10'],
-        colors: ['#efbe62', '#21d889', '#ff6174', '#f7ead0', '#82d8ff', '#f7b84b'],
-        tickColor: '#9aa995'
+        colors: ['#a855f7', '#3b82f6', '#22c55e', '#f97316', '#ec4899', '#e5e7eb'],
+        tickColor: '#9ca3af'
       },
       {
         id: 'merchant-chart',
         type: 'bar',
         labels: ['Metro Market'],
-        colors: ['#efbe62', '#21d889', '#ff6174', '#f7ead0', '#82d8ff', '#f7b84b'],
-        tickColor: '#9aa995'
+        colors: ['#a855f7', '#3b82f6', '#22c55e', '#f97316', '#ec4899', '#e5e7eb'],
+        tickColor: '#9ca3af'
       }
     ]);
 
