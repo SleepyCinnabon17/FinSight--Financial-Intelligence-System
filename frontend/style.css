@@ -4036,3 +4036,71 @@ html[data-theme="light"] .toast {
   color: var(--text-secondary);
   font-size: 0.75rem;
 }
+
+/* Make the terminal truly unified: place the prompt at the bottom as an overlay
+   and remove the rounded chatbox look. These selectors are specific to the
+   hero-terminal to avoid altering other chat forms. */
+.hero-terminal .nova-panel-body {
+  position: relative;
+  padding-bottom: 96px; /* room for prompt + disclaimer/footer */
+}
+
+.hero-terminal #chat-form {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: transparent;
+  padding: 6px 8px;
+}
+
+.hero-terminal #chat-input {
+  flex: 1 1 auto;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 8px;
+  background: rgba(168, 85, 247, 0.03);
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", var(--font-mono);
+  font-size: 0.95rem;
+}
+
+.hero-terminal #chat-form button[type="submit"] {
+  min-width: 72px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+  color: #151006;
+  border: 0;
+  font-weight: 700;
+}
+
+.hero-terminal .bubble {
+  position: relative;
+  padding-left: 48px; /* room for copy button */
+}
+
+.hero-terminal .bubble .bubble-copy {
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.hero-terminal .bubble:hover .bubble-copy {
+  opacity: 1;
+}
+
+/* Make copy button smaller and match terminal style */
+.hero-terminal .bubble .bubble-copy {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+}
