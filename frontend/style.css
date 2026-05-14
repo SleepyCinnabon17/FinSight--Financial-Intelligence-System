@@ -3323,8 +3323,8 @@ html[data-theme="light"] .network-bg {
   display: flex;
   flex-direction: column;
   position: relative;
-  /* Use JetBrains Mono in the terminal for a real CLI feel */
-  font-family: "JetBrains Mono", var(--font-mono);
+  /* Use Fira Code in the terminal for a real CLI feel */
+  font-family: "Fira Code", var(--font-mono);
   cursor: text;
 }
 
@@ -3955,7 +3955,7 @@ html[data-theme="light"] .toast {
   padding: 8px 6px 12px;
   min-height: 140px;
   max-height: min(48vh, 420px);
-  font-family: "JetBrains Mono", var(--font-mono);
+  font-family: "Fira Code", var(--font-mono);
   white-space: pre-wrap;
   overflow-y: auto;
   display: flex;
@@ -3983,7 +3983,7 @@ html[data-theme="light"] .toast {
   color: #c084fc;
   font-weight: 700;
   margin-right: 8px;
-  font-family: "JetBrains Mono", var(--font-mono);
+  font-family: "Fira Code", var(--font-mono);
 }
 
 /* Terminal-style bubble overrides inside the hero terminal */
@@ -4013,7 +4013,7 @@ html[data-theme="light"] .toast {
 }
 .hero-terminal .bubble .bubble-text {
   display: inline-block;
-  font-family: "JetBrains Mono", var(--font-mono);
+  font-family: "Fira Code", var(--font-mono);
   font-size: 0.95rem;
   white-space: pre-wrap;
 }
@@ -4065,7 +4065,7 @@ html[data-theme="light"] .toast {
   border-radius: 8px;
   background: rgba(168, 85, 247, 0.03);
   color: var(--text-primary);
-  font-family: "JetBrains Mono", var(--font-mono);
+  font-family: "Fira Code", var(--font-mono);
   font-size: 0.95rem;
 }
 
@@ -4141,7 +4141,7 @@ html[data-theme="light"] .toast {
   gap: 12px;
   padding: 6px 8px;
   pointer-events: auto;
-  font-family: "JetBrains Mono", var(--font-mono);
+  font-family: "Fira Code", var(--font-mono);
   font-size: 0.95rem;
   color: var(--text-primary);
   white-space: pre-wrap;
