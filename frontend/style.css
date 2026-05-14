@@ -4110,41 +4110,27 @@ html[data-theme="light"] .toast {
   display: none !important;
 }
 
-/* Make the native input visually invisible but still focusable and usable
-   for form submission and automated tests. The overlay displays the text
-   and the custom block cursor. */
+/* Use the native input for chat entry. */
 .hero-terminal #chat-input {
-  position: absolute;
-  inset: 0;
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  color: transparent !important;
-  caret-color: transparent !important;
-  padding: 8px 12px;
-  z-index: 1;
-}
-
-/* Remove visual send button (keeps DOM for tests but hides it visually).
-   The terminal UI will use Enter to submit like a real CLI. */
-.hero-terminal #chat-form button[type="submit"] {
-  display: none !important;
-}
-
-/* Prompt overlay mirrors the input value and shows a block cursor */
-.hero-terminal .prompt-overlay {
   position: relative;
-  z-index: 3;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 8px;
-  pointer-events: auto;
-  font-family: "Fira Code", var(--font-mono);
-  font-size: 0.95rem;
+  inset: auto;
+  background: rgba(168, 85, 247, 0.03);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  outline: none;
   color: var(--text-primary);
-  white-space: pre-wrap;
+  caret-color: var(--text-primary);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* Show the send button for keyboard and touch users. */
+.hero-terminal #chat-form button[type="submit"] {
+  display: inline-flex;
+}
+
+/* Hide the overlay prompt when using the native input. */
+.hero-terminal .prompt-overlay {
+  display: none;
 }
 
 .hero-terminal .prompt-symbol {
@@ -4188,16 +4174,9 @@ html[data-theme="light"] .toast {
   text-align: left !important;
 }
 
-/* Hide native input placeholder to avoid ghost text showing behind the
-   mirrored prompt overlay. Keep input focusable via terminal clicks. */
+/* Use the native placeholder when the overlay is hidden. */
 .hero-terminal #chat-input::placeholder {
-  color: transparent !important;
-}
-
-/* Prevent pointer interactions with the native input so clicks go to the
-   overlay which will focus the input programmatically. */
-.hero-terminal #chat-input {
-  pointer-events: none !important;
+  color: var(--text-muted);
 }
 
 
