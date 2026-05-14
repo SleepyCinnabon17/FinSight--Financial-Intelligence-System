@@ -134,6 +134,13 @@ function chartTheme() {
   };
 }
 
+function truncateLabel(label, maxLength = 18) {
+  const text = String(label || '').trim();
+  if (text.length <= maxLength) return text;
+  if (maxLength <= 3) return text.slice(0, maxLength);
+  return `${text.slice(0, maxLength - 3)}...`;
+}
+
 function chartOptions(type, theme) {
   const options = {
     responsive: true,
@@ -149,7 +156,18 @@ function chartOptions(type, theme) {
   if (type !== 'doughnut') {
     options.scales = {
       x: {
-        ticks: { color: theme.muted },
+        ticks: {
+          color: theme.muted,
+          autoSkip: true,
+          maxRotation: 0,
+          minRotation: 0,
+          maxTicksLimit: type === 'bar' ? 6 : undefined,
+          callback: type === 'bar'
+            ? function (value) {
+                return truncateLabel(this.getLabelForValue(value), 18);
+              }
+            : undefined
+        },
         grid: { color: theme.border }
       },
       y: {
