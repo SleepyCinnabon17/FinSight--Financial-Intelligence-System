@@ -2447,7 +2447,7 @@ body {
 }
 
 .dashboard-section {
-  padding: clamp(32px, 4vw, 56px);
+  padding: clamp(40px, 5vw, 76px) clamp(36px, 4.5vw, 64px);
   border-width: 2px;
 }
 
@@ -3410,7 +3410,7 @@ html[data-theme="light"] .network-bg {
 }
 
 .dashboard-section {
-  padding: clamp(32px, 4vw, 56px);
+  padding: clamp(40px, 5vw, 76px) clamp(36px, 4.5vw, 64px);
 }
 
 .pane-title,
