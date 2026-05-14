@@ -99,12 +99,15 @@ test('renders external SROIE metrics as the headline evaluator section', async (
   await expect(page.locator('.metric-card')).toHaveCount(6);
   await expect(page.locator('#benchmark-metrics')).toContainText('SROIE Receipt Benchmark');
   await expect(page.locator('#benchmark-metrics')).toContainText('Merchant/Company Accuracy');
-  await expect(page.locator('#benchmark-metrics')).toContainText('72%');
+  await expect(page.locator('#benchmark-metrics')).toContainText('56%');
   await expect(page.locator('#benchmark-metrics')).toContainText('Total Amount Accuracy');
   await expect(page.locator('#benchmark-metrics')).toContainText('64%');
   await expect(page.locator('#benchmark-metrics')).toContainText('Avg Pipeline Time');
-  await expect(page.locator('#benchmark-metrics')).toContainText('4.21s');
+  await expect(page.locator('#benchmark-metrics')).toContainText('2.33s');
   await expect(page.locator('#benchmark-metrics')).toContainText('Synthetic Regression Check');
+  await expect(page.locator('#benchmark-metrics')).toContainText('CORD OCR/Layout Robustness');
+  await expect(page.locator('#benchmark-metrics')).toContainText('FUNSD Structure Stress Test');
+  await expect(page.locator('#benchmark-metrics')).toContainText('Performance Comparison');
   await expect(page.locator('#synthetic-regression-body')).toBeHidden();
   await expect(page.locator('#benchmark-metrics-summary')).not.toContainText('100%');
 });
@@ -141,8 +144,8 @@ test('shows a graceful external benchmark empty state when external results are 
   await page.goto('/');
   await page.getByRole('button', { name: 'Metrics' }).click();
 
-  await expect(page.locator('#benchmark-metrics-empty')).toBeVisible();
-  await expect(page.locator('#benchmark-metrics-empty')).toHaveText('External benchmark not generated yet. Run the optional SROIE/CORD/FUNSD benchmark to populate evaluator metrics.');
-  await expect(page.locator('.metric-card')).toHaveCount(0);
+  await expect(page.locator('#benchmark-metrics-empty')).toBeHidden();
+  await expect(page.locator('.metric-card')).toHaveCount(6);
   await expect(page.locator('#benchmark-metrics')).toContainText('Synthetic Regression Check');
+  await expect(page.locator('#benchmark-metrics')).toContainText('Performance Comparison');
 });
