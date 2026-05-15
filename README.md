@@ -2,7 +2,7 @@
 # FinSight- Financial Intelligence System
 <p align="center">
   <img 
-    src="https://tenor.com/view/kah-gif-25638404"
+    src="https://tenor.com/view/kah-gif-25638404
     width="420"
     alt="Financial analytics"
   />
