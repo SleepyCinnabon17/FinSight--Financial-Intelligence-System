@@ -1,4 +1,4 @@
-````md
+
 # FinSight
 
 <p align="center">
