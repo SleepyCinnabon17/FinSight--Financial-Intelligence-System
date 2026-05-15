@@ -2,11 +2,13 @@
 # FinSight- Financial Intelligence System
 <p align="center">
   <img 
-    src="https://media.tenor.com/bm8Q6yAlsPsAAAAC/stock-market.gif"
-    width="420"
+    src="https://media.tenor.com/0AVbKGY_MxMAAAAd/stock-market-stocks.gif"
+    width="400"
     alt="Stock market animation"
   />
 </p>
+```
+
 ```
 
 
