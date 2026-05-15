@@ -2,15 +2,12 @@
 # FinSight- Financial Intelligence System
 <p align="center">
   <img 
-    src="https://media.tenor.com/0AVbKGY_MxMAAAAd/stock-market-stocks.gif"
-    width="400"
-    alt="Stock market animation"
+    src="https://raw.githubusercontent.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/main/assets/animated-finance.gif"
+    width="420"
+    alt="Finance animation"
   />
 </p>
 ```
-
-```
-
 
 <h3 align="center">
 AI-Powered Financial Intelligence Dashboard
