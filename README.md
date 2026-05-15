@@ -3,7 +3,6 @@
 <div align="center">
 <img src="Stocks (1).gif" width="350"/>
 </div>
-```
 
 
 <h3 align="center">
