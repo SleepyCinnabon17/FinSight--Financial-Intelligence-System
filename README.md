@@ -1,13 +1,14 @@
 
-# FinSight
-
+# FinSight- Financial Intelligence System
 <p align="center">
   <img 
-    src="https://media.giphy.com/media/l41YmiCZ8HXvVl9x6/giphy.gif" 
+    src="https://media.tenor.com/bm8Q6yAlsPsAAAAC/stock-market.gif"
     width="420"
     alt="Stock market animation"
   />
 </p>
+```
+
 
 <h3 align="center">
 AI-Powered Financial Intelligence Dashboard
