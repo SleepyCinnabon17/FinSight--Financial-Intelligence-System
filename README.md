@@ -14,7 +14,7 @@ OCR bill analysis • anomaly detection • spending intelligence • AI investm
 </p>
 
 <p align="center">
-  <a href="https://finsight-financial-intelligence-system-production.up.railway.app/#dashboard-view">
+  <a href="https://finsight-financial-intelligence-system-production.up.railway.app">
     <img 
       src="https://img.shields.io/badge/Live%20Demo-FinSight%20Dashboard-0f172a?style=for-the-badge"
       alt="Live Demo"
