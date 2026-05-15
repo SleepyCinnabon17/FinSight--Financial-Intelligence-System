@@ -2,6 +2,8 @@
 
 FinSight is a FastAPI and vanilla JavaScript financial intelligence dashboard. It ingests bill images/PDFs, preprocesses them, runs OCR and key information extraction, persists confirmed transactions, detects duplicates and anomalies, summarizes spending, and streams Nova chatbot responses with market/news context.
 
+> **Latest**: Fixed navigation button state helper for consistent module interaction.
+
 ## Features
 
 - Multi-file bill upload with OCR extraction and confirm/discard review.
