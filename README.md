@@ -1,10 +1,10 @@
 
 # FinSight- Financial Intelligence System
 <p align="center">
-  <img 
-    src="https://tenor.com/view/kah-gif-25638404
-    width="420"
-    alt="Financial analytics"
+  <img
+    src="https://media.tenor.com/BBRe0j_0yKAAAAAd/trading-stocks.gif"
+    width="430"
+    alt="Trading dashboard animation"
   />
 </p>
 ```
