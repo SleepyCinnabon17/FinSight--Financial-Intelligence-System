@@ -2,12 +2,13 @@
 # FinSight- Financial Intelligence System
 <p align="center">
   <img 
-    src="https://raw.githubusercontent.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/main/assets/animated-finance.gif"
+    src="https://media.tenor.com/2roX3uxz_68AAAAC/data-analysis.gif"
     width="420"
-    alt="Finance animation"
+    alt="Financial analytics"
   />
 </p>
 ```
+
 
 <h3 align="center">
 AI-Powered Financial Intelligence Dashboard
