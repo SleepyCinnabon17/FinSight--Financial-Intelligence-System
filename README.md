@@ -1,12 +1,8 @@
 
 # FinSight- Financial Intelligence System
-<p align="center">
-  <img
-    src="https://media.tenor.com/BBRe0j_0yKAAAAAd/trading-stocks.gif"
-    width="430"
-    alt="Trading dashboard animation"
-  />
-</p>
+<div align="center">
+<img src="Stocks (1).gif" width="350"/>
+</div>
 ```
 
 
